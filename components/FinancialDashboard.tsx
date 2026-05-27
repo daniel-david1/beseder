@@ -443,7 +443,7 @@ export default function FinancialDashboard({ onBack }: Props) {
         </div>
 
         <div className="mb-3">
-          <SubHeader label="הוצאות 🟠" color="#ea580c" />
+          <SubHeader label="הוצאות 🔴" color="#dc2626" />
           {property.expenses.map(expense => <PropExpenseRow key={expense.id} expense={expense} propId={property.id} />)}
           {property.expenses.length > 0 && <div className="text-xs text-teal-700 font-bold mt-1 text-right px-1">סה"כ: {ils(totalExpense)}/חודש</div>}
           <AddRowBtn label="הוסף הוצאה" onClick={addExpense} />
@@ -497,7 +497,7 @@ export default function FinancialDashboard({ onBack }: Props) {
             <div className="text-xs text-gray-400 mt-1">נותר לשלם</div>
           </div>
           <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#ea580c" }}>{ils(totalMonthly)}</div>
+            <div className="text-xl font-black" style={{ color: "#dc2626" }}>{ils(totalMonthly)}</div>
             <div className="text-xs text-gray-400 mt-1">תשלום חודשי</div>
           </div>
           <div className="card px-4 py-3 shadow-sm border border-gray-100">

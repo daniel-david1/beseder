@@ -882,22 +882,6 @@ export default function Dashboard() {
     }
   };
 
-  /* ── Import local brands into cloud ── */
-  const [importCount, setImportCount] = useState<number | null>(null);
-  const handleImportLocal = () => {
-    try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem("vaachalta_brands_v1") : null;
-      if (!raw) { alert("לא נמצאו מותגים ב-Local Storage"); return; }
-      const localBrands = JSON.parse(raw) as Brand[];
-      const existingIds = new Set(brands.map(b => b.id));
-      const toAdd = localBrands.filter(b => !existingIds.has(b.id));
-      if (toAdd.length === 0) { alert("כל המותגים המקומיים כבר קיימים בחשבון שלך"); return; }
-      const merged = [...brands, ...toAdd];
-      syncAll(merged);
-      setImportCount(toAdd.length);
-      setTimeout(() => setImportCount(null), 4000);
-    } catch { alert("שגיאה בייבוא המותגים"); }
-  };
 
   /* ── Brand CRUD ── */
   const handleSaveBrand = (brand: Brand) => {
@@ -1548,14 +1532,6 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {importCount !== null && (
-              <span className="text-sm text-green-600 font-semibold animate-in">✓ יובאו {importCount} מותגים</span>
-            )}
-            <button
-              onClick={handleImportLocal}
-              className="btn btn-ghost text-sm border border-gray-200 hover:border-teal-400 hover:text-teal-600"
-              title="ייבא מותגים מ-Local Storage לחשבון"
-            >📥 ייבא מ-Local</button>
             <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
           </div>
         </div>

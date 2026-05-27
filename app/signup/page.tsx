@@ -29,9 +29,9 @@ export default function SignupPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#0B1B2B", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "Heebo, sans-serif" }}>
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "10%", right: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 65%)", filter: "blur(60px)" }}/>
+        <div style={{ position: "absolute", top: "10%", right: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(31,174,181,0.08) 0%, transparent 65%)", filter: "blur(60px)" }}/>
         <div style={{ position: "absolute", bottom: "10%", left: "5%", width: 400, height: 400, background: "radial-gradient(circle, rgba(31,174,181,0.07) 0%, transparent 65%)", filter: "blur(60px)" }}/>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(249,115,22,0.03) 0%, transparent 60%)", filter: "blur(80px)" }}/>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(14,95,168,0.07) 0%, transparent 60%)", filter: "blur(80px)" }}/>
       </div>
 
       <div style={{ position: "relative", width: "100%", maxWidth: 420 }}>
@@ -78,7 +78,7 @@ export default function SignupPage() {
                     type="text" value={name} onChange={e => setName(e.target.value)} required
                     placeholder="דניאל דוד"
                     style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "rgba(232,244,246,0.06)", border: "1px solid rgba(232,244,246,0.11)", color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
-                    onFocus={e => (e.target.style.borderColor = "rgba(249,115,22,0.5)")}
+                    onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
                     onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
                   />
                 </div>
@@ -92,7 +92,7 @@ export default function SignupPage() {
                     placeholder="you@example.com"
                     dir="ltr"
                     style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "rgba(232,244,246,0.06)", border: "1px solid rgba(232,244,246,0.11)", color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
-                    onFocus={e => (e.target.style.borderColor = "rgba(249,115,22,0.5)")}
+                    onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
                     onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
                   />
                 </div>
@@ -106,7 +106,7 @@ export default function SignupPage() {
                     placeholder="לפחות 6 תווים"
                     dir="ltr"
                     style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "rgba(232,244,246,0.06)", border: "1px solid rgba(232,244,246,0.11)", color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
-                    onFocus={e => (e.target.style.borderColor = "rgba(249,115,22,0.5)")}
+                    onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
                     onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
                   />
                 </div>
@@ -122,11 +122,11 @@ export default function SignupPage() {
                   style={{
                     marginTop: 8, padding: "14px 20px", borderRadius: 12, border: "none",
                     cursor: loading ? "not-allowed" : "pointer",
-                    background: loading ? "rgba(249,115,22,0.4)" : "linear-gradient(135deg, #f97316, #ea580c)",
+                    background: loading ? "rgba(31,174,181,0.4)" : "linear-gradient(135deg, #1FAEB5, #0E5FA8)",
                     color: "#fff", fontFamily: "Heebo, sans-serif", fontWeight: 800, fontSize: 16,
                     letterSpacing: "-0.01em",
                     transition: "opacity 0.2s",
-                    boxShadow: loading ? "none" : "0 4px 20px rgba(249,115,22,0.35)",
+                    boxShadow: loading ? "none" : "0 4px 20px rgba(14,95,168,0.28)",
                   }}
                   onMouseEnter={e => { if (!loading) (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
                   onMouseLeave={e => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
@@ -137,7 +137,7 @@ export default function SignupPage() {
 
               <p style={{ textAlign: "center", marginTop: 24, fontFamily: "Heebo, sans-serif", fontSize: 14, color: "rgba(232,244,246,0.32)" }}>
                 כבר יש לך חשבון?{" "}
-                <a href="/login" style={{ color: "#f97316", fontWeight: 700, textDecoration: "none" }}>התחבר</a>
+                <a href="/login" style={{ color: "#1FAEB5", fontWeight: 700, textDecoration: "none" }}>התחבר</a>
               </p>
             </>
           )}

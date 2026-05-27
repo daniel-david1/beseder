@@ -24,9 +24,9 @@ export default function LoginPage() {
     <div style={{ minHeight: "100vh", background: "#0B1B2B", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "Heebo, sans-serif" }}>
       {/* Background orbs — same as landing page nav */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "10%", left: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 65%)", filter: "blur(60px)" }}/>
+        <div style={{ position: "absolute", top: "10%", left: "5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(31,174,181,0.08) 0%, transparent 65%)", filter: "blur(60px)" }}/>
         <div style={{ position: "absolute", bottom: "10%", right: "5%", width: 400, height: 400, background: "radial-gradient(circle, rgba(31,174,181,0.07) 0%, transparent 65%)", filter: "blur(60px)" }}/>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(249,115,22,0.03) 0%, transparent 60%)", filter: "blur(80px)" }}/>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(14,95,168,0.07) 0%, transparent 60%)", filter: "blur(80px)" }}/>
       </div>
 
       <div style={{ position: "relative", width: "100%", maxWidth: 420 }}>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                   color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15,
                   outline: "none", boxSizing: "border-box", transition: "border-color 0.15s",
                 }}
-                onFocus={e => (e.target.style.borderColor = "rgba(249,115,22,0.5)")}
+                onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
                 onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
               />
             </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                   color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15,
                   outline: "none", boxSizing: "border-box", transition: "border-color 0.15s",
                 }}
-                onFocus={e => (e.target.style.borderColor = "rgba(249,115,22,0.5)")}
+                onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
                 onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
               />
             </div>
@@ -115,11 +115,11 @@ export default function LoginPage() {
               style={{
                 marginTop: 8, padding: "14px 20px", borderRadius: 12, border: "none",
                 cursor: loading ? "not-allowed" : "pointer",
-                background: loading ? "rgba(249,115,22,0.4)" : "linear-gradient(135deg, #f97316, #ea580c)",
+                background: loading ? "rgba(31,174,181,0.4)" : "linear-gradient(135deg, #1FAEB5, #0E5FA8)",
                 color: "#fff", fontFamily: "Heebo, sans-serif", fontWeight: 800, fontSize: 16,
                 letterSpacing: "-0.01em",
                 transition: "opacity 0.2s, transform 0.15s",
-                boxShadow: loading ? "none" : "0 4px 20px rgba(249,115,22,0.35)",
+                boxShadow: loading ? "none" : "0 4px 20px rgba(14,95,168,0.28)",
               }}
               onMouseEnter={e => { if (!loading) (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
               onMouseLeave={e => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
           <p style={{ textAlign: "center", marginTop: 24, fontFamily: "Heebo, sans-serif", fontSize: 14, color: "rgba(232,244,246,0.32)" }}>
             אין לך חשבון?{" "}
-            <a href="/signup" style={{ color: "#f97316", fontWeight: 700, textDecoration: "none" }}>הרשם חינם</a>
+            <a href="/signup" style={{ color: "#1FAEB5", fontWeight: 700, textDecoration: "none" }}>הרשם חינם</a>
           </p>
         </div>
 

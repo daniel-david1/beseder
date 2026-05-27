@@ -178,7 +178,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
                 <button
                   onClick={() => { setBrandType("regular"); }}
                   className="rounded-xl border-2 px-3 py-3 text-right transition-all"
-                  style={{ borderColor: brandType === "regular" ? "#f97316" : "#e5e7eb", background: brandType === "regular" ? "#fff7ed" : "#f9fafb" }}
+                  style={{ borderColor: brandType === "regular" ? "#1FAEB5" : "#e5e7eb", background: brandType === "regular" ? "#f0f7fa" : "#f9fafb" }}
                 >
                   <div className="text-lg mb-0.5">🚀</div>
                   <div className="text-sm font-bold text-gray-800">מותג / פרויקט</div>
