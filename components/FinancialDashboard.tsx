@@ -150,42 +150,59 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       );
     }
 
+    const monthsLeft = Math.max(0, loan.totalMonths - loan.paidMonths);
+    const barColor = isDone ? "#16a34a" : pct >= 66 ? "#16a34a" : pct >= 33 ? "#f97316" : "#dc2626";
+    const amountColor = isDone ? "#16a34a" : "#dc2626";
+
     return (
-      <div className={`flex items-center gap-3 py-3 px-1 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors ${isDone ? "opacity-60" : ""}`}>
-        <div className="flex-1 text-right min-w-0">
-          <div className="font-semibold text-gray-800 text-sm flex items-center gap-1.5 justify-end">
-            {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">✓ שולם</span>}
-            {loan.name}
+      <div className={`py-4 px-1 border-b border-gray-100 group hover:bg-gray-50/40 transition-colors rounded-lg ${isDone ? "opacity-55" : ""}`}>
+        {/* Row 1: Name (right) + Amount (left) */}
+        <div className="flex items-start justify-between mb-2.5">
+          <div className="text-right">
+            <div className="flex items-center gap-2 justify-end">
+              {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">✓ שולם</span>}
+              <span className="font-bold text-gray-900 text-base">{loan.name}</span>
+            </div>
+            <div className="text-xs text-gray-400 mt-0.5">{ils(loan.monthlyPayment)}/חודש</div>
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            {ils(loan.monthlyPayment)}/חודש · {loan.paidMonths}/{loan.totalMonths} · נותר {Math.max(0, loan.totalMonths - loan.paidMonths)} חודשים
+          <div className="text-left flex-shrink-0">
+            <div className="font-black text-xl leading-tight" style={{ color: amountColor }}>{ils(remaining)}</div>
+            <div className="text-[11px] text-gray-400 mt-0.5">
+              {isDone ? "הסתיים" : `${monthsLeft} חודשים נותרים`}
+            </div>
           </div>
         </div>
-        <div className="w-20 flex-shrink-0">
-          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 100 ? "#16a34a" : "#0d9488" }} />
+
+        {/* Row 2: Full-width progress bar */}
+        <div className="mb-1.5">
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${pct}%`, background: barColor }}
+            />
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5 text-center">{pct}%</div>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="font-black text-sm" style={{ color: isDone ? "#16a34a" : "#dc2626" }}>{ils(remaining)}</span>
-          <span className="text-[10px] text-gray-400">נותר</span>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+        {/* Row 3: Stats + actions */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
             {!isDone && (
               <button
-                title="הוסף תשלום אחד"
                 onClick={() => advanceLoanOne(loan.id)}
-                className="px-2 h-6 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold whitespace-nowrap transition-colors"
+                className="px-2.5 h-6 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 flex items-center justify-center text-[11px] font-bold transition-colors"
               >
-                +תשלום
+                + תשלום
               </button>
             )}
             <button
-              className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors"
               onClick={() => setEditingLoan(loan.id)}
-            >
-              ✏️
-            </button>
+              className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors"
+            >✏️</button>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span className="font-medium" style={{ color: barColor }}>{pct}%</span>
+            <span>·</span>
+            <span>{loan.paidMonths}/{loan.totalMonths} חודשים</span>
           </div>
         </div>
       </div>
