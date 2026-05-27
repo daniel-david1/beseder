@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brand, Project, SubProject, Channel, Stage, StageStatus } from "@/lib/types";
+import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus } from "@/lib/types";
 import { loadBrands, saveBrands, createStage, loadBrandsFromCloud } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import ProjectPipeline from "@/components/ProjectPipeline";
@@ -248,6 +248,188 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Goals panel ─────────────────────────────────────── */
+const GOAL_STATUS: Record<BrandGoal["status"], { label: string; bg: string; text: string }> = {
+  "on-track": { label: "במסלול ✅", bg: "#dcfce7", text: "#15803d" },
+  "at-risk":  { label: "בסיכון ⚠️",  bg: "#fef9c3", text: "#a16207" },
+  "done":     { label: "הושלם 🎉",   bg: "#f3e8ff", text: "#7e22ce" },
+};
+
+function GoalsPanel({ goals, color, onChange }: {
+  goals: BrandGoal[];
+  color: string;
+  onChange: (goals: BrandGoal[]) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [newText, setNewText] = useState("");
+  const [newEmoji, setNewEmoji] = useState("🎯");
+  const [newDeadline, setNewDeadline] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const addGoal = () => {
+    if (!newText.trim()) return;
+    const goal: BrandGoal = {
+      id: uuidv4(), text: newText.trim(), emoji: newEmoji,
+      status: "on-track", deadline: newDeadline || undefined,
+    };
+    onChange([...goals, goal]);
+    setNewText(""); setNewEmoji("🎯"); setNewDeadline(""); setAdding(false);
+  };
+
+  const updateGoal = (id: string, patch: Partial<BrandGoal>) => {
+    onChange(goals.map(g => g.id === id ? { ...g, ...patch } : g));
+  };
+
+  const deleteGoal = (id: string) => {
+    onChange(goals.filter(g => g.id !== id));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="font-black text-gray-800 text-base flex items-center gap-2">
+          🎯 המטרות שלי
+          <span className="text-xs font-normal text-gray-400">— שמור את הפוקוס</span>
+        </h2>
+        {!adding && (
+          <button
+            onClick={() => setAdding(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors"
+            style={{ borderColor: color + "40", color, background: color + "10" }}
+          >
+            + הוסף מטרה
+          </button>
+        )}
+      </div>
+
+      {goals.length === 0 && !adding && (
+        <div
+          className="rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer hover:opacity-80 transition-opacity"
+          style={{ borderColor: color + "30", background: color + "06" }}
+          onClick={() => setAdding(true)}
+        >
+          <div className="text-3xl mb-2">🎯</div>
+          <p className="text-sm text-gray-400 font-medium">הוסף מטרה כדי שלא תסטה</p>
+        </div>
+      )}
+
+      {goals.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {goals.map(g => (
+            <div
+              key={g.id}
+              className="rounded-2xl border bg-white p-4 flex flex-col gap-2.5 shadow-sm hover:shadow-md transition-shadow"
+              style={{ borderColor: color + "25" }}
+            >
+              {editingId === g.id ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={g.emoji}
+                      onChange={e => updateGoal(g.id, { emoji: e.target.value })}
+                      className="w-12 text-center text-xl border border-gray-200 rounded-lg p-1 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                    />
+                    <input
+                      value={g.text}
+                      onChange={e => updateGoal(g.id, { text: e.target.value })}
+                      className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={g.status}
+                      onChange={e => updateGoal(g.id, { status: e.target.value as BrandGoal["status"] })}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-400 flex-1"
+                    >
+                      <option value="on-track">במסלול ✅</option>
+                      <option value="at-risk">בסיכון ⚠️</option>
+                      <option value="done">הושלם 🎉</option>
+                    </select>
+                    <input
+                      type="date"
+                      value={g.deadline ?? ""}
+                      onChange={e => updateGoal(g.id, { deadline: e.target.value || undefined })}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                    />
+                    <button onClick={() => setEditingId(null)} className="text-xs font-bold text-teal-600 px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors">
+                      שמור
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2.5 flex-1">
+                      <span className="text-2xl leading-none mt-0.5">{g.emoji}</span>
+                      <p className="text-sm font-semibold text-gray-800 leading-snug flex-1">{g.text}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => setEditingId(g.id)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
+                      <button onClick={() => deleteGoal(g.id)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold transition-colors">×</button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => {
+                        const statuses: BrandGoal["status"][] = ["on-track", "at-risk", "done"];
+                        const next = statuses[(statuses.indexOf(g.status) + 1) % statuses.length];
+                        updateGoal(g.id, { status: next });
+                      }}
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full transition-all hover:opacity-80"
+                      style={{ background: GOAL_STATUS[g.status].bg, color: GOAL_STATUS[g.status].text }}
+                    >
+                      {GOAL_STATUS[g.status].label}
+                    </button>
+                    {g.deadline && (
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        📅 {new Date(g.deadline).toLocaleDateString("he-IL")}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {adding && (
+        <div className="rounded-2xl border-2 p-4 space-y-3 bg-white shadow-sm" style={{ borderColor: color + "40" }}>
+          <div className="flex items-center gap-2">
+            <input
+              value={newEmoji}
+              onChange={e => setNewEmoji(e.target.value)}
+              placeholder="🎯"
+              className="w-12 text-center text-xl border border-gray-200 rounded-lg p-1 focus:outline-none focus:ring-1 focus:ring-teal-400"
+            />
+            <input
+              value={newText}
+              onChange={e => setNewText(e.target.value)}
+              placeholder="לדוגמה: 100,000 משתמשים"
+              autoFocus
+              onKeyDown={e => { if (e.key === "Enter") addGoal(); if (e.key === "Escape") setAdding(false); }}
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={newDeadline}
+              onChange={e => setNewDeadline(e.target.value)}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
+            />
+            <span className="text-xs text-gray-400">תאריך יעד (אופציונלי)</span>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={addGoal} className="btn btn-orange text-sm flex-1">הוסף מטרה</button>
+            <button onClick={() => { setAdding(false); setNewText(""); setNewEmoji("🎯"); setNewDeadline(""); }} className="btn btn-ghost text-sm">ביטול</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1160,6 +1342,13 @@ export default function Dashboard() {
               </div>
             );
           })()}
+
+          {/* Goals panel */}
+          <GoalsPanel
+            goals={activeBrand.goals ?? []}
+            color={activeBrand.color}
+            onChange={goals => syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, goals } : b))}
+          />
 
           {/* Projects grid */}
           {projects.length === 0 ? (

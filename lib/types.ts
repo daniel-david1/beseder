@@ -42,6 +42,14 @@ export interface SubProject {
   incomes?: StageExpense[];
 }
 
+export interface BrandGoal {
+  id: string;
+  text: string;
+  emoji: string;
+  status: 'on-track' | 'at-risk' | 'done';
+  deadline?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -60,6 +68,7 @@ export interface Brand {
   description: string;
   logo?: string;
   projects: Project[];
+  goals?: BrandGoal[];
   createdAt: string;
 }
 
