@@ -722,13 +722,16 @@ export default function Dashboard() {
     const local = loadBrands();
     setBrands(local);
     setLoaded(true);
-    // sync from cloud — overrides local if cloud has data
+    // sync from cloud — cloud wins if it has data; else push local to cloud
     loadBrandsFromCloud().then(cloud => {
       if (cloud && cloud.length > 0) {
         setBrands(cloud);
         if (typeof window !== "undefined") {
           localStorage.setItem("vaachalta_brands_v1", JSON.stringify(cloud));
         }
+      } else if (local.length > 0) {
+        // first login — upload existing local data to cloud
+        saveBrands(local);
       }
     });
   }, []);
