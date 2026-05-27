@@ -46,6 +46,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
   const [color,       setColor]       = useState(existing?.color       ?? "#f97316");
   const [description, setDescription] = useState(existing?.description ?? "");
   const [goal,        setGoal]        = useState("");
+  const [brandType,   setBrandType]   = useState<"regular" | "financial">("regular");
 
   /* AI state */
   const [depts, setDepts]     = useState<AIDept[]>([]);
@@ -170,47 +171,82 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
           </div>
 
           <div className="px-6 py-5 space-y-5">
-            {/* Emoji */}
+            {/* Brand type selector */}
             <div>
-              <label>אייקון</label>
-              <div className="grid grid-cols-10 gap-1 mt-1">
-                {EMOJIS.map(e => <button key={e} onClick={() => setEmoji(e)} className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}>{e}</button>)}
+              <label>סוג</label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <button
+                  onClick={() => { setBrandType("regular"); }}
+                  className="rounded-xl border-2 px-3 py-3 text-right transition-all"
+                  style={{ borderColor: brandType === "regular" ? "#f97316" : "#e5e7eb", background: brandType === "regular" ? "#fff7ed" : "#f9fafb" }}
+                >
+                  <div className="text-lg mb-0.5">🚀</div>
+                  <div className="text-sm font-bold text-gray-800">מותג / פרויקט</div>
+                  <div className="text-xs text-gray-400">שלבים, ערוצים, AI</div>
+                </button>
+                <button
+                  onClick={() => { setBrandType("financial"); setEmoji("💰"); setColor("#10b981"); if (!name) setName("פיננסי אישי"); }}
+                  className="rounded-xl border-2 px-3 py-3 text-right transition-all"
+                  style={{ borderColor: brandType === "financial" ? "#10b981" : "#e5e7eb", background: brandType === "financial" ? "#f0fdf4" : "#f9fafb" }}
+                >
+                  <div className="text-lg mb-0.5">💰</div>
+                  <div className="text-sm font-bold text-gray-800">פיננסי אישי</div>
+                  <div className="text-xs text-gray-400">הלוואות, נכסים, הוצאות</div>
+                </button>
               </div>
             </div>
 
             {/* Name */}
             <div>
-              <label>שם המותג / הפרויקט *</label>
-              <input className="input text-base font-semibold" value={name} onChange={e => setName(e.target.value)} placeholder="לדוגמה: ואכלת, קמפיין חגים..." autoFocus />
+              <label>שם *</label>
+              <input className="input text-base font-semibold" value={name} onChange={e => setName(e.target.value)} placeholder={brandType === "financial" ? "פיננסי אישי" : "לדוגמה: ואכלת, קמפיין חגים..."} autoFocus />
             </div>
 
-            {/* Description */}
-            <div>
-              <label>תיאור קצר</label>
-              <input className="input" value={description} onChange={e => setDescription(e.target.value)} placeholder="מה זה בגדול?" />
-            </div>
+            {brandType === "regular" && (
+              <>
+                {/* Emoji */}
+                <div>
+                  <label>אייקון</label>
+                  <div className="grid grid-cols-10 gap-1 mt-1">
+                    {EMOJIS.map(e => <button key={e} onClick={() => setEmoji(e)} className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}>{e}</button>)}
+                  </div>
+                </div>
 
-            {/* Goal — the AI key */}
-            <div>
-              <label>
-                מה המטרה שלך? *
-                <span className="text-xs font-normal text-teal-500 mr-1">— ה-AI ייצור מחלקות לפי זה</span>
-              </label>
-              <textarea
-                className="input min-h-[80px] resize-none"
-                value={goal}
-                onChange={e => setGoal(e.target.value)}
-                placeholder="לדוגמה: להגיע ל-100,000 משתמשים, להשיק קמפיין פרסומי, לנהל 10 לקוחות עם הכנסה של 20,000₪ לחודש..."
-              />
-            </div>
+                {/* Description */}
+                <div>
+                  <label>תיאור קצר</label>
+                  <input className="input" value={description} onChange={e => setDescription(e.target.value)} placeholder="מה זה בגדול?" />
+                </div>
 
-            {/* Color */}
-            <div>
-              <label>צבע מותג</label>
-              <div className="flex gap-2 mt-1">
-                {COLORS.map(c => <button key={c} onClick={() => setColor(c)} className="w-8 h-8 rounded-full transition-all" style={{ background: c, transform: color === c ? "scale(1.2)" : "scale(1)", outline: color === c ? `3px solid ${c}` : "none", outlineOffset: "2px" }} />)}
+                {/* Goal — the AI key */}
+                <div>
+                  <label>
+                    מה המטרה שלך? *
+                    <span className="text-xs font-normal text-teal-500 mr-1">— ה-AI ייצור מחלקות לפי זה</span>
+                  </label>
+                  <textarea
+                    className="input min-h-[80px] resize-none"
+                    value={goal}
+                    onChange={e => setGoal(e.target.value)}
+                    placeholder="לדוגמה: להגיע ל-100,000 משתמשים, להשיק קמפיין פרסומי, לנהל 10 לקוחות עם הכנסה של 20,000₪ לחודש..."
+                  />
+                </div>
+
+                {/* Color */}
+                <div>
+                  <label>צבע מותג</label>
+                  <div className="flex gap-2 mt-1">
+                    {COLORS.map(c => <button key={c} onClick={() => setColor(c)} className="w-8 h-8 rounded-full transition-all" style={{ background: c, transform: color === c ? "scale(1.2)" : "scale(1)", outline: color === c ? `3px solid ${c}` : "none", outlineOffset: "2px" }} />)}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {brandType === "financial" && (
+              <div className="rounded-xl p-3 text-sm text-emerald-700" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                יוצר דשבורד פיננסי עם מעקב הלוואות, נכסים, הכנסות והוצאות — תוכל להוסיף את הנתונים שלך מיד.
               </div>
-            </div>
+            )}
 
             {aiError && (
               <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">{aiError}</div>
@@ -218,22 +254,35 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
           </div>
 
           <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-2 sticky bottom-0 bg-white rounded-b-2xl">
-            <button
-              onClick={fetchSuggestions}
-              disabled={!name.trim() || !goal.trim()}
-              className="btn btn-orange w-full"
-              style={{ opacity: name.trim() && goal.trim() ? 1 : 0.5 }}
-            >
-              ✨ קבל המלצות AI למחלקות
-            </button>
-            <button
-              onClick={handleSaveSimple}
-              disabled={!name.trim()}
-              className="btn btn-ghost w-full text-sm"
-              style={{ opacity: name.trim() ? 1 : 0.5 }}
-            >
-              צור מותג ריק (ללא AI)
-            </button>
+            {brandType === "financial" ? (
+              <button
+                onClick={handleSaveSimple}
+                disabled={!name.trim()}
+                className="btn btn-orange w-full"
+                style={{ opacity: name.trim() ? 1 : 0.5, background: "#10b981" }}
+              >
+                💰 צור דשבורד פיננסי
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={fetchSuggestions}
+                  disabled={!name.trim() || !goal.trim()}
+                  className="btn btn-orange w-full"
+                  style={{ opacity: name.trim() && goal.trim() ? 1 : 0.5 }}
+                >
+                  ✨ קבל המלצות AI למחלקות
+                </button>
+                <button
+                  onClick={handleSaveSimple}
+                  disabled={!name.trim()}
+                  className="btn btn-ghost w-full text-sm"
+                  style={{ opacity: name.trim() ? 1 : 0.5 }}
+                >
+                  צור מותג ריק (ללא AI)
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
