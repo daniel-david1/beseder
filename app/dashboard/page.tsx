@@ -464,23 +464,7 @@ function TopNav({ userEmail }: { userEmail: string }) {
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
       <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <svg width="22" height="22" viewBox="0 0 52 52" fill="none">
-            <rect width="52" height="52" rx="13" fill="url(#ng)"/>
-            <rect x="10" y="12" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
-            <rect x="10" y="23" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
-            <rect x="10" y="34" width="28" height="6" rx="3" fill="#fff" opacity="0.65"/>
-            <defs>
-              <linearGradient id="ng" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#1FAEB5"/><stop offset="1" stopColor="#0E5FA8"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <span className="font-bold text-gray-900 text-base tracking-tight" style={{ fontFamily: "Sora, sans-serif" }}>beseder</span>
-        </div>
-
-        {/* User menu */}
+        {/* User menu — right side in RTL */}
         <div className="relative" ref={ref}>
           <button
             onClick={() => setOpen(v => !v)}
@@ -498,7 +482,7 @@ function TopNav({ userEmail }: { userEmail: string }) {
           </button>
 
           {open && (
-            <div className="absolute left-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden animate-in"
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden animate-in"
               style={{ animation: "fadeSlideDown 0.15s ease-out" }}
             >
               {/* User info */}
@@ -529,6 +513,22 @@ function TopNav({ userEmail }: { userEmail: string }) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Logo — left side in RTL */}
+        <div dir="ltr" className="flex items-center gap-2.5">
+          <svg width="20" height="20" viewBox="0 0 52 52" fill="none">
+            <rect width="52" height="52" rx="13" fill="url(#ng)"/>
+            <rect x="10" y="12" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
+            <rect x="10" y="23" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
+            <rect x="10" y="34" width="28" height="6" rx="3" fill="#fff" opacity="0.65"/>
+            <defs>
+              <linearGradient id="ng" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#1FAEB5"/><stop offset="1" stopColor="#0E5FA8"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="font-bold text-gray-900 text-base tracking-tight" style={{ fontFamily: "Sora, sans-serif" }}>beseder</span>
         </div>
       </div>
     </nav>
