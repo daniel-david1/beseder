@@ -42,11 +42,7 @@ export function loadBrands(): Brand[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) {
-      const initial = [buildSampleBrand()];
-      localStorage.setItem(KEY, JSON.stringify(initial));
-      return initial;
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as Brand[];
     return parsed.map(b => ({
       ...b,
@@ -113,69 +109,7 @@ export function createProject(order: number): Project {
 const FIN_KEY = "beseder_financial_v1";
 
 function defaultFinancialData(): FinancialData {
-  const uid = () => Math.random().toString(36).slice(2);
-  return {
-    loans: [
-      { id: uid(), name: "רכב",             principal: 46600,  monthlyPayment: 1361.33, paidMonths: 3,  totalMonths: 36  },
-      { id: uid(), name: "כאל מזרחי מורשה", principal: 50000,  monthlyPayment: 2272.78, paidMonths: 1,  totalMonths: 24  },
-      { id: uid(), name: "מזרחי פרטי",      principal: 38000,  monthlyPayment: 820.66,  paidMonths: 4,  totalMonths: 60  },
-      { id: uid(), name: "מזרחי עסקי",      principal: 115313, monthlyPayment: 2520.22, paidMonths: 3,  totalMonths: 60  },
-      { id: uid(), name: "בנק פועלים",      principal: 110000, monthlyPayment: 1250.61, paidMonths: 15, totalMonths: 120 },
-      { id: uid(), name: "כאל",             principal: 17500,  monthlyPayment: 1587.79, paidMonths: 0,  totalMonths: 12  },
-      { id: uid(), name: "איתי מתכנת",      principal: 48020,  monthlyPayment: 1000,    paidMonths: 1,  totalMonths: 50  },
-    ],
-    expenses: [
-      { id: uid(), name: "ביטוח מקף",      amount: 1547, frequency: "monthly" },
-      { id: uid(), name: "שכירות",          amount: 5500, frequency: "monthly" },
-      { id: uid(), name: "כרטיסי אשראי",   amount: 6000, frequency: "monthly" },
-      { id: uid(), name: "שונות",           amount: 2000, frequency: "monthly" },
-    ],
-    incomes: [],
-    properties: [
-      {
-        id: uid(),
-        name: "דב יוסף 11, באר שבע",
-        purchasePrice: 1000000,
-        incomes: [
-          { id: uid(), name: "מאשה (יחידה אמצעית)", amount: 2600 },
-          { id: uid(), name: "הגר (יחידה תחתית)",   amount: 2500 },
-          { id: uid(), name: "אגם (יחידה תחתית)",   amount: 2300 },
-        ],
-        expenses: [
-          { id: uid(), name: "ארנונה", amount: 385,  frequency: "monthly" },
-          { id: uid(), name: "חשמל",   amount: 335,  frequency: "monthly" },
-        ],
-        liabilities: [],
-      },
-      {
-        id: uid(),
-        name: "VIE קומה 12 (1125)",
-        purchasePrice: 1357000,
-        incomes: [],
-        expenses: [],
-        liabilities: [
-          { id: uid(), name: "שרון - עורך דין",    totalDebt: 5900,    monthlyPayment: 2950, paidSoFar: 14160 },
-          { id: uid(), name: "ישראל - משכנתא",    totalDebt: 1180,    monthlyPayment: 1180, paidSoFar: 1180  },
-          { id: uid(), name: "בנימין סבג - תיווך", totalDebt: 50740,   monthlyPayment: 0,    paidSoFar: 0     },
-          { id: uid(), name: "שלום גבאי - יזם",   totalDebt: 784700,  monthlyPayment: 0,    paidSoFar: 0     },
-          { id: uid(), name: "בלדי - קבלן",        totalDebt: 469000,  monthlyPayment: 3300, paidSoFar: 35400 },
-          { id: uid(), name: "מס רכישה",           totalDebt: 27303,   monthlyPayment: 0,    paidSoFar: 0     },
-        ],
-      },
-      {
-        id: uid(),
-        name: "VIE קומה 11 (1222)",
-        purchasePrice: 1062000,
-        incomes: [],
-        expenses: [],
-        liabilities: [
-          { id: uid(), name: "שלום גבאי - יזם", totalDebt: 445000, monthlyPayment: 0,    paidSoFar: 0     },
-          { id: uid(), name: "בלדי - קבלן",      totalDebt: 549100, monthlyPayment: 3300, paidSoFar: 67900 },
-          { id: uid(), name: "מס רכישה",         totalDebt: 27303,  monthlyPayment: 0,    paidSoFar: 0     },
-        ],
-      },
-    ],
-  };
+  return { loans: [], expenses: [], incomes: [], properties: [] };
 }
 
 export function loadFinancialData(): FinancialData {
