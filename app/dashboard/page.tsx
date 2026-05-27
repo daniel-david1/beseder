@@ -835,8 +835,10 @@ export default function Dashboard() {
           localStorage.setItem("vaachalta_brands_v1", JSON.stringify(cloud));
         }
       } else if (local.length > 0) {
-        // first login — upload existing local data to cloud
         saveBrands(local);
+      } else {
+        // brand new user — auto-open wizard
+        setTimeout(() => setShowBrandModal(true), 400);
       }
     });
   }, []);
@@ -1514,11 +1516,31 @@ export default function Dashboard() {
         </div>
 
         {brands.length === 0 ? (
-          <div className="card p-16 text-center">
-            <div className="text-5xl mb-3">🏢</div>
-            <h2 className="font-black text-gray-800 text-xl mb-2">צור את המותג הראשון שלך</h2>
-            <p className="text-gray-400 mb-5 text-sm max-w-xs mx-auto">כל מותג מכיל פרויקטים, כל פרויקט — מחלקות ושלבים</p>
-            <button onClick={() => setShowBrandModal(true)} className="btn btn-orange text-base px-8 py-3">+ צור מותג</button>
+          <div className="flex flex-col items-center justify-center py-20 text-center max-w-lg mx-auto">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-4xl mb-6 shadow-lg shadow-teal-200">🏢</div>
+            <h2 className="font-black text-gray-900 text-2xl mb-3">ברוך הבא ל-beseder</h2>
+            <p className="text-gray-400 text-base leading-relaxed mb-8 max-w-sm">
+              הכל מתחיל ממותג. תן שם לעסק שלך, הגדר מטרה — ה-AI ייצור לך מחלקות ושלבים מוכנים.
+            </p>
+            <button
+              onClick={() => setShowBrandModal(true)}
+              className="btn btn-orange text-base px-10 py-3.5 shadow-lg shadow-orange-200"
+            >
+              ✨ צור מותג ראשון
+            </button>
+            <div className="mt-10 grid grid-cols-3 gap-4 w-full">
+              {[
+                { emoji: "🎯", title: "מטרות ברורות", desc: "הגדר KPIs לכל שלב" },
+                { emoji: "🤖", title: "AI wizard", desc: "קבל מבנה מוכן תוך שניות" },
+                { emoji: "💸", title: "ניהול פיננסי", desc: "הוצאות, הכנסות, הלוואות" },
+              ].map(f => (
+                <div key={f.title} className="card p-4 text-center">
+                  <div className="text-2xl mb-2">{f.emoji}</div>
+                  <div className="font-bold text-gray-800 text-xs mb-1">{f.title}</div>
+                  <div className="text-gray-400 text-xs leading-relaxed">{f.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">

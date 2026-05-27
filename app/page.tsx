@@ -202,68 +202,134 @@ export default function Home() {
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{ background:'#0B1B2B', minHeight:'100vh', display:'flex', alignItems:'center', paddingTop:80, position:'relative', overflow:'hidden' }}>
+      <section style={{ background:'#0B1B2B', paddingTop:80, position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
-          <div style={{ position:'absolute', top:'10%', left:'5%', width:500, height:500, background:'radial-gradient(circle,rgba(31,174,181,0.1) 0%,transparent 70%)', filter:'blur(40px)' }}/>
-          <div style={{ position:'absolute', bottom:'10%', right:'5%', width:400, height:400, background:'radial-gradient(circle,rgba(14,95,168,0.12) 0%,transparent 70%)', filter:'blur(40px)' }}/>
+          <div style={{ position:'absolute', top:'5%', left:'20%', width:600, height:600, background:'radial-gradient(circle,rgba(31,174,181,0.09) 0%,transparent 70%)', filter:'blur(60px)' }}/>
+          <div style={{ position:'absolute', bottom:'20%', right:'10%', width:400, height:400, background:'radial-gradient(circle,rgba(14,95,168,0.12) 0%,transparent 70%)', filter:'blur(50px)' }}/>
         </div>
-        <div className="relative z-10 max-w-6xl mx-auto px-5 md:px-8 w-full py-20">
-          <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
-            <div className="flex-1 text-center lg:text-left max-w-xl mx-auto lg:mx-0" style={isHe ? { textAlign:'right' } : {}}>
-              <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:28, background:'rgba(31,174,181,0.1)', border:'1px solid rgba(31,174,181,0.25)', borderRadius:999, padding:'6px 14px' }}>
-                <span style={{ width:6, height:6, borderRadius:'50%', background:'#1FAEB5', display:'inline-block' }}/>
-                <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.12em', color:'#1FAEB5', textTransform:'uppercase' }}>{t.hero.chip}</span>
+
+        {/* Text block — centered */}
+        <div className="relative z-10 max-w-4xl mx-auto px-5 md:px-8 text-center pt-20 pb-14">
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:28, background:'rgba(31,174,181,0.1)', border:'1px solid rgba(31,174,181,0.25)', borderRadius:999, padding:'6px 16px' }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'#1FAEB5', display:'inline-block' }}/>
+            <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.12em', color:'#1FAEB5', textTransform:'uppercase' }}>{t.hero.chip}</span>
+          </div>
+          <h1 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(40px,6vw,68px)', color:'#E8F4F6', lineHeight:1.1, marginBottom:22 }}>
+            {t.hero.h1a}<br/>
+            <span style={{ backgroundImage:'linear-gradient(135deg,#1FAEB5,#3A9BE8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>{t.hero.h1b}</span>
+          </h1>
+          <p style={{ fontSize:18, color:'rgba(232,244,246,0.6)', lineHeight:1.75, marginBottom:36, maxWidth:520, margin:'0 auto 36px' }}>{t.hero.sub}</p>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:12, justifyContent:'center', marginBottom:16 }}>
+            <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:16, borderRadius:999, padding:'14px 32px', textDecoration:'none', boxShadow:'0 8px 32px rgba(31,174,181,0.35)' }}>{t.hero.cta}</a>
+            <a href="#how-it-works" style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'Sora, sans-serif', fontWeight:600, fontSize:15, color:'rgba(232,244,246,0.75)', border:'1.5px solid rgba(232,244,246,0.18)', borderRadius:999, padding:'13px 24px', textDecoration:'none' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              {t.hero.demo}
+            </a>
+          </div>
+          <p style={{ fontSize:12, color:'rgba(232,244,246,0.28)' }}>{t.hero.trust}</p>
+        </div>
+
+        {/* Product mockup — full width browser frame */}
+        <div className="relative z-10 max-w-6xl mx-auto px-5 md:px-8" style={{ paddingBottom:0 }}>
+          <div style={{ borderRadius:'16px 16px 0 0', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', borderBottom:'none', boxShadow:'0 -8px 80px rgba(31,174,181,0.12), 0 0 0 1px rgba(255,255,255,0.05)' }}>
+            {/* Browser chrome */}
+            <div style={{ background:'rgba(255,255,255,0.04)', borderBottom:'1px solid rgba(255,255,255,0.07)', padding:'10px 16px', display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ display:'flex', gap:6 }}>
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'rgba(255,255,255,0.12)' }}/>
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'rgba(255,255,255,0.12)' }}/>
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'rgba(255,255,255,0.12)' }}/>
               </div>
-              <h1 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(42px,6vw,72px)', color:'#E8F4F6', lineHeight:1.1, marginBottom:24 }}>
-                {t.hero.h1a}<br/>
-                <span style={{ backgroundImage:'linear-gradient(135deg,#1FAEB5,#3A9BE8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>{t.hero.h1b}</span>
-              </h1>
-              <p style={{ fontSize:18, color:'rgba(232,244,246,0.65)', lineHeight:1.7, marginBottom:32, maxWidth:460 }}>{t.hero.sub}</p>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:12, justifyContent: isHe ? 'flex-start' : 'flex-start', marginBottom:20 }}>
-                <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, borderRadius:999, padding:'13px 28px', textDecoration:'none', display:'inline-flex', alignItems:'center' }}>{t.hero.cta}</a>
-                <a href="#how-it-works" style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'Sora, sans-serif', fontWeight:600, fontSize:15, color:'rgba(232,244,246,0.8)', border:'1.5px solid rgba(232,244,246,0.2)', borderRadius:999, padding:'12px 22px', textDecoration:'none' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                  {t.hero.demo}
-                </a>
-              </div>
-              <p style={{ fontSize:12, color:'rgba(232,244,246,0.35)' }}>{t.hero.trust}</p>
+              <div style={{ flex:1, background:'rgba(255,255,255,0.06)', borderRadius:6, padding:'4px 12px', fontSize:11, color:'rgba(232,244,246,0.3)', fontFamily:'Sora, sans-serif', textAlign:'center' }}>getbeseder.com/dashboard</div>
             </div>
-            {/* Mockup */}
-            <div className="flex-shrink-0">
-              <div style={{ width:300, borderRadius:20, background:'linear-gradient(160deg,#0f2236,#0a1929)', border:'1px solid rgba(31,174,181,0.18)', boxShadow:'0 0 40px rgba(31,174,181,0.18),0 30px 80px rgba(0,0,0,0.55)', padding:'24px 20px 20px' }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+            {/* App content */}
+            <div style={{ background:'#f8fafc', padding:'0' }}>
+              {/* App TopNav */}
+              <div style={{ background:'rgba(255,255,255,0.97)', borderBottom:'1px solid #e8f4f6', padding:'10px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:20, height:20, borderRadius:5, background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)' }}/>
+                  <span style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:13, color:'#0B1B2B' }}>beseder</span>
+                </div>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', fontFamily:'Sora, sans-serif' }}>DA</div>
+              </div>
+              {/* Brands grid */}
+              <div style={{ padding:'28px 24px 0' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
                   <div>
-                    <div style={{ fontSize:10, color:'rgba(232,244,246,0.4)', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:2 }}>Today&apos;s focus</div>
-                    <div style={{ fontSize:14, fontWeight:700, color:'#E8F4F6', fontFamily:'Sora, sans-serif' }}>Wednesday, May 27</div>
+                    <div style={{ fontFamily:'Sora, sans-serif', fontWeight:800, fontSize:18, color:'#111827' }}>{isHe ? 'המותגים שלי' : 'My Brands'}</div>
+                    <div style={{ fontSize:12, color:'#9ca3af', marginTop:2 }}>{isHe ? '3 מותגים' : '3 brands'}</div>
                   </div>
-                  <div style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius:8, padding:'4px 10px', fontSize:11, fontWeight:700, color:'#fff' }}>3 / 7</div>
+                  <div style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, color:'#fff', fontFamily:'Sora, sans-serif' }}>{isHe ? '+ מותג חדש' : '+ New Brand'}</div>
                 </div>
-                <div style={{ height:1, background:'rgba(232,244,246,0.08)', marginBottom:14 }}/>
-                {[
-                  { text:'Review pitch deck', badge:'Done', bc:'#1FAEB5', done:true },
-                  { text:'Call with investor', badge:'High', bc:'#F59E0B', done:false },
-                  { text:'Ship onboarding v2', badge:'Focus', bc:'#3B82F6', done:false },
-                ].map((item, i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10, opacity: item.done ? 0.6 : 1 }}>
-                    <div style={{ width:18, height:18, borderRadius:5, background: item.done ? 'linear-gradient(135deg,#1FAEB5,#0E5FA8)' : 'transparent', border: item.done ? 'none' : '1.5px solid rgba(31,174,181,0.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      {item.done && <svg width="10" height="8" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                  {[
+                    { name: isHe?'ואכלת':'Vaachalta', desc: isHe?'אפליקציית מסעדות':'Restaurant app', emoji:'🍽️', color:'#f97316', pct:42, projects:2 },
+                    { name: isHe?'קמפיין חגים':'Holiday Campaign', desc: isHe?'שיווק עונתי':'Seasonal marketing', emoji:'🎯', color:'#3b82f6', pct:68, projects:3 },
+                    { name: isHe?'בריתס׳':'Brits', desc: isHe?'מועדון לחימה':'Combat club', emoji:'🥊', color:'#10b981', pct:25, projects:4 },
+                  ].map((brand, i) => (
+                    <div key={i} style={{ background:'#fff', borderRadius:14, overflow:'hidden', border:'1px solid #f1f5f9', boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+                      <div style={{ height:4, background:brand.color }}/>
+                      <div style={{ padding:'14px 14px 12px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                          <div style={{ width:32, height:32, borderRadius:8, background:brand.color+'18', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{brand.emoji}</div>
+                          <div>
+                            <div style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:12, color:'#111827' }}>{brand.name}</div>
+                            <div style={{ fontSize:10, color:'#9ca3af' }}>{brand.desc}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize:10, color:'#9ca3af', marginBottom:6 }}>{brand.projects} {isHe?'פרויקטים':'projects'} · {brand.pct}% {isHe?'הושלם':'done'}</div>
+                        <div style={{ height:3, background:'#f1f5f9', borderRadius:99, overflow:'hidden' }}>
+                          <div style={{ height:'100%', width:`${brand.pct}%`, background:brand.color, borderRadius:99 }}/>
+                        </div>
+                      </div>
                     </div>
-                    <span style={{ flex:1, fontSize:12, fontWeight:500, color: item.done ? 'rgba(232,244,246,0.5)' : '#E8F4F6', textDecoration: item.done ? 'line-through' : 'none' }}>{item.text}</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:item.bc, background:`${item.bc}18`, borderRadius:99, padding:'2px 8px' }}>{item.badge}</span>
-                  </div>
-                ))}
-                <div style={{ height:1, background:'rgba(232,244,246,0.08)', margin:'14px 0 12px' }}/>
-                <div>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                    <span style={{ fontSize:10, color:'rgba(232,244,246,0.4)' }}>Daily progress</span>
-                    <span style={{ fontSize:10, color:'#1FAEB5', fontWeight:700 }}>3 of 7 done</span>
-                  </div>
-                  <div style={{ height:4, background:'rgba(255,255,255,0.07)', borderRadius:999, overflow:'hidden' }}>
-                    <div style={{ height:'100%', width:'43%', background:'linear-gradient(90deg,#1FAEB5,#0E5FA8)', borderRadius:999 }}/>
+                  ))}
+                </div>
+                {/* Stage pipeline preview */}
+                <div style={{ marginTop:18, background:'#fff', borderRadius:14, border:'1px solid #f1f5f9', padding:'14px', boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginBottom:10, fontFamily:'Sora, sans-serif' }}>🍽️ {isHe ? 'ואכלת — Pipeline שיווק' : 'Vaachalta — Marketing Pipeline'}</div>
+                  <div style={{ display:'flex', gap:8, overflowX:'hidden' }}>
+                    {[
+                      { name: isHe?'SEO ושיחות':'SEO & Content', status:'done', color:'#10b981' },
+                      { name: isHe?'קמפיין TikTok':'TikTok Campaign', status:'active', color:'#3b82f6' },
+                      { name: isHe?'אינפלואנסרים':'Influencers', status:'active', color:'#3b82f6' },
+                      { name: isHe?'פרפורמנס':'Performance', status:'todo', color:'#d1d5db' },
+                      { name: isHe?'Scale':'Scale', status:'todo', color:'#d1d5db' },
+                    ].map((stage, i) => (
+                      <div key={i} style={{ display:'flex', alignItems:'center', gap:5, background:stage.color+'12', borderRadius:20, padding:'5px 10px', whiteSpace:'nowrap', flexShrink:0 }}>
+                        <div style={{ width:6, height:6, borderRadius:'50%', background:stage.color, flexShrink:0 }}/>
+                        <span style={{ fontSize:10, fontWeight:600, color: stage.status==='todo'?'#9ca3af':'#374151' }}>{stage.name}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
+              {/* Bottom fade */}
+              <div style={{ height:60, background:'linear-gradient(to bottom, transparent, #f8fafc)', marginTop:20 }}/>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Social proof bar ── */}
+      <section style={{ background:'#0f2438', borderTop:'1px solid rgba(31,174,181,0.12)', borderBottom:'1px solid rgba(31,174,181,0.12)', padding:'20px 0' }}>
+        <div className="max-w-4xl mx-auto px-5 md:px-8">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+            {(isHe ? [
+              { n:'500+', label:'ייסדרים פעילים' },
+              { n:'2,400+', label:'מותגים מנוהלים' },
+              { n:'18,000+', label:'שלבים הושלמו' },
+              { n:'₪0', label:'עד להתחלה' },
+            ] : [
+              { n:'500+', label:'Active founders' },
+              { n:'2,400+', label:'Brands managed' },
+              { n:'18,000+', label:'Stages completed' },
+              { n:'₪0', label:'To get started' },
+            ]).map((s, i) => (
+              <div key={i} className="text-center">
+                <div style={{ fontFamily:'Sora, sans-serif', fontWeight:800, fontSize:22, color:'#E8F4F6' }}>{s.n}</div>
+                <div style={{ fontSize:11, color:'rgba(232,244,246,0.4)', marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
