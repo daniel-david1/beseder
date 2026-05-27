@@ -524,7 +524,7 @@ function TopNav({ userEmail }: { userEmail: string }) {
 
         {/* Logo — left side in RTL */}
         <div dir="ltr">
-          <img src="/beseder_primary_2x.png" alt="beseder" style={{ height: 28, width: 'auto', display: 'block' }} />
+          <img src="/beseder_primary_2x.png" alt="beseder" style={{ height: 64, width: 'auto', display: 'block', maxWidth: 230, marginTop: -9, marginBottom: -9 }} />
         </div>
       </div>
     </nav>

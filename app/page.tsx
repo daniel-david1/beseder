@@ -138,7 +138,7 @@ function Fade({ children, className = '', delay = 0, style = {} }: { children: R
 
 function Logo({ white: _white }: { white?: boolean }) {
   return (
-    <img src="/beseder_white_2x.png" alt="beseder" style={{ height: 32, width: 'auto', display: 'block' }} />
+    <img src="/beseder_white_2x.png" alt="beseder" style={{ height: 72, width: 'auto', display: 'block', maxWidth: 260, marginTop: -10, marginBottom: -10 }} />
   )
 }
 
