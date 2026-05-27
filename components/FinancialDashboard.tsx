@@ -473,6 +473,11 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <button onClick={onBack} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group">
+            <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">→</span>
+            <span>המותגים שלי</span>
+          </button>
+          <h1 className="font-black text-gray-900 text-lg">💰 {brandName ?? "פיננסי אישי"}</h1>
           <div className="flex items-center gap-2">
             {editingDate ? (
               <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
@@ -482,11 +487,6 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               </button>
             )}
           </div>
-          <h1 className="font-black text-gray-900 text-lg">💰 {brandName ?? "פיננסי אישי"}</h1>
-          <button onClick={onBack} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group">
-            <span>המותגים שלי</span>
-            <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">←</span>
-          </button>
         </div>
       </div>
 
@@ -498,7 +498,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
             <div className="text-xs text-gray-400 mt-1">נותר לשלם</div>
           </div>
           <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#dc2626" }}>{ils(totalMonthly)}</div>
+            <div className="text-xl font-black" style={{ color: "#ea580c" }}>{ils(totalMonthly)}</div>
             <div className="text-xs text-gray-400 mt-1">תשלום חודשי</div>
           </div>
           <div className="card px-4 py-3 shadow-sm border border-gray-100">
@@ -526,10 +526,10 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
         {/* LOANS */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("loans")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
+          <button onClick={() => toggle("loans")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
             <span className="font-bold text-gray-900">הלוואות 🏦</span>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 hidden sm:block">{data.loans.length} הלוואות · {ils(totalLoansMonthly)}/חודש · נותר {ils(totalRemaining)}</span>
+              <span className="text-xs text-gray-500 hidden sm:block">{ils(totalRemaining)} נותר · {ils(totalLoansMonthly)}/חודש · {data.loans.length} הלוואות</span>
               <span className="text-gray-400 text-sm">{openSection === "loans" ? "▲" : "▼"}</span>
             </div>
           </button>
@@ -543,7 +543,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
         {/* INCOMES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("incomes")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
+          <button onClick={() => toggle("incomes")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
             <span className="font-bold text-gray-900">הכנסות 💚</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">
@@ -589,7 +589,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
         {/* EXPENSES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("expenses")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
+          <button onClick={() => toggle("expenses")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
             <span className="font-bold text-gray-900">הוצאות שוטפות 📊</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">{ils(totalExpensesMonthly)}/חודש · {data.expenses.length} הוצאות</span>
@@ -606,7 +606,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
         {/* PROPERTIES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("properties")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
+          <button onClick={() => toggle("properties")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
             <span className="font-bold text-gray-900">נכסים 🏘️</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">{ils(totalPropertyValue)} שווי · {data.properties.length} נכסים</span>
