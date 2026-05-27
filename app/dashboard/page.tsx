@@ -854,9 +854,9 @@ export default function Dashboard() {
         setTimeout(() => setShowBrandModal(true), 400);
       }
     });
-    // one-time financial data migration
+    // one-time financial data migration — save directly to brand-specific key
     if (typeof window !== "undefined" && !localStorage.getItem(FIN_MIGRATION_KEY)) {
-      saveFinancialData(MIGRATION_FINANCIAL);
+      saveFinancialData(MIGRATION_FINANCIAL, "f5645d60-7c07-47d0-b863-59be62f112aa");
       localStorage.setItem(FIN_MIGRATION_KEY, "1");
     }
   }, []);

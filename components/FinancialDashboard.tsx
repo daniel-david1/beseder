@@ -53,8 +53,8 @@ function hebrewMonthYear(iso: string) {
 }
 
 /* ══ Main Component ══════════════════════════════════════ */
-export default function FinancialDashboard({ onBack }: Props) {
-  const [data, setData] = useState<FinancialData>(() => loadFinancialData());
+export default function FinancialDashboard({ brandId, onBack }: Props) {
+  const [data, setData] = useState<FinancialData>(() => loadFinancialData(brandId));
   const [openSection, setOpenSection] = useState<"loans" | "expenses" | "incomes" | "properties" | null>("loans");
   const [editingDate, setEditingDate] = useState(false);
 
@@ -66,18 +66,18 @@ export default function FinancialDashboard({ onBack }: Props) {
   const [editingPropExpense, setEditingPropExpense]  = useState<string | null>(null);
   const [editingLiability,   setEditingLiability]   = useState<string | null>(null);
 
-  const save = (updated: FinancialData) => { setData(updated); saveFinancialData(updated); };
+  const save = (updated: FinancialData) => { setData(updated); saveFinancialData(updated, brandId); };
 
   useEffect(() => {
-    loadFinancialFromCloud().then(cloud => {
+    loadFinancialFromCloud(brandId).then(cloud => {
       if (cloud) {
         setData(cloud);
         if (typeof window !== "undefined") {
-          localStorage.setItem("beseder_financial_v1", JSON.stringify(cloud));
+          localStorage.setItem(`beseder_financial_${brandId}`, JSON.stringify(cloud));
         }
       }
     });
-  }, []);
+  }, [brandId]);
 
   const advanceMonth = () => {
     const prev = data.asOfDate ? new Date(data.asOfDate) : new Date();

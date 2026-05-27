@@ -106,44 +106,72 @@ export function createProject(order: number): Project {
 
 /* ─── Financial Data ──────────────────────────────────── */
 
-const FIN_KEY = "beseder_financial_v1";
+const FIN_KEY_LEGACY = "beseder_financial_v1";
+
+function finKey(brandId: string) { return `beseder_financial_${brandId}`; }
 
 function defaultFinancialData(): FinancialData {
   return { loans: [], expenses: [], incomes: [], properties: [] };
 }
 
-export function loadFinancialData(): FinancialData {
+export function loadFinancialData(brandId: string): FinancialData {
   if (typeof window === "undefined") return defaultFinancialData();
   try {
-    const raw = localStorage.getItem(FIN_KEY);
-    if (!raw) {
-      const d = defaultFinancialData();
-      localStorage.setItem(FIN_KEY, JSON.stringify(d));
+    const brandRaw = localStorage.getItem(finKey(brandId));
+    if (brandRaw) {
+      const parsed = JSON.parse(brandRaw) as FinancialData;
+      return { ...parsed, incomes: parsed.incomes ?? [] };
+    }
+    // First time for this brand — migrate from legacy global key once, then remove it
+    // so subsequent new brands don't inherit the data
+    const legacyRaw = localStorage.getItem(FIN_KEY_LEGACY);
+    if (legacyRaw) {
+      const parsed = JSON.parse(legacyRaw) as FinancialData;
+      const d = { ...parsed, incomes: parsed.incomes ?? [] };
+      localStorage.setItem(finKey(brandId), JSON.stringify(d));
+      localStorage.removeItem(FIN_KEY_LEGACY);
       return d;
     }
-    const parsed = JSON.parse(raw) as FinancialData;
-    return { ...parsed, incomes: parsed.incomes ?? [] };
+    return defaultFinancialData();
   } catch { return defaultFinancialData(); }
 }
 
-export function saveFinancialData(financial: FinancialData): void {
+export function saveFinancialData(financial: FinancialData, brandId?: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(FIN_KEY, JSON.stringify(financial));
+  const key = brandId ? finKey(brandId) : FIN_KEY_LEGACY;
+  localStorage.setItem(key, JSON.stringify(financial));
   (async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    // Store per-brand in a financial_brands map inside the financial column
+    const { data: existing } = await supabase.from("user_data").select("financial").eq("user_id", user.id).single();
+    const currentMap: Record<string, FinancialData> = existing?.financial?.brands ?? {};
+    const brandKey = brandId ?? "legacy";
+    const updatedMap = { ...currentMap, [brandKey]: financial };
     await supabase.from("user_data").upsert(
-      { user_id: user.id, financial, updated_at: new Date().toISOString() },
+      { user_id: user.id, financial: { brands: updatedMap }, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
   })();
 }
 
-export async function loadFinancialFromCloud(): Promise<FinancialData | null> {
+export async function loadFinancialFromCloud(brandId?: string): Promise<FinancialData | null> {
   try {
     const { data, error } = await supabase.from("user_data").select("financial").single();
     if (error || !data || !data.financial) return null;
-    const parsed = data.financial as FinancialData;
-    return { ...parsed, incomes: parsed.incomes ?? [] };
+    const fin = data.financial as Record<string, unknown>;
+    // New per-brand format
+    if (fin.brands && brandId) {
+      const map = fin.brands as Record<string, FinancialData>;
+      const parsed = map[brandId] ?? map["legacy"];
+      if (!parsed) return null;
+      return { ...parsed, incomes: parsed.incomes ?? [] };
+    }
+    // Legacy flat format (old single-brand data)
+    if ("loans" in fin) {
+      const parsed = fin as unknown as FinancialData;
+      return { ...parsed, incomes: parsed.incomes ?? [] };
+    }
+    return null;
   } catch { return null; }
 }
