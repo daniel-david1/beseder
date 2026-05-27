@@ -173,24 +173,33 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
                       className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center text-sm font-bold shrink-0 transition-colors"
                     >×</button>
                   </div>
-                  <div className="flex items-center gap-1.5 pr-1 w-fit">
-                    <span className="text-xs text-gray-400">📅 תאריך:</span>
-                    <input
-                      type="date"
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-0.5 w-36 shrink-0 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
-                      value={exp.date ?? ""}
-                      onChange={e => {
-                        const exps = [...(form.expenses ?? [])];
-                        exps[i] = { ...exps[i], date: e.target.value || undefined };
-                        set("expenses", exps);
-                      }}
-                    />
+                  <div className="flex items-center gap-1 pr-1">
+                    {([
+                      { value: 'monthly',  label: 'חודשי',   active: 'bg-teal-500 text-white border-teal-500' },
+                      { value: 'yearly',   label: 'שנתי',    active: 'bg-blue-500 text-white border-blue-500' },
+                      { value: 'one-time', label: 'חד פעמי', active: 'bg-gray-500 text-white border-gray-500' },
+                    ] as { value: 'monthly'|'yearly'|'one-time'; label: string; active: string }[]).map(opt => {
+                      const current = exp.frequency ?? 'monthly';
+                      const isActive = current === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            const exps = [...(form.expenses ?? [])];
+                            exps[i] = { ...exps[i], frequency: opt.value };
+                            set("expenses", exps);
+                          }}
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border transition-all ${isActive ? opt.active : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'}`}
+                        >{opt.label}</button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
             <button
-              onClick={() => set("expenses", [...(form.expenses ?? []), { id: uuidv4(), name: "", amount: 0 } as StageExpense])}
+              onClick={() => set("expenses", [...(form.expenses ?? []), { id: uuidv4(), name: "", amount: 0, frequency: 'monthly' } as StageExpense])}
               className="mt-2 w-full py-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 text-sm font-semibold hover:border-red-400 hover:text-red-500 transition-all"
             >
               + הוסף הוצאה

@@ -5,6 +5,7 @@ export interface StageExpense {
   name: string;
   amount: number;
   date?: string;
+  frequency?: 'monthly' | 'yearly' | 'one-time';
 }
 
 export interface Stage {

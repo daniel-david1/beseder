@@ -82,20 +82,29 @@ function ItemList({
                 className={`w-7 h-7 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${delHover}`}
               >×</button>
             </div>
-            <div className="flex items-center gap-1.5 pr-1 w-fit">
-              <span className="text-xs text-gray-400">📅 תאריך:</span>
-              <input
-                type="date"
-                className="text-xs border border-gray-200 rounded-lg px-2 py-0.5 w-36 shrink-0 focus:outline-none focus:ring-1 focus:ring-teal-400 bg-white"
-                value={item.date ?? ""}
-                onChange={e => { const arr = [...items]; arr[i] = { ...arr[i], date: e.target.value || undefined }; onChange(arr); }}
-              />
+            <div className="flex items-center gap-1 pr-1">
+              {([
+                { value: 'monthly',  label: 'חודשי',    active: 'bg-teal-500 text-white border-teal-500' },
+                { value: 'yearly',   label: 'שנתי',     active: 'bg-blue-500 text-white border-blue-500' },
+                { value: 'one-time', label: 'חד פעמי',  active: 'bg-gray-500 text-white border-gray-500' },
+              ] as { value: 'monthly'|'yearly'|'one-time'; label: string; active: string }[]).map(opt => {
+                const current = item.frequency ?? 'monthly';
+                const isActive = current === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => { const arr = [...items]; arr[i] = { ...arr[i], frequency: opt.value }; onChange(arr); }}
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border transition-all ${isActive ? opt.active : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'}`}
+                  >{opt.label}</button>
+                );
+              })}
             </div>
           </div>
         ))}
       </div>
       <button
-        onClick={() => onChange([...items, { id: uuidv4(), name: "", amount: 0 }])}
+        onClick={() => onChange([...items, { id: uuidv4(), name: "", amount: 0, frequency: 'monthly' }])}
         className={`mt-2 w-full py-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 text-sm font-semibold transition-all ${addHover}`}
       >+ {addLabel}</button>
     </div>
