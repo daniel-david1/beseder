@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FinancialData,
   Loan,
@@ -10,7 +10,7 @@ import {
   PropertyIncome,
   PropertyLiability,
 } from "@/lib/types";
-import { loadFinancialData, saveFinancialData } from "@/lib/storage";
+import { loadFinancialData, saveFinancialData, loadFinancialFromCloud } from "@/lib/storage";
 
 /* ─── helpers ─────────────────────────────────────────── */
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -67,6 +67,17 @@ export default function FinancialDashboard({ onBack }: Props) {
   const [editingLiability,   setEditingLiability]   = useState<string | null>(null);
 
   const save = (updated: FinancialData) => { setData(updated); saveFinancialData(updated); };
+
+  useEffect(() => {
+    loadFinancialFromCloud().then(cloud => {
+      if (cloud) {
+        setData(cloud);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("beseder_financial_v1", JSON.stringify(cloud));
+        }
+      }
+    });
+  }, []);
 
   const advanceMonth = () => {
     const prev = data.asOfDate ? new Date(data.asOfDate) : new Date();

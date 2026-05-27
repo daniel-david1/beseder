@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Brand, Project, SubProject, Channel, Stage, StageStatus } from "@/lib/types";
-import { loadBrands, saveBrands, createStage } from "@/lib/storage";
+import { loadBrands, saveBrands, createStage, loadBrandsFromCloud } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import ProjectPipeline from "@/components/ProjectPipeline";
 import StageEditDrawer from "@/components/StageEditDrawer";
@@ -536,7 +536,20 @@ export default function Dashboard() {
   const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
   const [showWhiteboard,   setShowWhiteboard]  = useState(false);
 
-  useEffect(() => { setBrands(loadBrands()); setLoaded(true); }, []);
+  useEffect(() => {
+    const local = loadBrands();
+    setBrands(local);
+    setLoaded(true);
+    // sync from cloud — overrides local if cloud has data
+    loadBrandsFromCloud().then(cloud => {
+      if (cloud && cloud.length > 0) {
+        setBrands(cloud);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("vaachalta_brands_v1", JSON.stringify(cloud));
+        }
+      }
+    });
+  }, []);
 
   /* ── persist + sync active objects ── */
   const syncAll = (updated: Brand[]) => {

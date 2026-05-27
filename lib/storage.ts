@@ -1,5 +1,6 @@
-import { Brand, Project, SubProject, Stage, FinancialData, Income } from "./types";
+import { Brand, Project, SubProject, Stage, FinancialData } from "./types";
 import { v4 as uuidv4 } from "uuid";
+import { supabase } from "./supabase";
 
 const KEY = "vaachalta_brands_v1";
 
@@ -73,6 +74,15 @@ export function loadBrands(): Brand[] {
 export function saveBrands(brands: Brand[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(brands));
+  supabase.from("app_data").upsert({ key: "brands", data: brands, updated_at: new Date().toISOString() }).then(() => {});
+}
+
+export async function loadBrandsFromCloud(): Promise<Brand[] | null> {
+  try {
+    const { data, error } = await supabase.from("app_data").select("data").eq("key", "brands").single();
+    if (error || !data) return null;
+    return data.data as Brand[];
+  } catch { return null; }
 }
 
 export function createStage(order: number): Stage {
@@ -178,4 +188,14 @@ export function loadFinancialData(): FinancialData {
 export function saveFinancialData(data: FinancialData): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(FIN_KEY, JSON.stringify(data));
+  supabase.from("app_data").upsert({ key: "financial", data, updated_at: new Date().toISOString() }).then(() => {});
+}
+
+export async function loadFinancialFromCloud(): Promise<FinancialData | null> {
+  try {
+    const { data, error } = await supabase.from("app_data").select("data").eq("key", "financial").single();
+    if (error || !data) return null;
+    const parsed = data.data as FinancialData;
+    return { ...parsed, incomes: parsed.incomes ?? [] };
+  } catch { return null; }
 }
