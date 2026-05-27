@@ -74,14 +74,21 @@ export function loadBrands(): Brand[] {
 export function saveBrands(brands: Brand[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(brands));
-  supabase.from("app_data").upsert({ key: "brands", data: brands, updated_at: new Date().toISOString() }).then(() => {});
+  (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("user_data").upsert(
+      { user_id: user.id, brands, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+  })();
 }
 
 export async function loadBrandsFromCloud(): Promise<Brand[] | null> {
   try {
-    const { data, error } = await supabase.from("app_data").select("data").eq("key", "brands").single();
+    const { data, error } = await supabase.from("user_data").select("brands").single();
     if (error || !data) return null;
-    return data.data as Brand[];
+    return data.brands as Brand[];
   } catch { return null; }
 }
 
@@ -185,17 +192,24 @@ export function loadFinancialData(): FinancialData {
   } catch { return defaultFinancialData(); }
 }
 
-export function saveFinancialData(data: FinancialData): void {
+export function saveFinancialData(financial: FinancialData): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(FIN_KEY, JSON.stringify(data));
-  supabase.from("app_data").upsert({ key: "financial", data, updated_at: new Date().toISOString() }).then(() => {});
+  localStorage.setItem(FIN_KEY, JSON.stringify(financial));
+  (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("user_data").upsert(
+      { user_id: user.id, financial, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+  })();
 }
 
 export async function loadFinancialFromCloud(): Promise<FinancialData | null> {
   try {
-    const { data, error } = await supabase.from("app_data").select("data").eq("key", "financial").single();
-    if (error || !data) return null;
-    const parsed = data.data as FinancialData;
+    const { data, error } = await supabase.from("user_data").select("financial").single();
+    if (error || !data || !data.financial) return null;
+    const parsed = data.financial as FinancialData;
     return { ...parsed, incomes: parsed.incomes ?? [] };
   } catch { return null; }
 }

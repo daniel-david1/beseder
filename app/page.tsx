@@ -1,1244 +1,411 @@
-"use client";
+'use client'
+import { useEffect, useRef, useState } from 'react'
 
-import { useState, useEffect } from "react";
-import { Brand, Project, SubProject, Channel, Stage, StageStatus } from "@/lib/types";
-import { loadBrands, saveBrands, createStage, loadBrandsFromCloud } from "@/lib/storage";
-import { v4 as uuidv4 } from "uuid";
-import ProjectPipeline from "@/components/ProjectPipeline";
-import StageEditDrawer from "@/components/StageEditDrawer";
-import BrandModal from "@/components/BrandModal";
-import BrandWizard from "@/components/BrandWizard";
-import NewProjectModal from "@/components/NewProjectModal";
-import SubProjectModal from "@/components/SubProjectModal";
-import ChannelModal from "@/components/ChannelModal";
-import FinancialDashboard from "@/components/FinancialDashboard";
-
-/* ─── helpers ─────────────────────────────────────────── */
-
-const STATUS_META: Record<StageStatus, { label: string; dot: string }> = {
-  todo:    { label: "לא התחיל", dot: "#d1d5db" },
-  active:  { label: "בתהליך",   dot: "#3b82f6" },
-  done:    { label: "הושלם",    dot: "#16a34a" },
-  blocked: { label: "תקוע",     dot: "#dc2626" },
-};
-
-function pct(stages: Stage[]) {
-  if (!stages.length) return 0;
-  return Math.round((stages.filter(s => s.status === "done").length / stages.length) * 100);
+const T = {
+  en: {
+    nav: { features: 'Features', howItWorks: 'How it works', pricing: 'Pricing', signin: 'Sign in', cta: 'Get started free' },
+    hero: {
+      chip: 'Business OS for Founders',
+      h1a: 'Every brand. Every project.',
+      h1b: 'One place.',
+      sub: 'beseder is the operating system for founders who run multiple businesses. Brands, projects, teams, milestones — structured and clear, finally.',
+      cta: 'Get started free →',
+      demo: 'Watch demo',
+      trust: 'No credit card · Free forever plan · Cancel anytime',
+    },
+    problem: {
+      chip: 'The Problem',
+      h2: 'Your to-do list is lying to you.',
+      sub: "Most task apps reward the act of adding tasks. beseder rewards finishing them. There's a difference.",
+      before: 'Before beseder', beforeBadge: 'Chaos',
+      after: 'With beseder', afterBadge: 'Clarity',
+    },
+    how: {
+      chip: 'How it works', h2: 'Three moves. Total clarity.',
+      steps: [
+        { n:'01', title:'Create your brands', desc:"Add every business or venture you're running. Each gets its own workspace." },
+        { n:'02', title:'Build your structure', desc:'Break each brand into projects, departments, and stages. Your exact way of thinking, preserved.' },
+        { n:'03', title:'Track everything', desc:'See progress at every level — from a single task to your entire portfolio on one whiteboard.' },
+      ],
+    },
+    features: {
+      chip: 'Features', h2: 'Everything you need to run your empire',
+      items: [
+        { title:'Multi-Brand Workspace', desc:'Run 5 companies? No problem. Each brand is fully isolated with its own structure.' },
+        { title:'4-Level Hierarchy', desc:'Brand → Project → Department → Stage. As deep or as flat as you need.' },
+        { title:'Visual Whiteboard', desc:'See your entire brand — all projects, departments, and channels — on one canvas.' },
+        { title:'Stage Pipeline', desc:'Every department has a pipeline of stages. Move them from Todo → Active → Done → Blocked.' },
+        { title:'Financial Tracker', desc:'Built-in financial management: loans, assets, expenses, cash flow. No spreadsheet needed.' },
+        { title:'Channel Management', desc:'Departments can have sub-channels — perfect for agencies managing multiple clients.' },
+      ],
+    },
+    pricing: {
+      chip: 'Pricing', h2: 'Start free. Grow as you go.',
+      free: { name:'Free', price:'₪0', per:'/month', cta:'Get started free',
+        items:['Up to 3 brands','Unlimited projects','Stage pipeline','Financial tracker','7-day history'] },
+      pro: { name:'Pro', price:'₪49', per:'/month', badge:'Most popular', cta:'Go Pro →',
+        items:['Unlimited brands','AI brand wizard','Visual whiteboard','Priority support','Advanced analytics','Team collaboration'] },
+      footnote: 'All plans · 14-day Pro trial · No credit card needed',
+    },
+    cta: { h2:'Stop building from memory.', sub:'beseder gives every business you run a clear, structured home.', btn:'Get started free →', link:'Learn more' },
+    footer: { tagline:'Order from chaos.' },
+  },
+  he: {
+    nav: { features: 'פיצ׳רים', howItWorks: 'איך זה עובד', pricing: 'תמחור', signin: 'התחבר', cta: 'התחל בחינם' },
+    hero: {
+      chip: 'מערכת ניהול לייסדרים',
+      h1a: 'כל מותג. כל פרויקט.',
+      h1b: 'מקום אחד.',
+      sub: 'beseder היא מערכת ההפעלה לייסדרים שמנהלים כמה עסקים במקביל. מותגים, פרויקטים, צוותים, אבני דרך — מסודר וברור, סוף סוף.',
+      cta: 'התחל בחינם ←',
+      demo: 'צפה בדמו',
+      trust: 'ללא כרטיס אשראי · חינמי לתמיד · ביטול בכל עת',
+    },
+    problem: {
+      chip: 'הבעיה',
+      h2: 'רשימת המשימות שלך משקרת לך.',
+      sub: 'רוב האפליקציות מתגמלות על הוספת משימות. beseder מתגמל על סיום שלהן. יש הבדל.',
+      before: 'לפני beseder', beforeBadge: 'כאוס',
+      after: 'עם beseder', afterBadge: 'בהירות',
+    },
+    how: {
+      chip: 'איך זה עובד', h2: 'שלושה צעדים. בהירות מלאה.',
+      steps: [
+        { n:'01', title:'צור את המותגים שלך', desc:'הוסף כל עסק או מיזם שאתה מנהל. לכל אחד יש סביבת עבודה נפרדת.' },
+        { n:'02', title:'בנה את המבנה שלך', desc:'חלק כל מותג לפרויקטים, מחלקות ושלבים. בדיוק כמו שאתה חושב.' },
+        { n:'03', title:'עקוב אחרי הכל', desc:'ראה התקדמות בכל רמה — ממשימה בודדת ועד כל הפורטפוליו שלך על לוח אחד.' },
+      ],
+    },
+    features: {
+      chip: 'פיצ׳רים', h2: 'כל מה שצריך לנהל את האימפריה שלך',
+      items: [
+        { title:'ניהול מרובה מותגים', desc:'מנהל 5 חברות? אין בעיה. כל מותג מבודד עם המבנה שלו.' },
+        { title:'היררכיה ב-4 רמות', desc:'מותג → פרויקט → מחלקה → שלב. כמה עמוק שצריך.' },
+        { title:'לוח ויזואלי', desc:'ראה את כל המותג שלך — פרויקטים, מחלקות וערוצים — על קנבס אחד.' },
+        { title:'Pipeline של שלבים', desc:'לכל מחלקה יש pipeline. הזז שלבים מ-Todo → פעיל → הושלם → תקוע.' },
+        { title:'ניהול פיננסי', desc:'ניהול פיננסי מובנה: הלוואות, נכסים, הוצאות, תזרים מזומנים.' },
+        { title:'ניהול ערוצים', desc:'למחלקות יכולים להיות ערוצי משנה — מושלם לסוכנויות עם מספר לקוחות.' },
+      ],
+    },
+    pricing: {
+      chip: 'תמחור', h2: 'התחל בחינם. גדל בקצב שלך.',
+      free: { name:'חינמי', price:'₪0', per:'/חודש', cta:'התחל בחינם',
+        items:['עד 3 מותגים','פרויקטים ללא הגבלה','Pipeline שלבים','ניהול פיננסי','היסטוריה של 7 ימים'] },
+      pro: { name:'Pro', price:'₪49', per:'/חודש', badge:'הפופולרי ביותר', cta:'עבור ל-Pro ←',
+        items:['מותגים ללא הגבלה','אשף מותג AI','לוח ויזואלי','תמיכה עדיפותית','אנליטיקס מתקדם','שיתוף פעולה בצוות'] },
+      footnote: 'כל התוכניות · ניסיון Pro 14 יום · ללא כרטיס אשראי',
+    },
+    cta: { h2:'הפסק לבנות מהזיכרון.', sub:'beseder נותן לכל עסק שאתה מנהל בית מסודר וברור.', btn:'התחל בחינם ←', link:'למד עוד' },
+    footer: { tagline:'סדר מתוך כאוס.' },
+  },
 }
 
-function totalPct(subs: SubProject[]) {
-  const all   = subs.reduce((n, sp) => n + sp.stages.length, 0);
-  const done  = subs.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length, 0);
-  return all > 0 ? Math.round((done / all) * 100) : 0;
+type Lang = 'en' | 'he'
+
+function useFadeUp() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current; if (!el) return
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight) { setVisible(true); return }
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' })
+    obs.observe(el); return () => obs.disconnect()
+  }, [])
+  return { ref, visible }
 }
 
-function subMonthlyExpenses(sub: SubProject): number {
-  const subDirect   = (sub.expenses ?? []).reduce((s, e) => s + e.amount, 0);
-  const stageDirect = sub.stages.reduce((s, st) => s + (st.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
-  const chExp       = sub.channels.reduce((s, ch) => {
-    const chDirect = (ch.expenses ?? []).reduce((a, e) => a + e.amount, 0);
-    const chStages = ch.stages.reduce((ss, st) => ss + (st.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
-    return s + chDirect + chStages;
-  }, 0);
-  return subDirect + stageDirect + chExp;
+function Fade({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, visible } = useFadeUp()
+  return <div ref={ref} className={className} style={{ opacity: visible ? 1 : 0, transform: visible ? 'none' : 'translateY(28px)', transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms` }}>{children}</div>
 }
 
-function subMonthlyIncomes(sub: SubProject): number {
-  const subDirect = (sub.incomes ?? []).reduce((s, e) => s + e.amount, 0);
-  const chInc     = sub.channels.reduce((s, ch) =>
-    s + (ch.incomes ?? []).reduce((a, e) => a + e.amount, 0), 0);
-  return subDirect + chInc;
-}
-
-/* ─── Breadcrumb sidebar ───────────────────────────────── */
-interface BreadcrumbItem { emoji: string; name: string; onClick: () => void; isCurrent: boolean; }
-
-function BreadcrumbSidebar({ items, color }: { items: BreadcrumbItem[]; color: string }) {
+function Logo({ white }: { white?: boolean }) {
+  const c = white ? '#E8F4F6' : '#0B1B2B'
+  const gs = white ? [['#2FE0D6','#3A9BE8'],['gw']] : [['#1FAEB5','#0E5FA8'],['g2']]
+  const id = white ? 'gw' : 'g2'
+  const [c1, c2] = white ? ['#2FE0D6','#3A9BE8'] : ['#1FAEB5','#0E5FA8']
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex pointer-events-none">
-      <div
-        className="rounded-full flex flex-row items-center pointer-events-auto"
-        style={{
-          background: "rgba(20,20,22,0.72)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.06) inset",
-          padding: "5px 6px",
-          gap: 2,
-        }}
-      >
-        {items.map((item, i) => (
-          <button
-            key={i}
-            onClick={item.onClick}
-            title={item.name}
-            className="flex flex-row items-center gap-1.5 rounded-full transition-all duration-200"
-            style={{
-              padding: item.isCurrent ? "5px 12px 5px 10px" : "5px 9px",
-              background: item.isCurrent ? "rgba(255,255,255,0.15)" : "transparent",
-              opacity: item.isCurrent ? 1 : 0.45,
-            }}
-          >
-            <span style={{ fontSize: 15, lineHeight: 1, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}>{item.emoji}</span>
-            {item.isCurrent && (
-              <span
-                className="font-semibold text-white"
-                style={{
-                  fontSize: 12,
-                  lineHeight: 1,
-                  maxWidth: 110,
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis",
-                  textShadow: "0 1px 3px rgba(0,0,0,0.4)",
-                }}
-              >{item.name}</span>
-            )}
-          </button>
-        ))}
-      </div>
+    <svg width="130" height="48" viewBox="0 0 244 90" fill="none">
+      <defs><linearGradient id={id} x1="20" y1="20" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop stopColor={c1}/><stop offset="1" stopColor={c2}/></linearGradient></defs>
+      <rect x="20" y="19" width="52" height="52" rx="15" fill={`url(#${id})`}/>
+      <rect x="30" y="31" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
+      <rect x="30" y="42" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
+      <rect x="30" y="53" width="30" height="6" rx="3" fill="#fff" opacity="0.65"/>
+      <text x="90" y="57" fontFamily="Sora, sans-serif" fontSize="30" fontWeight="700" fill={c} letterSpacing="-0.5">beseder</text>
+    </svg>
+  )
+}
+
+function Check({ green }: { green?: boolean }) {
+  return <div style={{ width:18, height:18, borderRadius:'50%', background: green ? 'rgba(31,174,181,0.15)' : 'rgba(31,174,181,0.1)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><svg width="9" height="7" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="#1FAEB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+}
+
+function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
+  return (
+    <div style={{ display:'flex', background:'rgba(232,244,246,0.08)', borderRadius:999, padding:3, gap:2 }}>
+      {(['en','he'] as Lang[]).map(l => (
+        <button key={l} onClick={() => setLang(l)} style={{ padding:'4px 12px', borderRadius:999, border:'none', cursor:'pointer', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:12, transition:'all 0.2s', background: lang===l ? 'rgba(31,174,181,0.9)' : 'transparent', color: lang===l ? '#fff' : 'rgba(232,244,246,0.5)' }}>{l.toUpperCase()}</button>
+      ))}
     </div>
-  );
+  )
 }
 
-/* ─── Brand whiteboard ─────────────────────────────────── */
-function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
-  brand: Brand;
-  onClose: () => void;
-  onNavigateTo: (project: Project, sub?: SubProject, channel?: Channel) => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f0f2f5" }}>
-      {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          {brand.logo
-            ? <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-2xl object-contain bg-gray-50 border border-gray-100" />
-            : <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-2xl" style={{ background: brand.color + "18", border: `2px solid ${brand.color}30` }}>{brand.emoji}</div>
-          }
-          <div>
-            <h2 className="font-black text-gray-900 text-lg leading-tight">{brand.name}</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{brand.projects.length} פרויקט{brand.projects.length !== 1 ? "ים" : ""} · תצוגת מפה</p>
-          </div>
-        </div>
-        <button onClick={onClose} className="btn btn-ghost text-sm gap-1">× סגור</button>
-      </div>
-
-      {/* Scrollable canvas */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="space-y-5 max-w-screen-xl mx-auto">
-          {brand.projects.length === 0 && (
-            <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
-              <div className="text-5xl mb-3">📭</div>
-              <p className="text-gray-400 font-semibold">אין פרויקטים במותג זה עדיין</p>
-            </div>
-          )}
-          {brand.projects.map(project => {
-            const allS = project.subProjects.reduce((n, sp) => n + sp.stages.length, 0);
-            const doneS = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length, 0);
-            const projPct = allS > 0 ? Math.round((doneS / allS) * 100) : 0;
-
-            return (
-              <div key={project.id} className="bg-white rounded-2xl overflow-hidden shadow-sm"
-                style={{ border: `1px solid ${project.color}28` }}>
-
-                {/* Project header bar */}
-                <button
-                  onClick={() => onNavigateTo(project)}
-                  className="w-full flex items-center justify-between px-5 py-4 transition-opacity hover:opacity-90"
-                  style={{ background: project.color + "0e", borderBottom: `1px solid ${project.color}1a` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl" style={{ background: project.color + "20" }}>
-                      {project.emoji}
-                    </div>
-                    <div className="text-right">
-                      <h3 className="font-black text-gray-900 text-base">{project.name}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{project.subProjects.length} מחלקות</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <span className="font-black text-2xl" style={{ color: project.color }}>{projPct}%</span>
-                      <div className="w-28 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${projPct}%`, background: project.color }} />
-                      </div>
-                    </div>
-                    <span className="text-gray-300 text-lg">←</span>
-                  </div>
-                </button>
-
-                {/* Departments grid */}
-                <div className="p-4 flex gap-3 flex-wrap">
-                  {project.subProjects.map(sub => {
-                    const hasChannels = sub.channels.length > 0;
-                    const hasStages   = sub.stages.length > 0;
-                    const subPct      = hasChannels
-                      ? pct(sub.channels.flatMap(c => c.stages))
-                      : pct(sub.stages);
-                    const itemCount   = hasChannels ? sub.channels.length : sub.stages.length;
-
-                    return (
-                      <div
-                        key={sub.id}
-                        onClick={() => onNavigateTo(project, sub)}
-                        className="flex-1 rounded-xl p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5 group cursor-pointer"
-                        style={{
-                          minWidth: 130, maxWidth: 220,
-                          background: project.color + "07",
-                          border: `1.5px solid ${project.color}20`,
-                        }}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{sub.emoji}</span>
-                          <span className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{sub.name}</span>
-                        </div>
-
-                        {/* Channel chips */}
-                        {hasChannels && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {sub.channels.slice(0, 5).map(ch => (
-                              <button
-                                key={ch.id}
-                                onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
-                                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold hover:opacity-70 transition-opacity"
-                                style={{ background: project.color + "22", color: project.color }}
-                              >
-                                <span>{ch.emoji}</span>
-                                <span className="max-w-[60px] truncate">{ch.name}</span>
-                              </button>
-                            ))}
-                            {sub.channels.length > 5 && (
-                              <span className="text-[10px] text-gray-400 self-center px-1">+{sub.channels.length - 5}</span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Stage dots */}
-                        {!hasChannels && hasStages && (
-                          <div className="flex gap-0.5 mb-2 flex-wrap">
-                            {sub.stages.slice(0, 8).map(s => (
-                              <div key={s.id} className="w-1.5 h-1.5 rounded-full" style={{
-                                background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : "#d1d5db"
-                              }} />
-                            ))}
-                            {sub.stages.length > 8 && <span className="text-[9px] text-gray-400 self-center">+{sub.stages.length - 8}</span>}
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2">
-                          <div className="h-1 bg-gray-100 rounded-full overflow-hidden flex-1">
-                            <div className="h-full rounded-full" style={{ width: `${subPct}%`, background: project.color }} />
-                          </div>
-                          <span className="text-[9px] text-gray-400 font-semibold whitespace-nowrap">
-                            {itemCount} {hasChannels ? "ערוצים" : "שלבים"}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {project.subProjects.length === 0 && (
-                    <p className="text-sm text-gray-400 italic py-2 px-1">אין מחלקות עדיין</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group"
-    >
-      <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">→</span>
-      {emoji && <span className="text-base leading-none">{emoji}</span>}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-/* ─── Brand card ──────────────────────────────────────── */
-function BrandCard({ brand, onClick, onEdit, onDelete }: {
-  brand: Brand; onClick: () => void; onEdit: () => void; onDelete: () => void;
-}) {
-  const allSubs   = brand.projects.flatMap(p => p.subProjects);
-  const progress  = totalPct(allSubs);
-  const nProjects = brand.projects.length;
-
-  return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
-      <div className="h-2 w-full rounded-t-[18px]" style={{ background: brand.color }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-start gap-3 flex-1 text-right">
-            {brand.logo
-              ? <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-xl object-contain bg-gray-50 border border-gray-100 flex-shrink-0" />
-              : <span className="text-3xl mt-0.5 flex-shrink-0">{brand.emoji}</span>
-            }
-            <div className="min-w-0">
-              <h3 className="font-black text-gray-900 text-base leading-tight">{brand.name}</h3>
-              {brand.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{brand.description}</p>}
-            </div>
-          </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
-          </div>
-        </div>
-
-        <button onClick={onClick} className="space-y-1.5">
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: brand.color }} />
-          </div>
-          <p className="text-xs text-gray-400">{nProjects} פרויקט{nProjects !== 1 ? "ים" : ""} · {progress}% הושלם</p>
-        </button>
-
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
-          פתח מותג ←
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Project card ────────────────────────────────────── */
-function ProjectCard({ project, onClick, onEdit, onDelete }: {
-  project: Project; onClick: () => void; onEdit: () => void; onDelete: () => void;
-}) {
-  const progress = totalPct(project.subProjects);
-  const blocked  = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "blocked").length, 0);
-
-  return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
-      <div className="h-1.5 w-full" style={{ background: project.color }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-start gap-3 flex-1 text-right">
-            <span className="text-3xl mt-0.5">{project.emoji}</span>
-            <div>
-              <h3 className="font-black text-gray-900 text-base leading-tight">{project.name}</h3>
-              {project.description && <p className="text-sm text-gray-400 mt-0.5">{project.description}</p>}
-            </div>
-          </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
-          </div>
-        </div>
-
-        {project.subProjects.length > 0 && (
-          <button onClick={onClick} className="flex flex-wrap gap-1.5">
-            {project.subProjects.map(sp => (
-              <span key={sp.id} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
-                {sp.emoji} {sp.name}
-              </span>
-            ))}
-          </button>
-        )}
-
-        {(() => {
-          const totalExp = project.subProjects.reduce((s, sp) => s + subMonthlyExpenses(sp), 0);
-          if (totalExp === 0) return null;
-          return (
-            <button onClick={onClick} className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span>💸</span>
-              <span className="font-semibold" style={{ color: project.color }}>₪{totalExp.toLocaleString("he-IL")}</span>
-              <span className="text-gray-400">/חודש הוצאות</span>
-            </button>
-          );
-        })()}
-
-        <button onClick={onClick} className="space-y-1.5">
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: project.color }} />
-          </div>
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>{project.subProjects.length} מחלקות · {progress}% הושלם</span>
-            {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-          </div>
-        </button>
-
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: project.color + "40", color: project.color }}>
-          פתח פרויקט ←
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Sub-project card ────────────────────────────────── */
-function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
-  sub: SubProject; color: string;
-  onClick: () => void; onEdit: () => void; onDelete: () => void;
-}) {
-  const p           = pct(sub.stages);
-  const blocked     = sub.stages.filter(s => s.status === "blocked").length;
-  const active      = sub.stages.filter(s => s.status === "active").length;
-  const done        = sub.stages.filter(s => s.status === "done").length;
-  const monthlyExp  = subMonthlyExpenses(sub);
-  const monthlyInc  = subMonthlyIncomes(sub);
-
-  return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
-      <div className="h-1 w-full" style={{ background: color, opacity: 0.6 }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-center gap-3 flex-1 text-right">
-            <span className="text-2xl">{sub.emoji}</span>
-            <div>
-              <h3 className="font-bold text-gray-900 text-base leading-tight">{sub.name}</h3>
-              {sub.description && <p className="text-sm text-gray-400 mt-0.5">{sub.description}</p>}
-            </div>
-          </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
-          </div>
-        </div>
-
-        {(monthlyInc > 0 || monthlyExp > 0) && (
-          <div className="flex gap-1.5 flex-wrap">
-            {monthlyInc > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#f0fdf4", border: "1px solid #86efac" }}>
-                <span className="text-xs">💚</span>
-                <span className="text-xs font-bold text-green-700">₪{monthlyInc.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-            {monthlyExp > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#fef3c7", border: "1px solid #fde68a" }}>
-                <span className="text-xs">💸</span>
-                <span className="text-xs font-bold text-amber-700">₪{monthlyExp.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {sub.stages.length > 0 ? (
-          <button onClick={onClick} className="space-y-1.5">
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p}%`, background: color }} />
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>{done}/{sub.stages.length} הושלמו</span>
-              {active  > 0 && <span className="text-blue-500">● {active} בתהליך</span>}
-              {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-            </div>
-          </button>
-        ) : (
-          <p className="text-sm text-gray-300">אין שלבים עדיין</p>
-        )}
-
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח מחלקה ←
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Channel card ────────────────────────────────────── */
-function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
-  channel: Channel; color: string;
-  onClick: () => void; onEdit: () => void; onDelete: () => void;
-}) {
-  const p          = pct(channel.stages);
-  const done       = channel.stages.filter(s => s.status === "done").length;
-  const blocked    = channel.stages.filter(s => s.status === "blocked").length;
-  const active     = channel.stages.filter(s => s.status === "active").length;
-  const monthlyExp = (channel.expenses ?? []).reduce((sum, e) => sum + e.amount, 0) +
-    channel.stages.reduce((sum, s) => sum + (s.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
-  const monthlyInc = (channel.incomes ?? []).reduce((sum, e) => sum + e.amount, 0);
-
-  return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
-      <div className="h-1 w-full" style={{ background: color, opacity: 0.7 }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-center gap-3 flex-1 text-right">
-            <span className="text-2xl">{channel.emoji}</span>
-            <div>
-              <h3 className="font-bold text-gray-900 text-base leading-tight">{channel.name}</h3>
-              {channel.description && <p className="text-sm text-gray-400 mt-0.5">{channel.description}</p>}
-            </div>
-          </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
-          </div>
-        </div>
-
-        {(monthlyInc > 0 || monthlyExp > 0) && (
-          <div className="flex gap-1.5 flex-wrap">
-            {monthlyInc > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#f0fdf4", border: "1px solid #86efac" }}>
-                <span className="text-xs">💚</span>
-                <span className="text-xs font-bold text-green-700">₪{monthlyInc.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-            {monthlyExp > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#fef3c7", border: "1px solid #fde68a" }}>
-                <span className="text-xs">💸</span>
-                <span className="text-xs font-bold text-amber-700">₪{monthlyExp.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {channel.stages.length > 0 ? (
-          <button onClick={onClick} className="space-y-1.5">
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p}%`, background: color }} />
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>{done}/{channel.stages.length} הושלמו</span>
-              {active  > 0 && <span className="text-blue-500">● {active} בתהליך</span>}
-              {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-            </div>
-          </button>
-        ) : (
-          <p className="text-sm text-gray-300">אין שלבים עדיין</p>
-        )}
-
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח פרויקט ←
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main ────────────────────────────────────────────── */
-export default function Dashboard() {
-  const [brands,           setBrands]          = useState<Brand[]>([]);
-  const [activeBrand,      setActiveBrand]     = useState<Brand | null>(null);
-  const [activeProject,    setActiveProject]   = useState<Project | null>(null);
-  const [activeSubProject, setActiveSubProject]= useState<SubProject | null>(null);
-  const [activeChannel,    setActiveChannel]    = useState<Channel | null>(null);
-  const [selectedStage,    setSelectedStage]   = useState<Stage | null>(null);
-  const [loaded,           setLoaded]          = useState(false);
-
-  // Modals
-  const [showBrandModal,   setShowBrandModal]  = useState(false);
-  const [editingBrand,     setEditingBrand]    = useState<Brand | null>(null);
-  const [showProjectModal, setShowProjectModal]= useState(false);
-  const [editingProject,   setEditingProject]  = useState<Project | null>(null);
-  const [showSubModal,     setShowSubModal]    = useState(false);
-  const [editingSub,       setEditingSub]      = useState<SubProject | null>(null);
-  const [showChannelModal, setShowChannelModal]= useState(false);
-  const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
-  const [showWhiteboard,   setShowWhiteboard]  = useState(false);
+export default function Home() {
+  const [lang, setLang] = useState<Lang>('he')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const t = T[lang]
+  const isHe = lang === 'he'
 
   useEffect(() => {
-    const local = loadBrands();
-    setBrands(local);
-    setLoaded(true);
-    // sync from cloud — overrides local if cloud has data
-    loadBrandsFromCloud().then(cloud => {
-      if (cloud && cloud.length > 0) {
-        setBrands(cloud);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("vaachalta_brands_v1", JSON.stringify(cloud));
-        }
-      }
-    });
-  }, []);
+    const fn = () => setScrolled(window.scrollY > 60)
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
 
-  /* ── persist + sync active objects ── */
-  const syncAll = (updated: Brand[]) => {
-    setBrands(updated);
-    saveBrands(updated);
-    if (activeBrand) {
-      const ab = updated.find(b => b.id === activeBrand.id) ?? null;
-      setActiveBrand(ab);
-      if (ab && activeProject) {
-        const ap = ab.projects.find(p => p.id === activeProject.id) ?? null;
-        setActiveProject(ap);
-        if (ap && activeSubProject) {
-          const asp = ap.subProjects.find(s => s.id === activeSubProject.id) ?? null;
-          setActiveSubProject(asp);
-          if (asp && activeChannel) {
-            setActiveChannel(asp.channels.find(c => c.id === activeChannel.id) ?? null);
-          }
-        }
-      }
-    }
-  };
-
-  /* ── Brand CRUD ── */
-  const handleSaveBrand = (brand: Brand) => {
-    const updated = brands.find(b => b.id === brand.id)
-      ? brands.map(b => b.id === brand.id ? brand : b)
-      : [...brands, brand];
-    syncAll(updated);
-  };
-
-  const handleDeleteBrand = (id: string) => {
-    if (!confirm("למחוק מותג זה וכל הפרויקטים שלו?")) return;
-    const updated = brands.filter(b => b.id !== id);
-    setBrands(updated);
-    saveBrands(updated);
-    if (activeBrand?.id === id) { setActiveBrand(null); setActiveProject(null); setActiveSubProject(null); }
-  };
-
-  /* ── Project CRUD ── */
-  const handleSaveProject = (project: Project) => {
-    if (!activeBrand) return;
-    const projs = activeBrand.projects;
-    const updated = projs.find(p => p.id === project.id)
-      ? projs.map(p => p.id === project.id ? project : p)
-      : [...projs, project];
-    syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, projects: updated } : b));
-  };
-
-  const handleDeleteProject = (id: string) => {
-    if (!activeBrand || !confirm("למחוק פרויקט זה?")) return;
-    const updated = activeBrand.projects.filter(p => p.id !== id);
-    syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, projects: updated } : b));
-    if (activeProject?.id === id) { setActiveProject(null); setActiveSubProject(null); }
-  };
-
-  /* ── Sub-project CRUD ── */
-  const updateProject = (project: Project) => {
-    if (!activeBrand) return;
-    const projs = activeBrand.projects.map(p => p.id === project.id ? project : p);
-    syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, projects: projs } : b));
-  };
-
-  const handleSaveSub = (sub: SubProject) => {
-    if (!activeProject) return;
-    const subs = activeProject.subProjects.find(s => s.id === sub.id)
-      ? activeProject.subProjects.map(s => s.id === sub.id ? sub : s)
-      : [...activeProject.subProjects, sub];
-    updateProject({ ...activeProject, subProjects: subs });
-  };
-
-  const handleDeleteSub = (id: string) => {
-    if (!activeProject || !confirm("למחוק מחלקה זו?")) return;
-    updateProject({ ...activeProject, subProjects: activeProject.subProjects.filter(s => s.id !== id) });
-    if (activeSubProject?.id === id) setActiveSubProject(null);
-  };
-
-  /* ── Stage CRUD ── */
-  const updateSub = (sub: SubProject) => {
-    if (!activeProject) return;
-    const p = { ...activeProject, subProjects: activeProject.subProjects.map(s => s.id === sub.id ? sub : s) };
-    updateProject(p);
-    setActiveSubProject(sub);
-  };
-
-  const handleSaveStage = (stage: Stage) => {
-    if (!activeSubProject) return;
-    updateSub({ ...activeSubProject, stages: activeSubProject.stages.map(s => s.id === stage.id ? stage : s) });
-  };
-
-  const handleDeleteStage = (id: string) => {
-    if (!activeSubProject) return;
-    updateSub({ ...activeSubProject, stages: activeSubProject.stages.filter(s => s.id !== id).map((s, i) => ({ ...s, order: i })) });
-  };
-
-  const handleAddStageAfter = () => {
-    if (!activeSubProject || !selectedStage) return;
-    const idx  = activeSubProject.stages.findIndex(s => s.id === selectedStage.id);
-    const newS = { ...createStage(idx + 1), id: uuidv4() };
-    const stages = [...activeSubProject.stages];
-    stages.splice(idx + 1, 0, newS);
-    updateSub({ ...activeSubProject, stages: stages.map((s, i) => ({ ...s, order: i })) });
-    setTimeout(() => setSelectedStage(newS), 50);
-  };
-
-  const handleAddStageEnd = () => {
-    if (!activeSubProject) return;
-    const newS = { ...createStage(activeSubProject.stages.length), id: uuidv4() };
-    updateSub({ ...activeSubProject, stages: [...activeSubProject.stages, newS] });
-    setTimeout(() => setSelectedStage(newS), 50);
-  };
-
-  /* ── Channel CRUD ── */
-  const handleSaveChannel = (ch: Channel) => {
-    if (!activeSubProject) return;
-    const channels = activeSubProject.channels.find(c => c.id === ch.id)
-      ? activeSubProject.channels.map(c => c.id === ch.id ? ch : c)
-      : [...activeSubProject.channels, ch];
-    updateSub({ ...activeSubProject, channels });
-  };
-
-  const handleDeleteChannel = (id: string) => {
-    if (!activeSubProject || !confirm("למחוק פרויקט זה?")) return;
-    updateSub({ ...activeSubProject, channels: activeSubProject.channels.filter(c => c.id !== id) });
-    if (activeChannel?.id === id) setActiveChannel(null);
-  };
-
-  /* ── Channel stage CRUD ── */
-  const updateChannel = (ch: Channel) => {
-    if (!activeSubProject) return;
-    const sub = { ...activeSubProject, channels: activeSubProject.channels.map(c => c.id === ch.id ? ch : c) };
-    updateSub(sub);
-    setActiveChannel(ch);
-  };
-
-  const handleSaveChannelStage = (stage: Stage) => {
-    if (!activeChannel) return;
-    updateChannel({ ...activeChannel, stages: activeChannel.stages.map(s => s.id === stage.id ? stage : s) });
-  };
-
-  const handleDeleteChannelStage = (id: string) => {
-    if (!activeChannel) return;
-    updateChannel({ ...activeChannel, stages: activeChannel.stages.filter(s => s.id !== id).map((s, i) => ({ ...s, order: i })) });
-  };
-
-  const handleAddChannelStageAfter = () => {
-    if (!activeChannel || !selectedStage) return;
-    const idx = activeChannel.stages.findIndex(s => s.id === selectedStage.id);
-    const newS = { ...createStage(idx + 1), id: uuidv4() };
-    const stages = [...activeChannel.stages];
-    stages.splice(idx + 1, 0, newS);
-    updateChannel({ ...activeChannel, stages: stages.map((s, i) => ({ ...s, order: i })) });
-    setTimeout(() => setSelectedStage(newS), 50);
-  };
-
-  const handleAddChannelStageEnd = () => {
-    if (!activeChannel) return;
-    const newS = { ...createStage(activeChannel.stages.length), id: uuidv4() };
-    updateChannel({ ...activeChannel, stages: [...activeChannel.stages, newS] });
-    setTimeout(() => setSelectedStage(newS), 50);
-  };
-
-  /* ─── Loading ─────────────────────────────────────────── */
-  if (!loaded) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center"><div className="text-4xl mb-3">⚡</div><p className="text-gray-400 font-medium">טוען...</p></div>
-    </div>
-  );
-
-  /* ══ LEVEL 4: Channel → Stages pipeline ══ */
-  if (activeChannel && activeSubProject && activeProject && activeBrand) {
-    const sorted   = [...activeChannel.stages].sort((a, b) => a.order - b.order);
-    const done     = sorted.filter(s => s.status === "done").length;
-    const progress = sorted.length > 0 ? Math.round((done / sorted.length) * 100) : 0;
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <BreadcrumbSidebar color={activeProject.color} items={[
-          { emoji: activeBrand.emoji,      name: activeBrand.name,      onClick: () => { setActiveProject(null); setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); }, isCurrent: false },
-          { emoji: activeProject.emoji,    name: activeProject.name,    onClick: () => { setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); },                        isCurrent: false },
-          { emoji: activeSubProject.emoji, name: activeSubProject.name, onClick: () => { setActiveChannel(null); setSelectedStage(null); },                                                   isCurrent: false },
-          { emoji: activeChannel.emoji,    name: activeChannel.name,    onClick: () => {},                                                                                                    isCurrent: true  },
-        ]} />
-        {selectedStage && (
-          <StageEditDrawer
-            stage={selectedStage}
-            stageNumber={sorted.findIndex(s => s.id === selectedStage.id) + 1}
-            totalStages={sorted.length}
-            onClose={() => setSelectedStage(null)}
-            onSave={stage => { handleSaveChannelStage(stage); setSelectedStage(null); }}
-            onDelete={id => { handleDeleteChannelStage(id); setSelectedStage(null); }}
-            onAddAfter={handleAddChannelStageAfter}
-          />
-        )}
-
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <BackButton emoji={activeSubProject.emoji} label={activeSubProject.name} onClick={() => { setActiveChannel(null); setSelectedStage(null); }} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingChannel(activeChannel)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm">+ שלב חדש</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-2xl mx-auto px-4 py-5 space-y-5 animate-in">
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeChannel.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-xl">{activeChannel.name}</h1>
-              {activeChannel.description && <p className="text-sm text-gray-400 mt-0.5">{activeChannel.description}</p>}
-            </div>
-          </div>
-
-          <div className="card px-5 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-gray-700 text-sm">התקדמות</span>
-              <span className="font-black text-xl" style={{ color: activeProject.color }}>{progress}%</span>
-            </div>
-            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
-            </div>
-            <div className="flex gap-4 mt-2.5 flex-wrap">
-              {(["todo","active","done","blocked"] as StageStatus[]).map(s => {
-                const count = sorted.filter(st => st.status === s).length;
-                if (!count) return null;
-                return (
-                  <div key={s} className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: STATUS_META[s].dot }} />
-                    <span className="text-xs text-gray-500">{STATUS_META[s].label}: <strong>{count}</strong></span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-gray-800">שלבים</h2>
-              <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">לחץ לעריכה</span>
-            </div>
-            {sorted.length === 0 ? (
-              <div className="text-center py-10 text-gray-400">
-                <p className="text-4xl mb-2">📋</p>
-                <p className="font-medium mb-3">אין שלבים עדיין</p>
-                <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm">+ הוסף שלב ראשון</button>
-              </div>
-            ) : (
-              <ProjectPipeline stages={sorted} onClickStage={setSelectedStage} activeStageId={selectedStage?.id ?? null} />
-            )}
-          </div>
-        </div>
-
-        {editingChannel && (
-          <ChannelModal existing={editingChannel} order={activeChannel.order} onClose={() => setEditingChannel(null)} onSave={handleSaveChannel} />
-        )}
-      </div>
-    );
-  }
-
-  /* ══ LEVEL 3: Sub-project detail (channels OR stages) ══ */
-  if (activeSubProject && activeProject && activeBrand) {
-    const hasChannels = activeSubProject.channels.length > 0;
-    const hasStages   = activeSubProject.stages.length > 0;
-    const sorted      = [...activeSubProject.stages].sort((a, b) => a.order - b.order);
-    const stageDone   = sorted.filter(s => s.status === "done").length;
-    const stageProgress = sorted.length > 0 ? Math.round((stageDone / sorted.length) * 100) : 0;
-    const chProgress  = hasChannels ? pct(activeSubProject.channels.flatMap(c => c.stages)) : 0;
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {selectedStage && !hasChannels && (
-          <StageEditDrawer
-            stage={selectedStage}
-            stageNumber={sorted.findIndex(s => s.id === selectedStage.id) + 1}
-            totalStages={sorted.length}
-            onClose={() => setSelectedStage(null)}
-            onSave={stage => { handleSaveStage(stage); setSelectedStage(null); }}
-            onDelete={id => { handleDeleteStage(id); setSelectedStage(null); }}
-            onAddAfter={handleAddStageAfter}
-          />
-        )}
-        <BreadcrumbSidebar color={activeProject.color} items={[
-          { emoji: activeBrand.emoji,      name: activeBrand.name,      onClick: () => { setActiveProject(null); setActiveSubProject(null); setSelectedStage(null); }, isCurrent: false },
-          { emoji: activeProject.emoji,    name: activeProject.name,    onClick: () => { setActiveSubProject(null); setSelectedStage(null); },                        isCurrent: false },
-          { emoji: activeSubProject.emoji, name: activeSubProject.name, onClick: () => {},                                                                            isCurrent: true  },
-        ]} />
-        {showChannelModal && <ChannelModal order={activeSubProject.channels.length} onClose={() => setShowChannelModal(false)} onSave={handleSaveChannel} />}
-        {editingChannel   && <ChannelModal existing={editingChannel} order={editingChannel.order} onClose={() => setEditingChannel(null)} onSave={handleSaveChannel} />}
-        {editingSub       && <SubProjectModal existing={editingSub} order={activeSubProject.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} />}
-
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <BackButton emoji={activeProject.emoji} label={activeProject.name} onClick={() => { setActiveSubProject(null); setSelectedStage(null); }} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingSub(activeSubProject)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              {hasChannels
-                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
-                : hasStages
-                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm">+ שלב חדש</button>
-                  : null
-              }
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-5 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeSubProject.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-xl">{activeSubProject.name}</h1>
-              {activeSubProject.description && <p className="text-sm text-gray-400 mt-0.5">{activeSubProject.description}</p>}
-            </div>
-          </div>
-
-          {/* ── CHANNELS MODE ── */}
-          {hasChannels && (
-            <>
-              <div className="card px-5 py-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-gray-700 text-sm">התקדמות כללית</span>
-                  <span className="font-black text-xl" style={{ color: activeProject.color }}>{chProgress}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${chProgress}%`, background: activeProject.color }} />
-                </div>
-                <p className="text-xs text-gray-400 mt-2">{activeSubProject.channels.length} פרויקטים</p>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {[...activeSubProject.channels].sort((a, b) => a.order - b.order).map(ch => (
-                  <ChannelCard
-                    key={ch.id}
-                    channel={ch}
-                    color={activeProject.color}
-                    onClick={() => { setActiveChannel(ch); setSelectedStage(null); }}
-                    onEdit={() => setEditingChannel(ch)}
-                    onDelete={() => handleDeleteChannel(ch.id)}
-                  />
-                ))}
-                <button
-                  onClick={() => setShowChannelModal(true)}
-                  className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-                >
-                  <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                  <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* ── STAGES MODE ── */}
-          {hasStages && !hasChannels && (
-            <>
-              <div className="card px-5 py-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-gray-700 text-sm">התקדמות</span>
-                  <span className="font-black text-xl" style={{ color: activeProject.color }}>{stageProgress}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${stageProgress}%`, background: activeProject.color }} />
-                </div>
-              </div>
-              <div className="card p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-gray-800">שלבים</h2>
-                  <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">לחץ לעריכה</span>
-                </div>
-                <ProjectPipeline stages={sorted} onClickStage={setSelectedStage} activeStageId={selectedStage?.id ?? null} />
-              </div>
-            </>
-          )}
-
-          {/* ── EMPTY STATE ── */}
-          {!hasChannels && !hasStages && (
-            <div className="card p-12 text-center">
-              <div className="text-4xl mb-3">✨</div>
-              <h2 className="font-black text-gray-800 text-lg mb-1">איך תרצה לארגן את המחלקה?</h2>
-              <p className="text-gray-400 text-sm mb-7">בחר מצב אחד — אפשר לשנות בהמשך</p>
-              <div className="flex gap-4 justify-center flex-wrap">
-                <button
-                  onClick={handleAddStageEnd}
-                  className="card p-6 flex flex-col items-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 w-44 cursor-pointer border-2 hover:border-teal-200"
-                >
-                  <span className="text-3xl">📋</span>
-                  <span className="font-bold text-gray-800">שלבים ישירים</span>
-                  <span className="text-xs text-gray-400 text-center">רשימה אחת של שלבים לכל המחלקה</span>
-                </button>
-                <button
-                  onClick={() => setShowChannelModal(true)}
-                  className="card p-6 flex flex-col items-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 w-44 cursor-pointer border-2 hover:border-teal-200"
-                >
-                  <span className="text-3xl">🗂️</span>
-                  <span className="font-bold text-gray-800">פרויקטים</span>
-                  <span className="text-xs text-gray-400 text-center">כמה פרויקטים נפרדים, לכל אחד שלבים</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ══ LEVEL 2: Project → Sub-projects ══ */
-  if (activeProject && activeBrand) {
-    const totalStages = activeProject.subProjects.reduce((n, sp) => n + sp.stages.length, 0);
-    const doneStages  = activeProject.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length, 0);
-    const progress    = totalStages > 0 ? Math.round((doneStages / totalStages) * 100) : 0;
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <BreadcrumbSidebar color={activeBrand.color} items={[
-          { emoji: activeBrand.emoji,  name: activeBrand.name,  onClick: () => setActiveProject(null), isCurrent: false },
-          { emoji: activeProject.emoji, name: activeProject.name, onClick: () => {},                  isCurrent: true  },
-        ]} />
-        {showSubModal   && <SubProjectModal order={activeProject.subProjects.length} onClose={() => setShowSubModal(false)} onSave={handleSaveSub} />}
-        {editingSub     && <SubProjectModal existing={editingSub} order={editingSub.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} />}
-        {editingProject && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
-
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <BackButton emoji={activeBrand.emoji} label={activeBrand.name} onClick={() => setActiveProject(null)} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingProject(activeProject)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              <button onClick={() => setShowSubModal(true)} className="btn btn-orange text-sm">+ מחלקה חדשה</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-6 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeProject.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-2xl">{activeProject.name}</h1>
-              {activeProject.description && <p className="text-sm text-gray-400 mt-0.5">{activeProject.description}</p>}
-            </div>
-          </div>
-
-          {/* Overall progress */}
-          <div className="card px-5 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-gray-700 text-sm">התקדמות כללית</span>
-              <span className="font-black text-xl" style={{ color: activeProject.color }}>{progress}%</span>
-            </div>
-            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} מחלקות · {doneStages}/{totalStages} שלבים הושלמו</p>
-          </div>
-
-          {/* Financial overview */}
-          {(() => {
-            const rows = activeProject.subProjects.map(sp => ({
-              sp, exp: subMonthlyExpenses(sp)
-            })).filter(r => r.exp > 0);
-            if (!rows.length) return null;
-            const totalExp = rows.reduce((s, r) => s + r.exp, 0);
-            return (
-              <div className="card p-4 border-l-4" style={{ borderLeftColor: activeProject.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-800 text-sm">💸 סיכום הוצאות חודשיות</h3>
-                  <span className="font-black text-base" style={{ color: activeProject.color }}>
-                    ₪{totalExp.toLocaleString("he-IL")}/חודש
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {rows.map(({ sp, exp }) => (
-                    <div key={sp.id} className="flex items-center gap-3">
-                      <span className="text-base">{sp.emoji}</span>
-                      <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{sp.name}</span>
-                      <span className="text-xs font-semibold text-gray-600">
-                        ₪{exp.toLocaleString("he-IL")}/חודש
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Sub-projects grid */}
-          {activeProject.subProjects.length === 0 ? (
-            <div className="card p-16 text-center">
-              <div className="text-5xl mb-3">📁</div>
-              <h2 className="font-black text-gray-800 text-lg mb-2">אין מחלקות עדיין</h2>
-              <p className="text-gray-400 mb-5 text-sm">כל מחלקה מקבלת שלבים משלה</p>
-              <button onClick={() => setShowSubModal(true)} className="btn btn-orange">+ הוסף מחלקה ראשונה</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {[...activeProject.subProjects].sort((a, b) => a.order - b.order).map(sub => (
-                <SubProjectCard
-                  key={sub.id}
-                  sub={sub}
-                  color={activeProject.color}
-                  onClick={() => setActiveSubProject(sub)}
-                  onEdit={() => setEditingSub(sub)}
-                  onDelete={() => handleDeleteSub(sub.id)}
-                />
-              ))}
-              <button
-                onClick={() => setShowSubModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-              >
-                <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">מחלקה חדשה</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ══ WHITEBOARD overlay ══ */
-  if (showWhiteboard && activeBrand) {
-    return (
-      <BrandWhiteboard
-        brand={activeBrand}
-        onClose={() => setShowWhiteboard(false)}
-        onNavigateTo={(project, sub, channel) => {
-          setActiveProject(project);
-          if (sub) setActiveSubProject(sub);
-          if (channel) setActiveChannel(channel);
-          setShowWhiteboard(false);
-        }}
-      />
-    );
-  }
-
-  /* ══ LEVEL 1: Brand → Projects ══ */
-  if (activeBrand) {
-    if (activeBrand.emoji === "💰") {
-      return (
-        <FinancialDashboard
-          brandId={activeBrand.id}
-          onBack={() => setActiveBrand(null)}
-        />
-      );
-    }
-
-    const projects = activeBrand.projects;
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <BreadcrumbSidebar color={activeBrand.color} items={[
-          { emoji: activeBrand.emoji, name: activeBrand.name, onClick: () => {}, isCurrent: true },
-        ]} />
-        {showProjectModal && <NewProjectModal order={projects.length} onClose={() => setShowProjectModal(false)} onSave={handleSaveProject} />}
-        {editingProject   && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
-        {editingBrand     && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
-
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <BackButton label="המותגים שלי" onClick={() => setActiveBrand(null)} />
-            <div className="flex gap-2">
-              <button onClick={() => setShowWhiteboard(true)} className="btn btn-ghost text-sm">🗺️ מפה</button>
-              <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm">✏️ ערוך מותג</button>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-6 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-4 pt-1">
-            {activeBrand.logo
-              ? <img src={activeBrand.logo} alt={activeBrand.name} className="w-14 h-14 rounded-2xl object-contain bg-white border border-gray-100 shadow-sm flex-shrink-0" />
-              : <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm flex-shrink-0" style={{ background: activeBrand.color + "20", border: `2px solid ${activeBrand.color}30` }}>{activeBrand.emoji}</div>
-            }
-            <div>
-              <h1 className="font-black text-gray-900 text-2xl">{activeBrand.name}</h1>
-              {activeBrand.description && <p className="text-sm text-gray-400 mt-0.5">{activeBrand.description}</p>}
-            </div>
-          </div>
-
-          {/* Brand financial summary */}
-          {(() => {
-            const projRows = projects.map(p => ({
-              p, exp: p.subProjects.reduce((s, sp) => s + subMonthlyExpenses(sp), 0)
-            })).filter(r => r.exp > 0);
-            if (!projRows.length) return null;
-            const totalExp = projRows.reduce((s, r) => s + r.exp, 0);
-            return (
-              <div className="card p-4 border-l-4" style={{ borderLeftColor: activeBrand.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-800 text-sm">💸 סיכום הוצאות חודשיות — כל הפרויקטים</h3>
-                  <span className="font-black text-base" style={{ color: activeBrand.color }}>
-                    ₪{totalExp.toLocaleString("he-IL")}/חודש
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {projRows.map(({ p, exp }) => (
-                    <div key={p.id} className="flex items-center gap-3">
-                      <span className="text-base">{p.emoji}</span>
-                      <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{p.name}</span>
-                      <span className="text-xs font-semibold text-gray-600">
-                        ₪{exp.toLocaleString("he-IL")}/חודש
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Projects grid */}
-          {projects.length === 0 ? (
-            <div className="card p-16 text-center">
-              <div className="text-5xl mb-3">🚀</div>
-              <h2 className="font-black text-gray-800 text-xl mb-2">אין פרויקטים עדיין</h2>
-              <p className="text-gray-400 mb-5 text-sm max-w-xs mx-auto">כל פרויקט מחולק למחלקות ושלבים</p>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור פרויקט ראשון</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-              {[...projects].sort((a, b) => a.order - b.order).map(p => (
-                <ProjectCard
-                  key={p.id}
-                  project={p}
-                  onClick={() => setActiveProject(p)}
-                  onEdit={() => setEditingProject(p)}
-                  onDelete={() => handleDeleteProject(p.id)}
-                />
-              ))}
-              <button
-                onClick={() => setShowProjectModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  /* ══ LEVEL 0: Brands home ══ */
   return (
-    <div className="min-h-screen bg-gray-50">
-      {showBrandModal && <BrandWizard onClose={() => setShowBrandModal(false)} onSave={handleSaveBrand} />}
-      {editingBrand   && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
+    <main dir={isHe ? 'rtl' : 'ltr'} style={{ fontFamily:'Manrope, sans-serif' }}>
 
-      <div className="max-w-screen-lg mx-auto px-4 py-8 space-y-6 animate-in">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">המותגים שלי</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {brands.length === 0 ? "צור מותג ראשון" : `${brands.length} מותג${brands.length !== 1 ? "ים" : ""}`}
-            </p>
+      {/* ── Navbar ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-200" style={scrolled ? { boxShadow:'0 1px 0 #E8F4F6, 0 2px 12px rgba(11,27,43,0.06)' } : {}}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 flex items-center justify-between h-16">
+          <a href="#"><Logo /></a>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" style={{ fontFamily:'Manrope, sans-serif', fontSize:14, fontWeight:500, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.features}</a>
+            <a href="#how-it-works" style={{ fontFamily:'Manrope, sans-serif', fontSize:14, fontWeight:500, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.howItWorks}</a>
+            <a href="#pricing" style={{ fontFamily:'Manrope, sans-serif', fontSize:14, fontWeight:500, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.pricing}</a>
           </div>
-          <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
+          <div className="hidden md:flex items-center gap-3">
+            <LangToggle lang={lang} setLang={setLang} />
+            <a href="/login" style={{ fontFamily:'Sora, sans-serif', fontSize:14, fontWeight:600, color:'rgba(11,27,43,0.65)', textDecoration:'none', padding:'8px 16px' }}>{t.nav.signin}</a>
+            <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:14, borderRadius:999, padding:'10px 22px', textDecoration:'none' }}>{t.nav.cta}</a>
+          </div>
+          <button className="md:hidden flex flex-col gap-1.5 p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+            <span className={`block w-6 h-0.5 bg-gray-800 transition-all ${mobileOpen?'rotate-45 translate-y-2':''}`}/>
+            <span className={`block w-6 h-0.5 bg-gray-800 transition-all ${mobileOpen?'opacity-0':''}`}/>
+            <span className={`block w-6 h-0.5 bg-gray-800 transition-all ${mobileOpen?'-rotate-45 -translate-y-2':''}`}/>
+          </button>
         </div>
+        <div className={`md:hidden overflow-hidden transition-all duration-300 bg-white border-t border-gray-100 ${mobileOpen?'max-h-80':'max-h-0'}`}>
+          <div className="px-5 py-4 flex flex-col gap-4">
+            <a href="#features" style={{ fontSize:14, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.features}</a>
+            <a href="#how-it-works" style={{ fontSize:14, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.howItWorks}</a>
+            <a href="#pricing" style={{ fontSize:14, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.pricing}</a>
+            <div style={{ display:'flex', alignItems:'center', gap:12, paddingTop:8, borderTop:'1px solid #e5e7eb' }}>
+              <LangToggle lang={lang} setLang={setLang} />
+              <a href="/login" style={{ fontSize:14, color:'rgba(11,27,43,0.65)', textDecoration:'none' }}>{t.nav.signin}</a>
+              <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:13, borderRadius:999, padding:'8px 18px', textDecoration:'none' }}>{t.nav.cta}</a>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        {brands.length === 0 ? (
-          <div className="card p-16 text-center">
-            <div className="text-5xl mb-3">🏢</div>
-            <h2 className="font-black text-gray-800 text-xl mb-2">צור את המותג הראשון שלך</h2>
-            <p className="text-gray-400 mb-5 text-sm max-w-xs mx-auto">כל מותג מכיל פרויקטים, כל פרויקט — מחלקות ושלבים</p>
-            <button onClick={() => setShowBrandModal(true)} className="btn btn-orange text-base px-8 py-3">+ צור מותג</button>
+      {/* ── Hero ── */}
+      <section style={{ background:'#0B1B2B', minHeight:'100vh', display:'flex', alignItems:'center', paddingTop:80, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, pointerEvents:'none' }}>
+          <div style={{ position:'absolute', top:'10%', left:'5%', width:500, height:500, background:'radial-gradient(circle,rgba(31,174,181,0.1) 0%,transparent 70%)', filter:'blur(40px)' }}/>
+          <div style={{ position:'absolute', bottom:'10%', right:'5%', width:400, height:400, background:'radial-gradient(circle,rgba(14,95,168,0.12) 0%,transparent 70%)', filter:'blur(40px)' }}/>
+        </div>
+        <div className="relative z-10 max-w-6xl mx-auto px-5 md:px-8 w-full py-20">
+          <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
+            <div className="flex-1 text-center lg:text-left max-w-xl mx-auto lg:mx-0" style={isHe ? { textAlign:'right' } : {}}>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:28, background:'rgba(31,174,181,0.1)', border:'1px solid rgba(31,174,181,0.25)', borderRadius:999, padding:'6px 14px' }}>
+                <span style={{ width:6, height:6, borderRadius:'50%', background:'#1FAEB5', display:'inline-block' }}/>
+                <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.12em', color:'#1FAEB5', textTransform:'uppercase' }}>{t.hero.chip}</span>
+              </div>
+              <h1 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(42px,6vw,72px)', color:'#E8F4F6', lineHeight:1.1, marginBottom:24 }}>
+                {t.hero.h1a}<br/>
+                <span style={{ backgroundImage:'linear-gradient(135deg,#1FAEB5,#3A9BE8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>{t.hero.h1b}</span>
+              </h1>
+              <p style={{ fontSize:18, color:'rgba(232,244,246,0.65)', lineHeight:1.7, marginBottom:32, maxWidth:460 }}>{t.hero.sub}</p>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:12, justifyContent: isHe ? 'flex-start' : 'flex-start', marginBottom:20 }}>
+                <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, borderRadius:999, padding:'13px 28px', textDecoration:'none', display:'inline-flex', alignItems:'center' }}>{t.hero.cta}</a>
+                <a href="#how-it-works" style={{ display:'inline-flex', alignItems:'center', gap:8, fontFamily:'Sora, sans-serif', fontWeight:600, fontSize:15, color:'rgba(232,244,246,0.8)', border:'1.5px solid rgba(232,244,246,0.2)', borderRadius:999, padding:'12px 22px', textDecoration:'none' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                  {t.hero.demo}
+                </a>
+              </div>
+              <p style={{ fontSize:12, color:'rgba(232,244,246,0.35)' }}>{t.hero.trust}</p>
+            </div>
+            {/* Mockup */}
+            <div className="flex-shrink-0">
+              <div style={{ width:300, borderRadius:20, background:'linear-gradient(160deg,#0f2236,#0a1929)', border:'1px solid rgba(31,174,181,0.18)', boxShadow:'0 0 40px rgba(31,174,181,0.18),0 30px 80px rgba(0,0,0,0.55)', padding:'24px 20px 20px' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+                  <div>
+                    <div style={{ fontSize:10, color:'rgba(232,244,246,0.4)', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:2 }}>Today&apos;s focus</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:'#E8F4F6', fontFamily:'Sora, sans-serif' }}>Wednesday, May 27</div>
+                  </div>
+                  <div style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius:8, padding:'4px 10px', fontSize:11, fontWeight:700, color:'#fff' }}>3 / 7</div>
+                </div>
+                <div style={{ height:1, background:'rgba(232,244,246,0.08)', marginBottom:14 }}/>
+                {[
+                  { text:'Review pitch deck', badge:'Done', bc:'#1FAEB5', done:true },
+                  { text:'Call with investor', badge:'High', bc:'#F59E0B', done:false },
+                  { text:'Ship onboarding v2', badge:'Focus', bc:'#3B82F6', done:false },
+                ].map((item, i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10, opacity: item.done ? 0.6 : 1 }}>
+                    <div style={{ width:18, height:18, borderRadius:5, background: item.done ? 'linear-gradient(135deg,#1FAEB5,#0E5FA8)' : 'transparent', border: item.done ? 'none' : '1.5px solid rgba(31,174,181,0.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      {item.done && <svg width="10" height="8" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </div>
+                    <span style={{ flex:1, fontSize:12, fontWeight:500, color: item.done ? 'rgba(232,244,246,0.5)' : '#E8F4F6', textDecoration: item.done ? 'line-through' : 'none' }}>{item.text}</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:item.bc, background:`${item.bc}18`, borderRadius:99, padding:'2px 8px' }}>{item.badge}</span>
+                  </div>
+                ))}
+                <div style={{ height:1, background:'rgba(232,244,246,0.08)', margin:'14px 0 12px' }}/>
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:10, color:'rgba(232,244,246,0.4)' }}>Daily progress</span>
+                    <span style={{ fontSize:10, color:'#1FAEB5', fontWeight:700 }}>3 of 7 done</span>
+                  </div>
+                  <div style={{ height:4, background:'rgba(255,255,255,0.07)', borderRadius:999, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:'43%', background:'linear-gradient(90deg,#1FAEB5,#0E5FA8)', borderRadius:999 }}/>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-            {brands.map(b => (
-              <BrandCard
-                key={b.id}
-                brand={b}
-                onClick={() => setActiveBrand(b)}
-                onEdit={() => setEditingBrand(b)}
-                onDelete={() => handleDeleteBrand(b.id)}
-              />
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section id="how-it-works" style={{ background:'#E8F4F6', padding:'100px 0' }}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Fade className="text-center mb-16">
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:20, background:'rgba(31,174,181,0.1)', border:'1px solid rgba(31,174,181,0.2)', borderRadius:999, padding:'5px 14px' }}>
+              <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#1FAEB5', textTransform:'uppercase' }}>{t.how.chip}</span>
+            </div>
+            <h2 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(28px,4vw,48px)', color:'#0B1B2B' }}>{t.how.h2}</h2>
+          </Fade>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {t.how.steps.map((step, i) => (
+              <Fade key={i} delay={i * 120}>
+                <div style={{ background:'#fff', borderRadius:20, padding:'32px 28px', border:'1px solid rgba(31,174,181,0.1)', height:'100%' }}>
+                  <div style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:40, lineHeight:1, marginBottom:16, backgroundImage:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>{step.n}</div>
+                  <h3 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:20, color:'#0B1B2B', marginBottom:12 }}>{step.title}</h3>
+                  <p style={{ fontSize:14, color:'rgba(11,27,43,0.6)', lineHeight:1.7 }}>{step.desc}</p>
+                </div>
+              </Fade>
             ))}
-            <button
-              onClick={() => setShowBrandModal(true)}
-              className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-              <span className="font-semibold text-gray-400 text-sm">מותג חדש</span>
-            </button>
           </div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section id="features" style={{ background:'#fff', padding:'100px 0' }}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Fade className="text-center mb-16">
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:20, background:'rgba(11,27,43,0.05)', border:'1px solid rgba(11,27,43,0.1)', borderRadius:999, padding:'5px 14px' }}>
+              <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'rgba(11,27,43,0.5)', textTransform:'uppercase' }}>{t.features.chip}</span>
+            </div>
+            <h2 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(28px,4vw,48px)', color:'#0B1B2B' }}>{t.features.h2}</h2>
+          </Fade>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+            {t.features.items.map((f, i) => (
+              <Fade key={i} delay={i * 80}>
+                <div style={{ background:'#fff', borderRadius:18, padding:'28px 24px', border:'1.5px solid rgba(11,27,43,0.07)', height:'100%', transition:'all 0.2s', cursor:'default' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(31,174,181,0.4)'; el.style.boxShadow='0 4px 24px rgba(31,174,181,0.1)'; el.style.transform='translateY(-2px)' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='rgba(11,27,43,0.07)'; el.style.boxShadow='none'; el.style.transform='none' }}
+                >
+                  <div style={{ width:40, height:40, borderRadius:12, background:'rgba(31,174,181,0.1)', display:'flex', alignItems:'center', justifyContent:'center', color:'#1FAEB5', marginBottom:14 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  </div>
+                  <h3 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, color:'#0B1B2B', marginBottom:8 }}>{f.title}</h3>
+                  <p style={{ fontSize:13, color:'rgba(11,27,43,0.55)', lineHeight:1.65 }}>{f.desc}</p>
+                </div>
+              </Fade>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" style={{ background:'#E8F4F6', padding:'100px 0' }}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <Fade className="text-center mb-14">
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:20, background:'rgba(31,174,181,0.12)', border:'1px solid rgba(31,174,181,0.22)', borderRadius:999, padding:'5px 14px' }}>
+              <span style={{ fontFamily:'Sora, sans-serif', fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#1FAEB5', textTransform:'uppercase' }}>{t.pricing.chip}</span>
+            </div>
+            <h2 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(28px,4vw,48px)', color:'#0B1B2B' }}>{t.pricing.h2}</h2>
+          </Fade>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <Fade>
+              <div style={{ background:'#fff', borderRadius:24, padding:'36px 32px', border:'1.5px solid rgba(11,27,43,0.08)', height:'100%', display:'flex', flexDirection:'column' }}>
+                <div style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:16, color:'#0B1B2B', marginBottom:8 }}>{t.pricing.free.name}</div>
+                <div style={{ marginBottom:24 }}><span style={{ fontFamily:'Sora, sans-serif', fontWeight:800, fontSize:40, color:'#0B1B2B' }}>{t.pricing.free.price}</span><span style={{ fontSize:14, color:'rgba(11,27,43,0.45)', marginRight:6 }}>{t.pricing.free.per}</span></div>
+                <ul style={{ listStyle:'none', padding:0, margin:'0 0 32px', flex:1 }}>
+                  {t.pricing.free.items.map((item, i) => (
+                    <li key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}><Check /><span style={{ fontSize:14, color:'rgba(11,27,43,0.7)' }}>{item}</span></li>
+                  ))}
+                </ul>
+                <a href="/signup" style={{ background:'transparent', border:'2px solid rgba(31,174,181,0.4)', color:'#1FAEB5', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, borderRadius:12, padding:'13px', textDecoration:'none', textAlign:'center', display:'block' }}>{t.pricing.free.cta}</a>
+              </div>
+            </Fade>
+            <Fade delay={150}>
+              <div style={{ background:'#0B1B2B', borderRadius:24, padding:'36px 32px', border:'1.5px solid rgba(31,174,181,0.25)', height:'100%', display:'flex', flexDirection:'column', position:'relative', overflow:'hidden', boxShadow:'0 8px 40px rgba(31,174,181,0.15)' }}>
+                <div style={{ position:'absolute', top:20, [isHe?'left':'right']:20, background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius:999, padding:'4px 12px', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:11, color:'#fff' }}>{t.pricing.pro.badge}</div>
+                <div style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:16, color:'#E8F4F6', marginBottom:8 }}>{t.pricing.pro.name}</div>
+                <div style={{ marginBottom:24 }}><span style={{ fontFamily:'Sora, sans-serif', fontWeight:800, fontSize:40, color:'#E8F4F6' }}>{t.pricing.pro.price}</span><span style={{ fontSize:14, color:'rgba(232,244,246,0.4)', marginRight:6 }}>{t.pricing.pro.per}</span></div>
+                <ul style={{ listStyle:'none', padding:0, margin:'0 0 32px', flex:1 }}>
+                  {t.pricing.pro.items.map((item, i) => (
+                    <li key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}><Check green /><span style={{ fontSize:14, color:'rgba(232,244,246,0.7)' }}>{item}</span></li>
+                  ))}
+                </ul>
+                <a href="/signup" style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, borderRadius:12, padding:'13px', textDecoration:'none', textAlign:'center', display:'block' }}>{t.pricing.pro.cta}</a>
+              </div>
+            </Fade>
+          </div>
+          <Fade className="text-center mt-8">
+            <p style={{ fontSize:13, color:'rgba(11,27,43,0.45)' }}>{t.pricing.footnote}</p>
+          </Fade>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section style={{ background:'linear-gradient(135deg,#1FAEB5,#0E5FA8)', padding:'100px 0' }}>
+        <div className="max-w-3xl mx-auto px-5 md:px-8 text-center">
+          <Fade>
+            <h2 style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:'clamp(32px,5vw,56px)', color:'#fff', lineHeight:1.15, marginBottom:16 }}>{t.cta.h2}</h2>
+            <p style={{ fontSize:17, color:'rgba(255,255,255,0.75)', lineHeight:1.7, marginBottom:40 }}>{t.cta.sub}</p>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:16, justifyContent:'center' }}>
+              <a href="/signup" style={{ background:'#fff', color:'#0B1B2B', fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:15, borderRadius:999, padding:'13px 28px', textDecoration:'none' }}>{t.cta.btn}</a>
+              <a href="#features" style={{ color:'#fff', fontFamily:'Sora, sans-serif', fontWeight:600, fontSize:15, border:'2px solid rgba(255,255,255,0.45)', borderRadius:999, padding:'12px 28px', textDecoration:'none' }}>{t.cta.link}</a>
+            </div>
+          </Fade>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer style={{ background:'#0B1B2B', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'60px 0 36px' }}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-12 mb-12">
+            <div>
+              <Logo white />
+              <p style={{ fontSize:13, color:'rgba(232,244,246,0.4)', marginTop:12 }}>{t.footer.tagline}</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              {[
+                { title: isHe ? 'מוצר' : 'Product', items: [t.nav.features, t.nav.howItWorks, t.nav.pricing] },
+                { title: isHe ? 'חברה' : 'Company', items: [isHe?'אודות':'About', isHe?'בלוג':'Blog'] },
+                { title: isHe ? 'משפטי' : 'Legal', items: [isHe?'פרטיות':'Privacy', isHe?'תנאים':'Terms'] },
+              ].map(col => (
+                <div key={col.title}>
+                  <div style={{ fontFamily:'Sora, sans-serif', fontWeight:700, fontSize:11, letterSpacing:'0.1em', color:'rgba(232,244,246,0.35)', textTransform:'uppercase', marginBottom:14 }}>{col.title}</div>
+                  <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+                    {col.items.map(item => (
+                      <li key={item} style={{ marginBottom:9 }}><a href="#" style={{ fontSize:13, color:'rgba(232,244,246,0.5)', textDecoration:'none' }}>{item}</a></li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:24, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+            <p style={{ fontSize:12, color:'rgba(232,244,246,0.3)' }}>&copy; 2026 beseder. All rights reserved.</p>
+            <p style={{ fontFamily:'Sora, sans-serif', fontWeight:600, fontSize:12, color:'rgba(232,244,246,0.25)', letterSpacing:'0.04em' }}>getbeseder.com</p>
+          </div>
+        </div>
+      </footer>
+    </main>
+  )
 }
