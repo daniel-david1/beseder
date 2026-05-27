@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus } from "@/lib/types";
 import { loadBrands, saveBrands, createStage, loadBrandsFromCloud } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import ProjectPipeline from "@/components/ProjectPipeline";
 import StageEditDrawer from "@/components/StageEditDrawer";
 import BrandModal from "@/components/BrandModal";
@@ -434,6 +436,105 @@ function GoalsPanel({ goals, color, onChange }: {
   );
 }
 
+/* ─── Top Nav ─────────────────────────────────────────── */
+function TopNav({ userEmail }: { userEmail: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const initials = userEmail
+    ? userEmail.split("@")[0].slice(0, 2).toUpperCase()
+    : "?";
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  return (
+    <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
+      <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <svg width="22" height="22" viewBox="0 0 52 52" fill="none">
+            <rect width="52" height="52" rx="13" fill="url(#ng)"/>
+            <rect x="10" y="12" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
+            <rect x="10" y="23" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
+            <rect x="10" y="34" width="28" height="6" rx="3" fill="#fff" opacity="0.65"/>
+            <defs>
+              <linearGradient id="ng" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#1FAEB5"/><stop offset="1" stopColor="#0E5FA8"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="font-bold text-gray-900 text-base tracking-tight" style={{ fontFamily: "Sora, sans-serif" }}>beseder</span>
+        </div>
+
+        {/* User menu */}
+        <div className="relative" ref={ref}>
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              {initials}
+            </div>
+            <svg
+              className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {open && (
+            <div className="absolute left-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden animate-in"
+              style={{ animation: "fadeSlideDown 0.15s ease-out" }}
+            >
+              {/* User info */}
+              <div className="px-4 py-3.5 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 truncate">{userEmail}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">חשבון אישי</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="p-1.5">
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-base flex-shrink-0">
+                    {loggingOut ? "⏳" : "👋"}
+                  </span>
+                  {loggingOut ? "מתנתק..." : "התנתק"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; onClick: () => void }) {
   return (
     <button
@@ -717,8 +818,12 @@ export default function Dashboard() {
   const [showChannelModal, setShowChannelModal]= useState(false);
   const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
   const [showWhiteboard,   setShowWhiteboard]  = useState(false);
+  const [userEmail,        setUserEmail]       = useState("");
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? "");
+    });
     const local = loadBrands();
     setBrands(local);
     setLoaded(true);
@@ -911,6 +1016,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
+        <TopNav userEmail={userEmail} />
         <BreadcrumbSidebar color={activeProject.color} items={[
           { emoji: activeBrand.emoji,      name: activeBrand.name,      onClick: () => { setActiveProject(null); setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); }, isCurrent: false },
           { emoji: activeProject.emoji,    name: activeProject.name,    onClick: () => { setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); },                        isCurrent: false },
@@ -1005,6 +1111,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
+        <TopNav userEmail={userEmail} />
         {selectedStage && !hasChannels && (
           <StageEditDrawer
             stage={selectedStage}
@@ -1148,6 +1255,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
+        <TopNav userEmail={userEmail} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji,  name: activeBrand.name,  onClick: () => setActiveProject(null), isCurrent: false },
           { emoji: activeProject.emoji, name: activeProject.name, onClick: () => {},                  isCurrent: true  },
@@ -1284,6 +1392,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
+        <TopNav userEmail={userEmail} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji, name: activeBrand.name, onClick: () => {}, isCurrent: true },
         ]} />
@@ -1389,6 +1498,7 @@ export default function Dashboard() {
   /* ══ LEVEL 0: Brands home ══ */
   return (
     <div className="min-h-screen bg-gray-50">
+      <TopNav userEmail={userEmail} />
       {showBrandModal && <BrandWizard onClose={() => setShowBrandModal(false)} onSave={handleSaveBrand} />}
       {editingBrand   && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
