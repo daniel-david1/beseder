@@ -151,28 +151,26 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
     }
 
     return (
-      <div className={`flex items-center gap-3 py-3 px-2 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors ${isDone ? "opacity-60" : ""}`} dir="rtl">
-        {/* RIGHT — primary: name + remaining amount */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-gray-900 text-sm truncate">{loan.name}</span>
-            {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">✓ שולם</span>}
+      <div className={`flex items-center gap-3 py-3 px-1 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors ${isDone ? "opacity-60" : ""}`}>
+        <div className="flex-1 text-right min-w-0">
+          <div className="font-semibold text-gray-800 text-sm flex items-center gap-1.5 justify-end">
+            {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">✓ שולם</span>}
+            {loan.name}
           </div>
-          <span className="font-black text-base" style={{ color: isDone ? "#16a34a" : "#dc2626" }}>{ils(remaining)}</span>
-          <span className="text-[10px] text-gray-400 mr-1">נותר</span>
+          <div className="text-xs text-gray-400 mt-0.5">
+            {ils(loan.monthlyPayment)}/חודש · {loan.paidMonths}/{loan.totalMonths} · נותר {Math.max(0, loan.totalMonths - loan.paidMonths)} חודשים
+          </div>
         </div>
-        {/* MIDDLE — progress bar */}
-        <div className="w-16 flex-shrink-0">
+        <div className="w-20 flex-shrink-0">
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 100 ? "#16a34a" : "#0d9488" }} />
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5 text-center">{pct}%</div>
         </div>
-        {/* LEFT — secondary: monthly details + actions */}
-        <div className="flex flex-col items-start gap-0.5 flex-shrink-0 min-w-[110px]">
-          <span className="text-xs text-gray-500">{ils(loan.monthlyPayment)}/חודש</span>
-          <span className="text-[11px] text-gray-400">{loan.paidMonths}/{loan.totalMonths} חודשים</span>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span className="font-black text-sm" style={{ color: isDone ? "#16a34a" : "#dc2626" }}>{ils(remaining)}</span>
+          <span className="text-[10px] text-gray-400">נותר</span>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {!isDone && (
               <button
                 title="הוסף תשלום אחד"
