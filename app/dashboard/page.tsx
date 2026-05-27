@@ -545,15 +545,34 @@ function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; 
 }
 
 /* ─── Brand card ──────────────────────────────────────── */
-function BrandCard({ brand, onClick, onEdit, onDelete }: {
+function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
   brand: Brand; onClick: () => void; onEdit: () => void; onDelete: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  isDragOver: boolean;
 }) {
   const allSubs   = brand.projects.flatMap(p => p.subProjects);
   const progress  = totalPct(allSubs);
   const nProjects = brand.projects.length;
 
   return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-grab active:cursor-grabbing"
+      style={{
+        outline: isDragOver ? `2px solid ${brand.color}` : "none",
+        outlineOffset: 2,
+        opacity: isDragOver ? 0.85 : 1,
+        transform: isDragOver ? "scale(0.98)" : undefined,
+        transition: "all 0.15s ease",
+      }}
+    >
       <div className="h-2 w-full rounded-t-[18px]" style={{ background: brand.color }} />
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between gap-2">
@@ -567,9 +586,16 @@ function BrandCard({ brand, onClick, onEdit, onDelete }: {
               {brand.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{brand.description}</p>}
             </div>
           </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+          <div className="flex items-center gap-1 shrink-0">
+            <span
+              className="w-6 h-6 flex items-center justify-center text-gray-300 group-hover:text-gray-400 transition-colors cursor-grab select-none"
+              title="גרור לשינוי סדר"
+              style={{ fontSize: 14 }}
+            >⠿</span>
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+              <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+            </div>
           </div>
         </div>
 
@@ -824,6 +850,10 @@ export default function Dashboard() {
   const [showWhiteboard,   setShowWhiteboard]  = useState(false);
   const [userEmail,        setUserEmail]       = useState("");
 
+  // Drag-to-reorder brand cards
+  const dragBrandId = useRef<string | null>(null);
+  const [dragOverBrandId, setDragOverBrandId] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? "");
@@ -882,6 +912,35 @@ export default function Dashboard() {
     }
   };
 
+
+  /* ── Drag-to-reorder brands ── */
+  const handleBrandDragStart = (e: React.DragEvent, id: string) => {
+    dragBrandId.current = id;
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleBrandDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragBrandId.current !== id) setDragOverBrandId(id);
+  };
+  const handleBrandDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const fromId = dragBrandId.current;
+    dragBrandId.current = null;
+    setDragOverBrandId(null);
+    if (!fromId || fromId === targetId) return;
+    const from = brands.findIndex(b => b.id === fromId);
+    const to   = brands.findIndex(b => b.id === targetId);
+    if (from === -1 || to === -1) return;
+    const updated = [...brands];
+    const [removed] = updated.splice(from, 1);
+    updated.splice(to, 0, removed);
+    syncAll(updated);
+  };
+  const handleBrandDragEnd = () => {
+    dragBrandId.current = null;
+    setDragOverBrandId(null);
+  };
 
   /* ── Brand CRUD ── */
   const handleSaveBrand = (brand: Brand) => {
@@ -1404,6 +1463,7 @@ export default function Dashboard() {
       return (
         <FinancialDashboard
           brandId={activeBrand.id}
+          brandName={activeBrand.name}
           onBack={() => setActiveBrand(null)}
         />
       );
@@ -1572,6 +1632,11 @@ export default function Dashboard() {
                 onClick={() => setActiveBrand(b)}
                 onEdit={() => setEditingBrand(b)}
                 onDelete={() => handleDeleteBrand(b.id)}
+                onDragStart={e => handleBrandDragStart(e, b.id)}
+                onDragOver={e => handleBrandDragOver(e, b.id)}
+                onDrop={e => handleBrandDrop(e, b.id)}
+                onDragEnd={handleBrandDragEnd}
+                isDragOver={dragOverBrandId === b.id}
               />
             ))}
             <button

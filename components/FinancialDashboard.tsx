@@ -18,6 +18,7 @@ const ils = (n: number) => "₪" + Math.round(n).toLocaleString("he-IL");
 
 interface Props {
   brandId: string;
+  brandName?: string;
   onBack: () => void;
 }
 
@@ -53,7 +54,7 @@ function hebrewMonthYear(iso: string) {
 }
 
 /* ══ Main Component ══════════════════════════════════════ */
-export default function FinancialDashboard({ brandId, onBack }: Props) {
+export default function FinancialDashboard({ brandId, brandName, onBack }: Props) {
   const [data, setData] = useState<FinancialData>(() => loadFinancialData(brandId));
   const [openSection, setOpenSection] = useState<"loans" | "expenses" | "incomes" | "properties" | null>("loans");
   const [editingDate, setEditingDate] = useState(false);
@@ -150,26 +151,28 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
     }
 
     return (
-      <div className={`flex items-center gap-3 py-3 px-1 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors ${isDone ? "opacity-60" : ""}`}>
-        <div className="flex-1 text-right min-w-0">
-          <div className="font-semibold text-gray-800 text-sm flex items-center gap-1.5 justify-end">
-            {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">✓ שולם</span>}
-            {loan.name}
+      <div className={`flex items-center gap-3 py-3 px-2 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors ${isDone ? "opacity-60" : ""}`} dir="rtl">
+        {/* RIGHT — primary: name + remaining amount */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-gray-900 text-sm truncate">{loan.name}</span>
+            {isDone && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">✓ שולם</span>}
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            {ils(loan.monthlyPayment)}/חודש · {loan.paidMonths}/{loan.totalMonths} · נותר {Math.max(0, loan.totalMonths - loan.paidMonths)} חודשים
-          </div>
+          <span className="font-black text-base" style={{ color: isDone ? "#16a34a" : "#dc2626" }}>{ils(remaining)}</span>
+          <span className="text-[10px] text-gray-400 mr-1">נותר</span>
         </div>
-        <div className="w-20 flex-shrink-0">
+        {/* MIDDLE — progress bar */}
+        <div className="w-16 flex-shrink-0">
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pct >= 100 ? "#16a34a" : "#0d9488" }} />
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5 text-center">{pct}%</div>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="font-black text-sm" style={{ color: isDone ? "#16a34a" : "#dc2626" }}>{ils(remaining)}</span>
-          <span className="text-[10px] text-gray-400">נותר</span>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* LEFT — secondary: monthly details + actions */}
+        <div className="flex flex-col items-start gap-0.5 flex-shrink-0 min-w-[110px]">
+          <span className="text-xs text-gray-500">{ils(loan.monthlyPayment)}/חודש</span>
+          <span className="text-[11px] text-gray-400">{loan.paidMonths}/{loan.totalMonths} חודשים</span>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
             {!isDone && (
               <button
                 title="הוסף תשלום אחד"
@@ -472,11 +475,6 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <button onClick={onBack} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group">
-            <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">→</span>
-            <span>המותגים שלי</span>
-          </button>
-          <h1 className="font-black text-gray-900 text-lg">💰 פיננסי אישי</h1>
           <div className="flex items-center gap-2">
             {editingDate ? (
               <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
@@ -486,6 +484,11 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
               </button>
             )}
           </div>
+          <h1 className="font-black text-gray-900 text-lg">💰 {brandName ?? "פיננסי אישי"}</h1>
+          <button onClick={onBack} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group">
+            <span>המותגים שלי</span>
+            <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">←</span>
+          </button>
         </div>
       </div>
 
@@ -525,10 +528,10 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
 
         {/* LOANS */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("loans")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
+          <button onClick={() => toggle("loans")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
             <span className="font-bold text-gray-900">הלוואות 🏦</span>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 hidden sm:block">{ils(totalRemaining)} נותר · {ils(totalLoansMonthly)}/חודש · {data.loans.length} הלוואות</span>
+              <span className="text-xs text-gray-500 hidden sm:block">{data.loans.length} הלוואות · {ils(totalLoansMonthly)}/חודש · נותר {ils(totalRemaining)}</span>
               <span className="text-gray-400 text-sm">{openSection === "loans" ? "▲" : "▼"}</span>
             </div>
           </button>
@@ -542,7 +545,7 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
 
         {/* INCOMES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("incomes")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
+          <button onClick={() => toggle("incomes")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
             <span className="font-bold text-gray-900">הכנסות 💚</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">
@@ -588,7 +591,7 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
 
         {/* EXPENSES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("expenses")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
+          <button onClick={() => toggle("expenses")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
             <span className="font-bold text-gray-900">הוצאות שוטפות 📊</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">{ils(totalExpensesMonthly)}/חודש · {data.expenses.length} הוצאות</span>
@@ -605,7 +608,7 @@ export default function FinancialDashboard({ brandId, onBack }: Props) {
 
         {/* PROPERTIES */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <button onClick={() => toggle("properties")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
+          <button onClick={() => toggle("properties")} className="w-full flex justify-between items-center px-5 py-4 hover:bg-gray-50/50 transition-colors" dir="rtl">
             <span className="font-bold text-gray-900">נכסים 🏘️</span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500 hidden sm:block">{ils(totalPropertyValue)} שווי · {data.properties.length} נכסים</span>
