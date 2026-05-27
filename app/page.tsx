@@ -59,55 +59,55 @@ const T = {
   he: {
     nav: { features: 'פיצ׳רים', howItWorks: 'איך זה עובד', pricing: 'תמחור', signin: 'התחבר', cta: 'התחל בחינם' },
     hero: {
-      chip: 'מערכת ניהול לייסדרים',
+      chip: 'מערכת ניהול לעצמאים ויזמים',
       h1a: 'כל מותג.',
       h1b: 'כל פרויקט.',
       h1c: 'מקום אחד.',
-      sub: 'beseder היא מערכת ההפעלה לייסדרים שמנהלים כמה עסקים במקביל. מותגים, פרויקטים, צוותים, אבני דרך — מסודר וברור, סוף סוף.',
+      sub: 'beseder היא מערכת הניהול ליזמים שמנהלים כמה עסקים במקביל. מותגים, פרויקטים, מחלקות, הוצאות — הכל מסודר ומובן, סוף סוף.',
       cta: 'התחל בחינם ←',
       demo: 'צפה בדמו',
       trust: 'ללא כרטיס אשראי · חינמי לתמיד',
     },
     proof: [
-      { n: '500+', label: 'ייסדרים פעילים' },
-      { n: '2,400+', label: 'מותגים' },
-      { n: '18,000+', label: 'שלבים' },
-      { n: '₪0', label: 'להתחלה' },
+      { n: '500+', label: 'יזמים פעילים' },
+      { n: '2,400+', label: 'מותגים מנוהלים' },
+      { n: '18,000+', label: 'שלבים הושלמו' },
+      { n: '₪0', label: 'כדי להתחיל' },
     ],
     spotlights: [
       {
         chip: 'ניהול מרובה מותגים',
         h3: 'כל העסקים שלך. מקום אחד.',
-        desc: 'הפסק לקפץ בין כלים ומחברות. beseder נותן לכל מותג סביבת עבודה מבודדת — ועדיין רואה הכל מלוח מחוונים אחד.',
-        bullets: ['בידוד מלא של מותג עם לוח משותף', 'פרויקטים ללא הגבלה לכל מותג', 'תצוגת פורטפוליו ויזואלית'],
+        desc: 'נגמר עם הקפיצות בין גיליונות, מחברות וכלים שונים. beseder נותן לכל מותג סביבת עבודה נפרדת — ואתה רואה את הכל מלוח ניהול אחד.',
+        bullets: ['סביבה מבודדת לכל מותג', 'פרויקטים ומחלקות ללא הגבלה', 'תצוגת פורטפוליו כוללת'],
       },
       {
         chip: 'אשף AI',
         h3: 'בנה מבנה מלא בלחיצה אחת.',
-        desc: 'ספר לאשף ה-AI מה המותג שלך עושה. הוא מייצר אוטומטית פרויקטים, מחלקות ושלבים המותאמים לסוג העסק שלך.',
-        bullets: ['פיגום מותג חכם בשניות', 'מתאים לתעשייה ולמודל העסקי שלך', 'ניתן לעריכה מלאה לאחר יצירה'],
+        desc: 'ספר לאשף ה-AI מה המותג שלך עושה — והוא בונה עבורך אוטומטית את הפרויקטים, המחלקות והשלבים המתאימים לסוג העסק שלך.',
+        bullets: ['מבנה מלא נוצר בשניות', 'מותאם לתחום ולמודל העסקי שלך', 'ניתן לעריכה חופשית לאחר יצירה'],
       },
       {
         chip: 'מעקב פיננסי',
-        h3: 'פיננסים מובנים. ללא גיליון אלקטרוני.',
-        desc: 'עקוב אחרי הכנסות, הוצאות, הלוואות ותזרים מזומנים בכל רמה — מותג, פרויקט, מחלקה או שלב. סיכומים בזמן אמת בכל מקום.',
-        bullets: ['הכנסה והוצאה לפי תדירות', 'מעקב הלוואות ונכסים', 'תזרים מזומנים בכל רמה'],
+        h3: 'פיננסים מובנים. בלי גיליונות אקסל.',
+        desc: 'עקוב אחר הכנסות, הוצאות, הלוואות ותזרים מזומנים בכל רמה — מותג, פרויקט, מחלקה או שלב. סיכומים חיים בכל מקום.',
+        bullets: ['הכנסות והוצאות לפי תדירות', 'מעקב הלוואות ונכסים', 'תזרים מזומנים בכל רמה'],
       },
     ],
     testimonials: [
-      { quote: 'beseder שינה לי את הדרך שאני מנהל את כל הפרויקטים. סוף סוף יש לי ראייה ברורה.', name: 'דן ל.', title: 'יזם סדרתי' },
-      { quote: 'האשף ה-AI חסך לי שעות של תכנון. לחצתי כפתור וקיבלתי מבנה מלא.', name: 'מיכל ר.', title: 'מנהלת שיווק' },
-      { quote: 'ניהול 4 עסקים מאיגו אחד — זה בדיוק מה שחיפשתי.', name: 'אורי כ.', title: 'בעל עסק' },
+      { quote: 'beseder שינה לי את כל שיטת הניהול. סוף סוף יש לי תמונה ברורה של כל העסקים שלי.', name: 'דן ל.', title: 'יזם סדרתי' },
+      { quote: 'אשף ה-AI חסך לי שעות של תכנון. לחצתי כפתור אחד וקיבלתי מבנה מלא ומוכן לעבודה.', name: 'מיכל ר.', title: 'מנהלת שיווק' },
+      { quote: 'לנהל 4 עסקים ממקום אחד — זה בדיוק מה שחיפשתי כל הזמן.', name: 'אורי כ.', title: 'בעל עסק' },
     ],
     pricing: {
       chip: 'תמחור', h2: 'התחל בחינם. גדל בקצב שלך.',
       free: { name: 'חינמי', price: '₪0', per: '/חודש', cta: 'התחל בחינם',
-        items: ['עד 3 מותגים', 'פרויקטים ללא הגבלה', 'Pipeline שלבים', 'ניהול פיננסי', 'היסטוריה של 7 ימים'] },
+        items: ['עד 3 מותגים', 'פרויקטים ללא הגבלה', 'מסלול שלבים', 'ניהול פיננסי', 'גישה מלאה לפיצ׳רים'] },
       pro: { name: 'Pro', price: '₪49', per: '/חודש', badge: 'הפופולרי ביותר', cta: 'עבור ל-Pro ←',
-        items: ['מותגים ללא הגבלה', 'אשף מותג AI', 'לוח ויזואלי', 'תמיכה עדיפותית', 'אנליטיקס מתקדם', 'שיתוף פעולה בצוות'] },
-      footnote: 'כל התוכניות · ניסיון Pro 14 יום · ללא כרטיס אשראי',
+        items: ['מותגים ללא הגבלה', 'אשף מותג AI', 'לוח ניהול ויזואלי', 'תמיכה מועדפת', 'אנליטיקס מתקדם', 'שיתוף פעולה בצוות'] },
+      footnote: 'כל התוכניות · ניסיון Pro חינמי 14 יום · ללא כרטיס אשראי',
     },
-    bottomCta: { h2: 'הפסק לבנות מהזיכרון.', sub: 'beseder נותן לכל עסק שאתה מנהל בית מסודר וברור.', btn: 'התחל בחינם ←', link: 'למד עוד' },
+    bottomCta: { h2: 'הפסק לנהל מהראש.', sub: 'beseder נותן לכל עסק שאתה מנהל בית ברור, מסודר וקל לעדכון.', btn: 'התחל בחינם ←', link: 'קרא עוד' },
     footer: { tagline: 'סדר מתוך כאוס.' },
   },
 }
@@ -136,19 +136,9 @@ function Fade({ children, className = '', delay = 0, style = {} }: { children: R
   )
 }
 
-function Logo({ white }: { white?: boolean }) {
-  const c = white ? '#E8F4F6' : '#0B1B2B'
-  const id = white ? 'gw' : 'g2'
-  const [c1, c2] = white ? ['#2FE0D6', '#3A9BE8'] : ['#1FAEB5', '#0E5FA8']
+function Logo({ white: _white }: { white?: boolean }) {
   return (
-    <svg width="130" height="48" viewBox="0 0 244 90" fill="none">
-      <defs><linearGradient id={id} x1="20" y1="20" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop stopColor={c1}/><stop offset="1" stopColor={c2}/></linearGradient></defs>
-      <rect x="20" y="19" width="52" height="52" rx="15" fill={`url(#${id})`}/>
-      <rect x="30" y="31" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
-      <rect x="30" y="42" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
-      <rect x="30" y="53" width="30" height="6" rx="3" fill="#fff" opacity="0.65"/>
-      <text x="90" y="57" fontFamily="Sora, sans-serif" fontSize="30" fontWeight="700" fill={c} letterSpacing="-0.5">beseder</text>
-    </svg>
+    <img src="/beseder_white_2x.png" alt="beseder" style={{ height: 32, width: 'auto', display: 'block' }} />
   )
 }
 
@@ -303,11 +293,19 @@ export default function Home() {
   ]
 
   return (
-    <main dir={isHe ? 'rtl' : 'ltr'} style={{ fontFamily: 'Manrope, sans-serif', overflowX: 'hidden' }}>
+    <main dir={isHe ? 'rtl' : 'ltr'} style={{ fontFamily: isHe ? 'Heebo, sans-serif' : 'Manrope, sans-serif', overflowX: 'hidden' }}>
 
       {/* ── Keyframes injected once ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+        [dir="rtl"], [dir="rtl"] * {
+          font-family: 'Heebo', sans-serif !important;
+          letter-spacing: 0 !important;
+        }
+        [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 {
+          font-family: 'Heebo', sans-serif !important;
+          letter-spacing: -0.01em !important;
+        }
         @keyframes pulse-glow {
           0%,100% { opacity:0.6; transform:scale(1); }
           50% { opacity:1; transform:scale(1.06); }
@@ -340,7 +338,7 @@ export default function Home() {
         borderBottom: scrolled ? '1px solid rgba(31,174,181,0.12)' : '1px solid transparent',
         transition: 'all 0.3s ease',
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
+        <div dir="ltr" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
           <a href="#" style={{ textDecoration: 'none' }}><Logo white /></a>
           {/* Desktop nav */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 36 }} className="hidden md:flex">
@@ -415,7 +413,7 @@ export default function Home() {
           {/* Chip */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 32, background: 'rgba(31,174,181,0.1)', border: '1px solid rgba(31,174,181,0.28)', borderRadius: 999, padding: '7px 18px' }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1FAEB5', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
-            <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: '#1FAEB5', textTransform: 'uppercase' }}>{t.hero.chip}</span>
+            <span style={{ fontFamily: isHe ? 'Heebo, sans-serif' : 'Sora, sans-serif', fontSize: isHe ? 13 : 11, fontWeight: 700, letterSpacing: isHe ? '0.02em' : '0.14em', color: '#1FAEB5', textTransform: isHe ? 'none' : 'uppercase' }}>{t.hero.chip}</span>
           </div>
           {/* Headline */}
           <h1 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 'clamp(48px, 7vw, 88px)', color: '#E8F4F6', lineHeight: 1.05, marginBottom: 28, letterSpacing: '-0.02em' }}>

@@ -31,6 +31,25 @@ export interface Channel {
   incomes?: StageExpense[];
 }
 
+export interface CommitmentPayment {
+  id: string;
+  dueDate?: string;
+  paid: boolean;
+  invoiceDataUrl?: string;
+  invoiceName?: string;
+}
+
+export interface PaymentCommitment {
+  id: string;
+  name: string;
+  amountPerPayment: number;
+  totalPayments: number;
+  frequency: 'monthly' | 'weekly' | 'milestone';
+  startDate?: string;
+  notes?: string;
+  payments: CommitmentPayment[];
+}
+
 export interface SubProject {
   id: string;
   name: string;
@@ -41,6 +60,7 @@ export interface SubProject {
   order: number;
   expenses?: StageExpense[];
   incomes?: StageExpense[];
+  commitments?: PaymentCommitment[];
 }
 
 export interface BrandGoal {

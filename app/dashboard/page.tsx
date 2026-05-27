@@ -43,7 +43,14 @@ function subMonthlyExpenses(sub: SubProject): number {
     const chStages = ch.stages.reduce((ss, st) => ss + (st.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
     return s + chDirect + chStages;
   }, 0);
-  return subDirect + stageDirect + chExp;
+  const commitmentCost = (sub.commitments ?? []).reduce((s, c) => {
+    const paid = (c.payments ?? []).filter((p: { paid: boolean }) => p.paid).length;
+    if (paid >= c.totalPayments && c.totalPayments > 0) return s;
+    if (c.frequency === 'monthly') return s + c.amountPerPayment;
+    if (c.frequency === 'weekly') return s + c.amountPerPayment * 4;
+    return s;
+  }, 0);
+  return subDirect + stageDirect + chExp + commitmentCost;
 }
 
 function subMonthlyIncomes(sub: SubProject): number {
@@ -516,19 +523,8 @@ function TopNav({ userEmail }: { userEmail: string }) {
         </div>
 
         {/* Logo — left side in RTL */}
-        <div dir="ltr" className="flex items-center gap-2.5">
-          <svg width="20" height="20" viewBox="0 0 52 52" fill="none">
-            <rect width="52" height="52" rx="13" fill="url(#ng)"/>
-            <rect x="10" y="12" width="32" height="6" rx="3" fill="#fff" opacity="0.95"/>
-            <rect x="10" y="23" width="24" height="6" rx="3" fill="#fff" opacity="0.8"/>
-            <rect x="10" y="34" width="28" height="6" rx="3" fill="#fff" opacity="0.65"/>
-            <defs>
-              <linearGradient id="ng" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#1FAEB5"/><stop offset="1" stopColor="#0E5FA8"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <span className="font-bold text-gray-900 text-base tracking-tight" style={{ fontFamily: "Sora, sans-serif" }}>beseder</span>
+        <div dir="ltr">
+          <img src="/beseder_primary_2x.png" alt="beseder" style={{ height: 28, width: 'auto', display: 'block' }} />
         </div>
       </div>
     </nav>
@@ -862,6 +858,23 @@ export default function Dashboard() {
         }
       }
     }
+  };
+
+  /* ── Import local brands into cloud ── */
+  const [importCount, setImportCount] = useState<number | null>(null);
+  const handleImportLocal = () => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem("vaachalta_brands_v1") : null;
+      if (!raw) { alert("לא נמצאו מותגים ב-Local Storage"); return; }
+      const localBrands = JSON.parse(raw) as Brand[];
+      const existingIds = new Set(brands.map(b => b.id));
+      const toAdd = localBrands.filter(b => !existingIds.has(b.id));
+      if (toAdd.length === 0) { alert("כל המותגים המקומיים כבר קיימים בחשבון שלך"); return; }
+      const merged = [...brands, ...toAdd];
+      syncAll(merged);
+      setImportCount(toAdd.length);
+      setTimeout(() => setImportCount(null), 4000);
+    } catch { alert("שגיאה בייבוא המותגים"); }
   };
 
   /* ── Brand CRUD ── */
@@ -1512,7 +1525,17 @@ export default function Dashboard() {
               {brands.length === 0 ? "צור מותג ראשון" : `${brands.length} מותג${brands.length !== 1 ? "ים" : ""}`}
             </p>
           </div>
-          <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
+          <div className="flex items-center gap-2">
+            {importCount !== null && (
+              <span className="text-sm text-green-600 font-semibold animate-in">✓ יובאו {importCount} מותגים</span>
+            )}
+            <button
+              onClick={handleImportLocal}
+              className="btn btn-ghost text-sm border border-gray-200 hover:border-teal-400 hover:text-teal-600"
+              title="ייבא מותגים מ-Local Storage לחשבון"
+            >📥 ייבא מ-Local</button>
+            <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
+          </div>
         </div>
 
         {brands.length === 0 ? (
