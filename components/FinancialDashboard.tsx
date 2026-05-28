@@ -11,6 +11,7 @@ import {
   PropertyLiability,
 } from "@/lib/types";
 import { loadFinancialData, saveFinancialData, loadFinancialFromCloud } from "@/lib/storage";
+import BankConnect from "@/components/BankConnect";
 
 /* ─── helpers ─────────────────────────────────────────── */
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -75,6 +76,11 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
   const [data, setData] = useState<FinancialData>(() => loadFinancialData(brandId));
   const [openSection, setOpenSection] = useState<"loans" | "expenses" | "incomes" | "properties" | null>("loans");
   const [editingDate, setEditingDate] = useState(false);
+  const [showBankConnect, setShowBankConnect] = useState(false);
+
+  if (showBankConnect) {
+    return <BankConnect onBack={() => setShowBankConnect(false)} />;
+  }
 
   const [editingLoan,        setEditingLoan]        = useState<string | null>(null);
   const [editingExpense,     setEditingExpense]      = useState<string | null>(null);
@@ -620,6 +626,13 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           </button>
           <h1 className="font-black text-gray-900 text-base sm:text-lg truncate">💰 {brandName ?? "פיננסי אישי"}</h1>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowBankConnect(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:opacity-90"
+              style={{ background: "#0d9488" }}
+            >
+              🏦 <span className="hidden sm:inline">חיבור לבנק</span>
+            </button>
             {editingDate ? (
               <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
             ) : (
