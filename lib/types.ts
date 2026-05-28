@@ -97,7 +97,9 @@ export interface Loan {
   id: string;
   name: string;
   principal: number;
+  annualRate?: number;      // annual interest rate in %, e.g. 4.5 means 4.5%
   monthlyPayment: number;
+  manualPayment?: boolean;  // true = user manually set the payment (not auto-calculated)
   paidMonths: number;
   totalMonths: number;
   notes?: string;

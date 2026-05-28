@@ -44,8 +44,25 @@ function AddRowBtn({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
+/* ─── Loan math ──────────────────────────────────────── */
+function calcPMT(principal: number, annualRate: number, totalMonths: number): number {
+  if (totalMonths === 0 || principal === 0) return 0;
+  if (annualRate === 0) return principal / totalMonths;
+  const r = annualRate / 100 / 12;
+  return (principal * r * Math.pow(1 + r, totalMonths)) / (Math.pow(1 + r, totalMonths) - 1);
+}
+
+function loanRemainingBalance(principal: number, annualRate: number, monthlyPayment: number, paidMonths: number): number {
+  if (paidMonths <= 0) return principal;
+  if (monthlyPayment <= 0) return principal;
+  if (annualRate === 0) return Math.max(0, principal - monthlyPayment * paidMonths);
+  const r = annualRate / 100 / 12;
+  const factor = Math.pow(1 + r, paidMonths);
+  return Math.max(0, principal * factor - monthlyPayment * (factor - 1) / r);
+}
+
 function loanRemaining(l: Loan) {
-  return Math.max(0, l.totalMonths - l.paidMonths) * l.monthlyPayment;
+  return loanRemainingBalance(l.principal, l.annualRate ?? 0, l.monthlyPayment, l.paidMonths);
 }
 
 function hebrewMonthYear(iso: string) {
@@ -110,53 +127,166 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
   /* ════ LOANS ════ */
   const LoanRow = ({ loan }: { loan: Loan }) => {
-    const [form, setForm] = useState({ ...loan });
+    const initForm = () => ({
+      ...loan,
+      annualRate: loan.annualRate ?? 0,
+      manualPayment: loan.manualPayment ?? false,
+    });
+    const [form, setForm] = useState(initForm);
     const isEditing = editingLoan === loan.id;
+
     const pct = loan.totalMonths > 0 ? Math.round((loan.paidMonths / loan.totalMonths) * 100) : 0;
     const remaining = loanRemaining(loan);
     const isDone = loan.paidMonths >= loan.totalMonths;
 
+    /* ── helpers inside edit mode ── */
+    const autoPMT = calcPMT(form.principal, form.annualRate, form.totalMonths);
+    const effectivePMT = form.manualPayment ? form.monthlyPayment : autoPMT;
+
+    const handleField = (field: keyof typeof form, value: number | string | boolean) => {
+      setForm(prev => {
+        const next = { ...prev, [field]: value } as typeof prev;
+        // Auto-sync monthly payment when loan params change
+        if (!next.manualPayment && (field === "principal" || field === "annualRate" || field === "totalMonths")) {
+          next.monthlyPayment = calcPMT(next.principal, next.annualRate, next.totalMonths);
+        }
+        return next;
+      });
+    };
+
+    const handleSave = () => {
+      const saved: Loan = {
+        ...form,
+        monthlyPayment: form.manualPayment ? form.monthlyPayment : autoPMT,
+      };
+      save({ ...data, loans: data.loans.map(l => l.id === loan.id ? saved : l) });
+      setEditingLoan(null);
+    };
+
+    const handleDelete = () => {
+      if (!confirm("למחוק הלוואה זו?")) return;
+      save({ ...data, loans: data.loans.filter(l => l.id !== loan.id) });
+      setEditingLoan(null);
+    };
+
+    /* ── EDIT FORM ── */
     if (isEditing) {
+      const previewRemaining = loanRemainingBalance(form.principal, form.annualRate, effectivePMT, form.paidMonths);
+      const totalPaid = effectivePMT * form.totalMonths;
+      const totalInterest = Math.max(0, totalPaid - form.principal);
+
       return (
-        <div className="py-3 px-1 border-b border-gray-50">
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div className="col-span-2">
-              <label className="text-xs text-gray-400 mb-0.5 block">שם הלוואה</label>
-              <input className={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} dir="rtl" />
+        <div className="py-4 px-1 border-b border-gray-100">
+          {/* Name */}
+          <div className="mb-3">
+            <label className="text-xs text-gray-400 mb-0.5 block">שם ההלוואה</label>
+            <input className={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} dir="rtl" placeholder="לדוגמה: רכב, כאל, משכנתא..." />
+          </div>
+
+          {/* Loan parameters */}
+          <div className="rounded-xl bg-blue-50/50 border border-blue-100 p-3 mb-3">
+            <div className="text-[11px] font-bold text-blue-600 mb-2.5 flex items-center gap-1.5">💡 פרטי ההלוואה</div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">קרן מקורית (₪)</label>
+                <input className={inp} type="number" value={form.principal || ""} onChange={e => handleField("principal", Number(e.target.value))} dir="rtl" placeholder="0" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">ריבית שנתית (%)</label>
+                <input className={inp} type="number" step="0.01" value={form.annualRate || ""} onChange={e => handleField("annualRate", Number(e.target.value))} dir="rtl" placeholder="0" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">תקופה (חודשים)</label>
+                <input className={inp} type="number" value={form.totalMonths || ""} onChange={e => handleField("totalMonths", Number(e.target.value))} dir="rtl" placeholder="0" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 flex items-center gap-1">
+                  החזר חודשי (₪)
+                  {!form.manualPayment && autoPMT > 0 && (
+                    <span className="bg-teal-100 text-teal-700 px-1.5 rounded-full text-[10px] font-bold">אוטו</span>
+                  )}
+                </label>
+                {form.manualPayment ? (
+                  <div className="flex gap-1">
+                    <input className={inp + " flex-1"} type="number" value={form.monthlyPayment || ""} onChange={e => setForm({ ...form, monthlyPayment: Number(e.target.value) })} dir="rtl" />
+                    <button
+                      onClick={() => setForm({ ...form, manualPayment: false, monthlyPayment: autoPMT })}
+                      className="px-2 rounded-lg bg-teal-50 text-teal-600 text-xs font-bold hover:bg-teal-100 transition-colors whitespace-nowrap border border-teal-200"
+                    >⟳</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-1 items-center">
+                    <div className="flex-1 border border-teal-300 rounded-lg px-2 py-1 text-sm font-semibold text-right bg-teal-50 text-teal-800">
+                      {autoPMT > 0 ? Math.round(autoPMT).toLocaleString("he-IL") : (form.monthlyPayment || 0).toLocaleString("he-IL")}
+                    </div>
+                    <button
+                      onClick={() => setForm({ ...form, manualPayment: true })}
+                      className="px-2 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-bold hover:bg-gray-200 transition-colors border border-gray-200"
+                    >ידני</button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-0.5 block">קרן (₪)</label>
-              <input className={inp} type="number" value={form.principal} onChange={e => setForm({ ...form, principal: Number(e.target.value) })} dir="rtl" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-0.5 block">החזר חודשי (₪)</label>
-              <input className={inp} type="number" value={form.monthlyPayment} onChange={e => setForm({ ...form, monthlyPayment: Number(e.target.value) })} dir="rtl" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-0.5 block">חודשים ששולמו</label>
-              <input className={inp} type="number" value={form.paidMonths} onChange={e => setForm({ ...form, paidMonths: Number(e.target.value) })} dir="rtl" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-0.5 block">סה"כ חודשים</label>
-              <input className={inp} type="number" value={form.totalMonths} onChange={e => setForm({ ...form, totalMonths: Number(e.target.value) })} dir="rtl" />
+
+            {/* Summary row */}
+            {form.principal > 0 && effectivePMT > 0 && form.totalMonths > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-1 pt-2 border-t border-blue-100">
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400">סה״כ לשלם</div>
+                  <div className="text-xs font-bold text-gray-700">{ils(totalPaid)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400">ריבית כוללת</div>
+                  <div className="text-xs font-bold text-red-500">{ils(totalInterest)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400">יתרה כעת</div>
+                  <div className="text-xs font-bold" style={{ color: "#dc2626" }}>{ils(previewRemaining)}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tracking */}
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 mb-3">
+            <div className="text-[11px] font-bold text-gray-500 mb-2.5 flex items-center gap-1.5">📊 מעקב תשלומים</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">חודשים ששולמו</label>
+                <input className={inp} type="number" value={form.paidMonths || 0} onChange={e => setForm({ ...form, paidMonths: Math.min(Number(e.target.value), form.totalMonths) })} dir="rtl" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">יתרה לתשלום</label>
+                <div className="border border-gray-200 rounded-lg px-2 py-1 text-sm font-black text-right bg-white" style={{ color: form.paidMonths >= form.totalMonths ? "#16a34a" : "#dc2626" }}>
+                  {ils(previewRemaining)}
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Notes */}
+          <div className="mb-3">
+            <label className="text-xs text-gray-400 mb-0.5 block">הערות</label>
+            <textarea className={inp + " resize-none"} rows={2} value={form.notes ?? ""} onChange={e => setForm({ ...form, notes: e.target.value })} dir="rtl" placeholder="הערות נוספות..." />
+          </div>
+
           <div className="flex gap-2">
-            <button className="btn btn-orange text-xs px-3 py-1.5" onClick={() => { save({ ...data, loans: data.loans.map(l => l.id === loan.id ? { ...form } : l) }); setEditingLoan(null); }}>שמור</button>
+            <button className="btn btn-orange text-xs px-3 py-1.5" onClick={handleSave}>שמור</button>
             <button className="btn btn-ghost text-xs px-3 py-1.5" onClick={() => setEditingLoan(null)}>ביטול</button>
-            <button className="btn btn-red text-xs px-3 py-1.5 mr-auto" onClick={() => { if (!confirm("למחוק הלוואה זו?")) return; save({ ...data, loans: data.loans.filter(l => l.id !== loan.id) }); setEditingLoan(null); }}>מחק</button>
+            <button className="btn btn-red text-xs px-3 py-1.5 mr-auto" onClick={handleDelete}>מחק</button>
           </div>
         </div>
       );
     }
 
+    /* ── DISPLAY ROW ── */
     const monthsLeft = Math.max(0, loan.totalMonths - loan.paidMonths);
     const barColor = isDone ? "#16a34a" : pct >= 66 ? "#16a34a" : pct >= 33 ? "#f97316" : "#dc2626";
     const amountColor = isDone ? "#16a34a" : "#dc2626";
 
     return (
       <div className={`py-4 px-1 border-b border-gray-100 group hover:bg-gray-50/40 transition-colors rounded-lg ${isDone ? "opacity-55" : ""}`}>
-        {/* Row 1: Name (right) + Amount (left) */}
+        {/* Row 1: Name + amount */}
         <div className="flex items-start justify-between mb-2.5">
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end">
@@ -173,13 +303,10 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           </div>
         </div>
 
-        {/* Row 2: Full-width progress bar */}
+        {/* Row 2: Progress bar */}
         <div className="mb-1.5">
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: barColor }}
-            />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
           </div>
         </div>
 
@@ -187,22 +314,19 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             {!isDone && (
-              <button
-                onClick={() => advanceLoanOne(loan.id)}
-                className="px-2.5 h-6 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 flex items-center justify-center text-[11px] font-bold transition-colors"
-              >
+              <button onClick={() => advanceLoanOne(loan.id)} className="px-2.5 h-6 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 flex items-center justify-center text-[11px] font-bold transition-colors">
                 + תשלום
               </button>
             )}
-            <button
-              onClick={() => setEditingLoan(loan.id)}
-              className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors"
-            >✏️</button>
+            <button onClick={() => setEditingLoan(loan.id)} className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span className="font-medium" style={{ color: barColor }}>{pct}%</span>
             <span>·</span>
             <span>{loan.paidMonths}/{loan.totalMonths} חודשים</span>
+            {(loan.annualRate ?? 0) > 0 && (
+              <><span>·</span><span className="text-blue-500 font-medium">{loan.annualRate}%</span></>
+            )}
           </div>
         </div>
       </div>
@@ -553,7 +677,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           {openSection === "loans" && (
             <div className="px-5 pb-4 border-t border-gray-50">
               <div className="mt-2">{data.loans.map(loan => <LoanRow key={loan.id} loan={loan} />)}</div>
-              <AddRowBtn label="הוסף הלוואה" onClick={() => { const n: Loan = { id: uid(), name: "הלוואה חדשה", principal: 0, monthlyPayment: 0, paidMonths: 0, totalMonths: 12 }; save({ ...data, loans: [...data.loans, n] }); setEditingLoan(n.id); }} />
+              <AddRowBtn label="הוסף הלוואה" onClick={() => { const n: Loan = { id: uid(), name: "", principal: 0, annualRate: 0, monthlyPayment: 0, manualPayment: false, paidMonths: 0, totalMonths: 12 }; save({ ...data, loans: [...data.loans, n] }); setEditingLoan(n.id); }} />
             </div>
           )}
         </div>
