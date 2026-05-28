@@ -65,9 +65,9 @@ interface BreadcrumbItem { emoji: string; name: string; onClick: () => void; isC
 
 function BreadcrumbSidebar({ items, color }: { items: BreadcrumbItem[]; color: string }) {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex pointer-events-none">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex pointer-events-none" style={{ maxWidth: "calc(100vw - 24px)" }}>
       <div
-        className="rounded-full flex flex-row items-center pointer-events-auto"
+        className="rounded-full flex flex-row items-center pointer-events-auto overflow-hidden"
         style={{
           background: "rgba(20,20,22,0.72)",
           backdropFilter: "blur(20px)",
@@ -120,7 +120,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f0f2f5" }}>
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           {brand.logo
             ? <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-2xl object-contain bg-gray-50 border border-gray-100" />
@@ -524,7 +524,7 @@ function TopNav({ userEmail }: { userEmail: string }) {
 
         {/* Logo — left side in RTL */}
         <div dir="ltr">
-          <img src="/beseder_primary_2x.png" alt="beseder" style={{ height: 64, width: 'auto', display: 'block', maxWidth: 230, marginTop: -9, marginBottom: -9 }} />
+          <img src="/beseder_primary_2x.png" alt="beseder" className="block" style={{ height: 48, width: 'auto', maxWidth: 160, marginTop: -6, marginBottom: -6 }} />
         </div>
       </div>
     </nav>
@@ -574,7 +574,7 @@ function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, 
       }}
     >
       <div className="h-2 w-full rounded-t-[18px]" style={{ background: brand.color }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
+      <div className="p-3 sm:p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between gap-2">
           <button onClick={onClick} className="flex items-start gap-3 flex-1 text-right">
             {brand.logo
@@ -588,13 +588,13 @@ function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, 
           </button>
           <div className="flex items-center gap-1 shrink-0">
             <span
-              className="w-6 h-6 flex items-center justify-center text-gray-300 group-hover:text-gray-400 transition-colors cursor-grab select-none"
+              className="w-6 h-6 hidden sm:flex items-center justify-center text-gray-300 group-hover:text-gray-400 transition-colors cursor-grab select-none"
               title="גרור לשינוי סדר"
               style={{ fontSize: 14 }}
             >⠿</span>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-              <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+            <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+              <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
             </div>
           </div>
         </div>
@@ -633,9 +633,9 @@ function ProjectCard({ project, onClick, onEdit, onDelete }: {
               {project.description && <p className="text-sm text-gray-400 mt-0.5">{project.description}</p>}
             </div>
           </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
 
@@ -1483,12 +1483,12 @@ export default function Dashboard() {
 
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
             <BackButton label="המותגים שלי" onClick={() => setActiveBrand(null)} />
-            <div className="flex gap-2">
-              <button onClick={() => setShowWhiteboard(true)} className="btn btn-ghost text-sm">🗺️ מפה</button>
-              <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm">✏️ ערוך מותג</button>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
+            <div className="flex gap-1.5 sm:gap-2">
+              <button onClick={() => setShowWhiteboard(true)} className="hidden sm:inline-flex btn btn-ghost text-sm">🗺️ מפה</button>
+              <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm px-2.5 sm:px-4">✏️ <span className="hidden sm:inline">ערוך מותג</span></button>
+              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm px-3 sm:px-4">+ <span className="hidden sm:inline">פרויקט חדש</span><span className="sm:hidden">פרויקט</span></button>
             </div>
           </div>
         </div>
@@ -1552,7 +1552,7 @@ export default function Dashboard() {
               <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור פרויקט ראשון</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
               {[...projects].sort((a, b) => a.order - b.order).map(p => (
                 <ProjectCard
                   key={p.id}
@@ -1583,7 +1583,7 @@ export default function Dashboard() {
       {showBrandModal && <BrandWizard onClose={() => setShowBrandModal(false)} onSave={handleSaveBrand} />}
       {editingBrand   && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
-      <div className="max-w-screen-lg mx-auto px-4 py-8 space-y-6 animate-in">
+      <div className="max-w-screen-lg mx-auto px-4 py-5 sm:py-8 space-y-6 animate-in">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-black text-gray-900">המותגים שלי</h1>
@@ -1624,7 +1624,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
             {brands.map(b => (
               <BrandCard
                 key={b.id}

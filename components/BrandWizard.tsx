@@ -122,14 +122,14 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
     return (
       <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
         <div className="modal w-full" style={{ maxWidth: 480 }}>
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
             <h2 className="text-lg font-black text-gray-900">ערוך מותג</h2>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm">✕</button>
           </div>
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
             <div>
               <label>אייקון</label>
-              <div className="grid grid-cols-10 gap-1 mt-1">
+              <div className="grid grid-cols-7 sm:grid-cols-10 gap-1 mt-1">
                 {EMOJIS.map(e => <button key={e} onClick={() => setEmoji(e)} className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}>{e}</button>)}
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
               </div>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
             <button onClick={handleSaveSimple} disabled={!name.trim()} className="btn btn-orange flex-1" style={{ opacity: name.trim() ? 1 : 0.5 }}>שמור שינויים</button>
             <button onClick={onClose} className="btn btn-ghost">ביטול</button>
           </div>
@@ -162,7 +162,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
     return (
       <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
         <div className="modal w-full" style={{ maxWidth: 520 }}>
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
             <div>
               <h2 className="text-lg font-black text-gray-900">מותג חדש ✨</h2>
               <p className="text-xs text-gray-400 mt-0.5">ספר לנו מה אתה בונה — ה-AI יציע לך מחלקות</p>
@@ -170,7 +170,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm">✕</button>
           </div>
 
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
             {/* Brand type selector */}
             <div>
               <label>סוג</label>
@@ -253,7 +253,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
             )}
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-2 sticky bottom-0 bg-white rounded-b-2xl">
+          <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex flex-col gap-2 sticky bottom-0 bg-white rounded-b-2xl" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
             {brandType === "financial" ? (
               <button
                 onClick={handleSaveSimple}

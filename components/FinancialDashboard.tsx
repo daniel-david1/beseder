@@ -185,7 +185,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
         {/* Row 3: Stats + actions */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             {!isDone && (
               <button
                 onClick={() => advanceLoanOne(loan.id)}
@@ -248,7 +248,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
         <div className="flex-1 text-right font-semibold text-gray-800 text-sm">{expense.name}</div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className="text-sm font-bold text-teal-600">{ils(expense.amount)}/{expense.frequency === "monthly" ? "חודש" : "שנה"}</span>
-          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingExpense(expense.id)}>✏️</button>
+          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingExpense(expense.id)}>✏️</button>
         </div>
       </div>
     );
@@ -298,7 +298,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
             {income.frequency === "monthly" ? "חודשי" : "חד פעמי"}
           </span>
           <span className="text-sm font-bold text-green-600">{ils(income.amount)}</span>
-          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingIncomeLine(income.id)}>✏️</button>
+          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingIncomeLine(income.id)}>✏️</button>
         </div>
       </div>
     );
@@ -332,7 +332,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
         <div className="flex-1 text-sm text-gray-700 text-right">{income.name}</div>
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-semibold text-green-600">{ils(income.amount)}/חודש</span>
-          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingIncome(income.id)}>✏️</button>
+          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingIncome(income.id)}>✏️</button>
         </div>
       </div>
     );
@@ -365,7 +365,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
         <div className="flex-1 text-sm text-gray-700 text-right">{expense.name}</div>
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-semibold text-teal-600">{ils(expense.amount)}/חודש</span>
-          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingPropExpense(expense.id)}>✏️</button>
+          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingPropExpense(expense.id)}>✏️</button>
         </div>
       </div>
     );
@@ -399,7 +399,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       <div className="py-2 px-1 border-b border-gray-100 group">
         <div className="flex items-start gap-2">
           <div className="flex-1 text-sm font-semibold text-gray-700 text-right">{liability.name}</div>
-          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" onClick={() => setEditingLiability(liability.id)}>✏️</button>
+          <button className="w-5 h-5 rounded bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" onClick={() => setEditingLiability(liability.id)}>✏️</button>
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-xs text-gray-500">
           <span className="text-red-600 font-semibold">{ils(liability.totalDebt)} חוב</span>
@@ -489,18 +489,18 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
     <div className="min-h-screen bg-gray-50" dir="rtl">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <button onClick={onBack} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          <button onClick={onBack} className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group flex-shrink-0">
             <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">→</span>
-            <span>המותגים שלי</span>
+            <span className="hidden sm:inline">המותגים שלי</span>
           </button>
-          <h1 className="font-black text-gray-900 text-lg">💰 {brandName ?? "פיננסי אישי"}</h1>
-          <div className="flex items-center gap-2">
+          <h1 className="font-black text-gray-900 text-base sm:text-lg truncate">💰 {brandName ?? "פיננסי אישי"}</h1>
+          <div className="flex items-center gap-2 flex-shrink-0">
             {editingDate ? (
               <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
             ) : (
-              <button onClick={() => setEditingDate(true)} className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50" title="לחץ לשינוי תאריך">
-                נכון ל: {data.asOfDate ? hebrewMonthYear(data.asOfDate) : "היום"}
+              <button onClick={() => setEditingDate(true)} className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-1.5 sm:px-2 py-1 rounded-lg hover:bg-gray-50 whitespace-nowrap" title="לחץ לשינוי תאריך">
+                <span className="hidden sm:inline">נכון ל: </span>{data.asOfDate ? hebrewMonthYear(data.asOfDate) : "היום"}
               </button>
             )}
           </div>
