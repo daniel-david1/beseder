@@ -249,7 +249,15 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
             )}
 
             {aiError && (
-              <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">{aiError}</div>
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-xl leading-none mt-0.5">⚠️</span>
+                  <div>
+                    <p className="text-sm font-bold text-amber-800">ה-AI לא זמין כרגע</p>
+                    <p className="text-xs text-amber-600 mt-0.5">תוכל ליצור את המותג ולהוסיף מחלקות ידנית — לא תפסיד כלום</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
@@ -263,6 +271,23 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
               >
                 💰 צור דשבורד פיננסי
               </button>
+            ) : aiError ? (
+              <>
+                <button
+                  onClick={handleSaveSimple}
+                  disabled={!name.trim()}
+                  className="btn btn-orange w-full"
+                  style={{ opacity: name.trim() ? 1 : 0.5 }}
+                >
+                  ✅ צור מותג ללא AI
+                </button>
+                <button
+                  onClick={() => setAiError("")}
+                  className="btn btn-ghost w-full text-sm"
+                >
+                  נסה שוב
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -279,7 +304,7 @@ export default function BrandWizard({ existing, onClose, onSave }: Props) {
                   className="btn btn-ghost w-full text-sm"
                   style={{ opacity: name.trim() ? 1 : 0.5 }}
                 >
-                  צור מותג ריק (ללא AI)
+                  צור מותג ללא AI →
                 </button>
               </>
             )}
