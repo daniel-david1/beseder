@@ -1335,7 +1335,7 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
 
   return (
     <div
-      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move"
+      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move h-full"
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -1419,7 +1419,7 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
   const monthlyInc  = subMonthlyIncomes(sub);
 
   return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
+    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group h-full">
       <div className="h-1 w-full" style={{ background: color, opacity: 0.6 }} />
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between gap-2">
@@ -2263,7 +2263,7 @@ export default function Dashboard() {
               <button onClick={() => setShowSubModal(true)} className="btn btn-orange">+ הוסף פרויקט ראשון</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style={{ gridAutoRows: "1fr" }}>
               {[...activeProject.subProjects].sort((a, b) => a.order - b.order).map(sub => (
                 <SubProjectCard
                   key={sub.id}
@@ -2276,7 +2276,7 @@ export default function Dashboard() {
               ))}
               <button
                 onClick={() => setShowSubModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
+                className="card flex flex-col items-center justify-center gap-3 py-8 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
               >
                 <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
                 <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
@@ -2452,11 +2452,11 @@ export default function Dashboard() {
               <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור מחלקה ראשונה</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" style={{ gridAutoRows: "1fr" }}>
               {[...projects].sort((a, b) => a.order - b.order).map(p => (
                 <div
                   key={p.id}
-                  className={dragOverProjectId === p.id ? "opacity-50" : ""}
+                  className={`h-full${dragOverProjectId === p.id ? " opacity-50" : ""}`}
                   onDragOver={(e) => handleProjectDragOver(e, p.id)}
                   onDrop={(e) => handleProjectDrop(e, p.id)}
                 >
@@ -2475,7 +2475,7 @@ export default function Dashboard() {
               {/* Financial card */}
               <button
                 onClick={() => setShowBrandFinancial(true)}
-                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 h-full"
                 style={{ border: "2px solid #d1fae5" }}
               >
                 <div className="h-1.5 w-full" style={{ background: "#10b981" }} />
@@ -2495,7 +2495,7 @@ export default function Dashboard() {
 
               <button
                 onClick={() => setShowProjectModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
+                className="card flex flex-col items-center justify-center gap-3 py-8 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
               >
                 <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
                 <span className="font-semibold text-gray-400 text-sm">מחלקה חדשה</span>
