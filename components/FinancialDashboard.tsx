@@ -105,6 +105,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
   const [data, setData] = useState<FinancialData>(() => loadFinancialData(brandId));
   const [openSection, setOpenSection] = useState<"loans" | "expenses" | "incomes" | "properties" | null>("loans");
   const [editingDate, setEditingDate] = useState(false);
+  const [showCashflowBreakdown, setShowCashflowBreakdown] = useState(false);
 
   const [editingLoan,        setEditingLoan]        = useState<string | null>(null);
   const [editingExpense,     setEditingExpense]      = useState<string | null>(null);
@@ -927,16 +928,20 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               {totalExpensesMonthly > 0 && ` · הוצ׳ ₪${Math.round(totalExpensesMonthly).toLocaleString("he-IL")}`}
             </div>
           </div>
-          {/* Net cash */}
-          <div className={`card px-4 py-3 shadow-sm border ${netMonthlyCash >= 0 ? "border-teal-100 bg-teal-50/40" : "border-red-100 bg-red-50/40"}`}>
+          {/* Net cash — clickable for breakdown */}
+          <button
+            onClick={() => setShowCashflowBreakdown(true)}
+            className={`card px-4 py-3 shadow-sm border text-right transition-all hover:shadow-md active:scale-95 ${netMonthlyCash >= 0 ? "border-teal-100 bg-teal-50/40 hover:border-teal-300" : "border-red-100 bg-red-50/40 hover:border-red-300"}`}
+          >
             <div className="text-xl font-black" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
               {netMonthlyCash >= 0 ? "+" : ""}{ils(netMonthlyCash)}
             </div>
             <div className="text-xs text-gray-500 mt-1 font-medium">תזרים נטו</div>
-            <div className="text-[10px] mt-0.5" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
+            <div className="text-[10px] mt-0.5 flex items-center gap-1" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
               {netMonthlyCash >= 0 ? "✓ חיובי" : "⚠ גירעון"}
+              <span className="text-gray-300 mr-1">· לחץ לפירוט</span>
             </div>
-          </div>
+          </button>
           {/* Total debt */}
           <div className="card px-4 py-3 shadow-sm border border-gray-100">
             <div className="text-xl font-black" style={{ color: "#6366f1" }}>{ils(totalDebtAll)}</div>
@@ -1067,6 +1072,170 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
             setShowScanner(false);
           }}
         />
+      )}
+
+      {/* ── Cashflow Breakdown Modal ── */}
+      {showCashflowBreakdown && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" dir="rtl"
+          style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+          onClick={() => setShowCashflowBreakdown(false)}
+        >
+          <div
+            className="w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-3xl shadow-2xl overflow-hidden"
+            style={{ maxHeight: "88vh", display: "flex", flexDirection: "column" }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <button onClick={() => setShowCashflowBreakdown(false)}
+                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-lg transition-colors">×</button>
+              <div className="text-right">
+                <h2 className="font-black text-gray-900 text-base">פירוט תזרים חודשי</h2>
+                <p className="text-xs text-gray-400 mt-0.5">מאיפה מגיע הכסף ולאן הוא הולך</p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+
+              {/* ── INCOME ── */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-black text-green-700">+{ils(allMonthlyIncome)}</span>
+                  <span className="text-xs font-bold text-gray-500 flex items-center gap-1">💚 הכנסות חודשיות</span>
+                </div>
+                <div className="space-y-1.5 pr-2">
+                  {(data.incomes ?? []).filter(i => i.frequency === "monthly").map(i => (
+                    <div key={i.id} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-green-50 border border-green-100">
+                      <span className="text-sm font-bold text-green-700">+{ils(i.amount)}</span>
+                      <span className="text-sm text-gray-700">{i.name}</span>
+                    </div>
+                  ))}
+                  {data.properties.map(p => {
+                    const propInc = p.incomes.reduce((s, i) => s + i.amount, 0);
+                    if (propInc === 0) return null;
+                    return (
+                      <div key={p.id} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-green-50 border border-green-100">
+                        <span className="text-sm font-bold text-green-700">+{ils(propInc)}</span>
+                        <span className="text-sm text-gray-700">🏠 {p.name}</span>
+                      </div>
+                    );
+                  })}
+                  {allMonthlyIncome === 0 && (
+                    <div className="text-xs text-gray-400 text-right px-1">אין הכנסות מוגדרות</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="h-px bg-gray-100" />
+
+              {/* ── OUTFLOWS ── */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-black text-red-600">-{ils(allMonthlyOut)}</span>
+                  <span className="text-xs font-bold text-gray-500 flex items-center gap-1">🔴 הוצאות חודשיות</span>
+                </div>
+                <div className="space-y-1.5 pr-2">
+
+                  {/* Loans */}
+                  {data.loans.filter(l => l.paidMonths < l.totalMonths).length > 0 && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 mb-1">🏦 הלוואות</div>
+                      {data.loans.filter(l => l.paidMonths < l.totalMonths).map(l => {
+                        const remaining = l.totalMonths - l.paidMonths;
+                        return (
+                          <div key={l.id} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-orange-50 border border-orange-100">
+                            <div className="text-right">
+                              <span className="text-sm font-bold text-red-600">-{ils(l.monthlyPayment)}</span>
+                            </div>
+                            <div className="text-right min-w-0">
+                              <div className="text-sm text-gray-700 truncate">{l.name}</div>
+                              <div className="text-[10px] text-gray-400">{remaining} תשלומים נותרו</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Fixed expenses */}
+                  {data.expenses.filter(e => e.frequency === "monthly").length > 0 && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 mb-1 mt-2">📋 הוצאות קבועות</div>
+                      {data.expenses.filter(e => e.frequency === "monthly").map(e => (
+                        <div key={e.id} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-red-50 border border-red-100">
+                          <span className="text-sm font-bold text-red-600">-{ils(e.amount)}</span>
+                          <span className="text-sm text-gray-700">{e.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Property liabilities */}
+                  {data.properties.some(p => p.liabilities.length > 0) && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 mb-1 mt-2">🏠 חובות נכסים</div>
+                      {data.properties.flatMap(p => p.liabilities.map(l => ({
+                        key: l.id, name: `${p.name} — ${l.name}`, amount: l.monthlyPayment,
+                      }))).map(row => (
+                        <div key={row.key} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-red-50 border border-red-100">
+                          <span className="text-sm font-bold text-red-600">-{ils(row.amount)}</span>
+                          <span className="text-sm text-gray-700 truncate">{row.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Property expenses */}
+                  {data.properties.some(p => p.expenses.some(e => e.frequency === "monthly")) && (
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 mb-1 mt-2">🏠 הוצאות נכסים</div>
+                      {data.properties.flatMap(p => p.expenses.filter(e => e.frequency === "monthly").map(e => ({
+                        key: e.id, name: `${p.name} — ${e.name}`, amount: e.amount,
+                      }))).map(row => (
+                        <div key={row.key} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-red-50 border border-red-100">
+                          <span className="text-sm font-bold text-red-600">-{ils(row.amount)}</span>
+                          <span className="text-sm text-gray-700 truncate">{row.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── NET TOTAL ── */}
+              <div className="h-px bg-gray-100" />
+              <div className={`flex items-center justify-between px-4 py-4 rounded-2xl ${netMonthlyCash >= 0 ? "bg-teal-50 border border-teal-200" : "bg-red-50 border border-red-200"}`}>
+                <div className="text-left">
+                  <div className="text-2xl font-black" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
+                    {netMonthlyCash >= 0 ? "+" : ""}{ils(netMonthlyCash)}
+                  </div>
+                  <div className="text-xs font-bold mt-0.5" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
+                    {netMonthlyCash >= 0 ? "✓ תזרים חיובי" : "⚠ גירעון חודשי"}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-gray-700">תזרים נטו</div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    +{ils(allMonthlyIncome)} הכנסות<br/>
+                    -{ils(allMonthlyOut)} הוצאות
+                  </div>
+                </div>
+              </div>
+
+              {netMonthlyCash < 0 && (
+                <div className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <div className="text-xs font-bold text-amber-700 mb-1">💡 מה אפשר לעשות?</div>
+                  <div className="text-xs text-amber-600 leading-relaxed">
+                    כדי לאזן את התזרים צריך להגדיל הכנסות ב-{ils(Math.abs(netMonthlyCash))}/חודש
+                    או להפחית הוצאות באותו סכום.
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
