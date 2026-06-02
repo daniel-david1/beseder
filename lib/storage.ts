@@ -157,6 +157,9 @@ export function saveFinancialData(financial: FinancialData, brandId?: string): v
   })();
 }
 
+/** Fixed UUID of the personal-finance brand — same constant as in dashboard/page.tsx */
+const PERSONAL_FINANCE_BRAND_ID = "f5645d60-7c07-47d0-b863-59be62f112aa";
+
 export async function loadFinancialFromCloud(brandId?: string): Promise<FinancialData | null> {
   try {
     const { data, error } = await supabase.from("user_data").select("financial").single();
@@ -165,7 +168,9 @@ export async function loadFinancialFromCloud(brandId?: string): Promise<Financia
     // New per-brand format
     if (fin.brands && brandId) {
       const map = fin.brands as Record<string, FinancialData>;
-      const parsed = map[brandId] ?? map["legacy"];
+      // Try exact brandId, then the fixed personal-finance UUID as fallback,
+      // then "legacy" — this ensures mobile syncs even if brands haven't loaded yet.
+      const parsed = map[brandId] ?? map[PERSONAL_FINANCE_BRAND_ID] ?? map["legacy"];
       if (!parsed) return null;
       return { ...parsed, incomes: parsed.incomes ?? [] };
     }
