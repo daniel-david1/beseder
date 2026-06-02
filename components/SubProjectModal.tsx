@@ -123,12 +123,12 @@ function ItemList({
                     className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-teal-200 hover:bg-teal-100 transition-colors"
                   >
                     <span>📋</span>
-                    <span>פתח ערוץ ←</span>
+                    <span>פתח פריט ←</span>
                   </button>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-200">
                     <span>✨</span>
-                    <span>יצור ערוץ בשמירה</span>
+                    <span>צור פריט בשמירה</span>
                   </span>
                 )}
               </div>

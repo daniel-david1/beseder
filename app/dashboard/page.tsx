@@ -735,7 +735,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                             <div className="h-full rounded-full" style={{ width: `${subPct}%`, background: project.color }} />
                           </div>
                           <span className="text-[9px] text-gray-400 font-semibold whitespace-nowrap">
-                            {itemCount} {hasChannels ? "ערוצים" : "שלבים"}
+                            {itemCount} {hasChannels ? "פריטים" : "שלבים"}
                           </span>
                         </div>
                       </div>
@@ -936,7 +936,7 @@ function GoalsPanel({ goals, color, onChange }: {
 }
 
 /* ─── Top Nav ─────────────────────────────────────────── */
-function TopNav({ userEmail }: { userEmail: string }) {
+function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () => void }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -1011,6 +1011,19 @@ function TopNav({ userEmail }: { userEmail: string }) {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Center area: finance shortcut */}
+        <div className="flex items-center gap-2">
+          {onFinance && (
+            <button
+              onClick={onFinance}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-colors"
+            >
+              <span>💰</span>
+              <span className="hidden sm:inline">פיננסי</span>
+            </button>
           )}
         </div>
 
@@ -1378,7 +1391,7 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
         )}
 
         <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח פרויקט ←
+          פתח פריט ←
         </button>
       </div>
     </div>
@@ -1709,7 +1722,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopNav userEmail={userEmail} />
+        <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeProject.color} items={[
           { emoji: activeBrand.emoji,      name: activeBrand.name,      onClick: () => { setActiveProject(null); setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); }, isCurrent: false },
           { emoji: activeProject.emoji,    name: activeProject.name,    onClick: () => { setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); },                        isCurrent: false },
@@ -1804,7 +1817,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopNav userEmail={userEmail} />
+        <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         {selectedStage && !hasChannels && (
           <StageEditDrawer
             stage={selectedStage}
@@ -1832,7 +1845,7 @@ export default function Dashboard() {
             <div className="flex gap-1.5">
               <button onClick={() => setEditingSub(activeSubProject)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
               {hasChannels
-                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> פרויקט חדש</span><span className="sm:hidden"> פרויקט</span></button>
+                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> פריט חדש</span><span className="sm:hidden"> פריט</span></button>
                 : hasStages
                   ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> שלב חדש</span><span className="sm:hidden"> שלב</span></button>
                   : null
@@ -1851,7 +1864,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ── CHANNELS MODE ── */}
+          {/* ── ROSTER MODE (פריטים) ── */}
           {hasChannels && (
             <>
               {/* Income + Expense summary */}
@@ -1935,7 +1948,7 @@ export default function Dashboard() {
                   className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
                 >
                   <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                  <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
+                  <span className="font-semibold text-gray-400 text-sm">פריט חדש</span>
                 </button>
               </div>
             </>
@@ -1983,8 +1996,8 @@ export default function Dashboard() {
                   className="card p-6 flex flex-col items-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 w-44 cursor-pointer border-2 hover:border-teal-200"
                 >
                   <span className="text-3xl">🗂️</span>
-                  <span className="font-bold text-gray-800">פרויקטים</span>
-                  <span className="text-xs text-gray-400 text-center">כמה פרויקטים נפרדים, לכל אחד שלבים</span>
+                  <span className="font-bold text-gray-800">פריטים (רשימה)</span>
+                  <span className="text-xs text-gray-400 text-center">לקוחות / ספקים / פריטים — לכל אחד שלבים</span>
                 </button>
               </div>
             </div>
@@ -2002,7 +2015,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopNav userEmail={userEmail} />
+        <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji,  name: activeBrand.name,  onClick: () => setActiveProject(null), isCurrent: false },
           { emoji: activeProject.emoji, name: activeProject.name, onClick: () => {},                  isCurrent: true  },
@@ -2194,7 +2207,7 @@ export default function Dashboard() {
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <TopNav userEmail={userEmail} />
+        <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji, name: activeBrand.name, onClick: () => {}, isCurrent: true },
         ]} />
@@ -2360,7 +2373,7 @@ export default function Dashboard() {
   /* ══ LEVEL 0: Brands home ══ */
   return (
     <div className="min-h-screen bg-gray-50">
-      <TopNav userEmail={userEmail} />
+      <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
       {showBrandModal && (
         <BrandWizard
           onClose={() => setShowBrandModal(false)}

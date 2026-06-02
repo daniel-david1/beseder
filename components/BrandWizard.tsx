@@ -31,13 +31,13 @@ function mkProj(name: string, emoji: string, color: string, subs: TplSub[]): Tpl
 const TEMPLATES: Record<BizType, TplProject[]> = {
   service: [
     mkProj("ניהול לקוחות", "🤝", "#8b5cf6", [
-      mkSub("לקוחות פעילים",  "💼", "ערוץ לכל לקוח — שלבי ניהול שוטף", true,  []),
+      mkSub("לקוחות פעילים",  "💼", "פריט לכל לקוח — שלבי ניהול שוטף", true,  []),
       mkSub("גיוס לקוחות",   "🚀", "מהליד הראשון ועד חתימה",           false, ["ליד", "שיחת מכירה", "הצעת מחיר", "חתימה", "אונבורדינג"]),
       mkSub("שימור ונאמנות", "❤️", "מניעת נטישה ושדרוג",               false, ["מעקב חודשי", "דוח ביצועים", "הצעת שדרוג"]),
     ]),
     mkProj("שיווק", "📢", "#f97316", [
       mkSub("תוכן ורשתות",  "🌱", "אורגני — אינסטגרם, לינקדאין",    false, ["תכנון תוכן", "הפקה", "פרסום", "ניתוח"]),
-      mkSub("פרסום ממומן",  "💸", "קמפיינים וערוצים ממומנים",        true,  []),
+      mkSub("פרסום ממומן",  "💸", "קמפיינים ופריטים ממומנים",        true,  []),
     ]),
     mkProj("פיננסי", "💰", "#10b981", [
       mkSub("מעקב הכנסות", "📊", "חשבוניות, גבייה, מע״מ", false, ["חשבוניות", "גבייה", "מע״מ"]),
@@ -50,7 +50,7 @@ const TEMPLATES: Record<BizType, TplProject[]> = {
       mkSub("אנליטיקס", "📊", "כלים, דשבורד, פעולות",      false, ["הטמעת כלים", "דשבורד", "פעולות לפי נתונים"]),
     ]),
     mkProj("גדילה", "🚀", "#f97316", [
-      mkSub("רכישת משתמשים", "👥", "ערוצי רכישה — קמפיינים, שיתופי פעולה", true,  []),
+      mkSub("רכישת משתמשים", "👥", "פריטי רכישה — קמפיינים, שיתופי פעולה", true,  []),
       mkSub("שימור",         "🔄", "אונבורדינג, Engagement, ריטנשן",         false, ["אונבורדינג", "Engagement", "ריטנשן"]),
     ]),
     mkProj("עסק", "💼", "#8b5cf6", [
@@ -61,7 +61,7 @@ const TEMPLATES: Record<BizType, TplProject[]> = {
   ecommerce: [
     mkProj("מוצר ומלאי", "📦", "#f97316", [
       mkSub("ניהול מלאי", "🏭", "רכש, קבלה, ניהול שוטף",     false, ["רכש", "קבלה ובדיקה", "ניהול שוטף", "פריקה"]),
-      mkSub("ספקים",      "🤝", "ספק לכל קטגוריה — ערוצים", true,  []),
+      mkSub("ספקים",      "🤝", "פריט לכל ספק/קטגוריה", true,  []),
     ]),
     mkProj("שיווק ומכירות", "📣", "#ec4899", [
       mkSub("חנות אונליין",      "🛒", "UX, CRO, SEO, אוטומציות",       false, ["UX / עיצוב", "CRO", "SEO", "אוטומציות"]),
@@ -75,7 +75,7 @@ const TEMPLATES: Record<BizType, TplProject[]> = {
   ],
   freelance: [
     mkProj("לקוחות ופרויקטים", "💼", "#8b5cf6", [
-      mkSub("פרויקטים פעילים", "🎨", "ערוץ לכל פרויקט",           true,  []),
+      mkSub("פרויקטים פעילים", "🎨", "פריט לכל לקוח/פרויקט",           true,  []),
       mkSub("לידים ומכירות",  "🎯", "מהליד הראשון עד חוזה",      false, ["ליד", "שיחה ראשונה", "הצעת מחיר", "חוזה"]),
     ]),
     mkProj("שיווק עצמי", "📢", "#f97316", [
@@ -259,7 +259,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
             >
               <div className="text-xl mb-0.5">🚀</div>
               <div className="text-sm font-bold text-gray-800">מותג / פרויקט</div>
-              <div className="text-xs text-gray-400">שלבים, ערוצים, תבניות</div>
+              <div className="text-xs text-gray-400">שלבים, פריטים, תבניות</div>
             </button>
             <button
               onClick={() => { setIsFinancial(true); setEmoji("💰"); setColor("#10b981"); if (!name) setName("פיננסי אישי"); }}
@@ -438,7 +438,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
                       )}
                       <div className="flex items-center gap-1 shrink-0">
                         {ts.useChannels
-                          ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-500 font-medium">ערוצים</span>
+                          ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-500 font-medium">פריטים</span>
                           : ts.stages.length > 0
                             ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{ts.stages.length} שלבים</span>
                             : null

@@ -138,7 +138,7 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
       <div className="modal w-full" style={{ maxWidth: 540 }}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
           <h2 className="text-lg font-black text-gray-900">
-            {existing ? "ערוך ערוץ" : "ערוץ חדש"}
+            {existing ? "ערוך פריט" : "פריט חדש"}
           </h2>
           <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base">✕</button>
         </div>
@@ -156,10 +156,10 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
           </div>
 
           <div>
-            <label>שם הערוץ *</label>
+            <label>שם הפריט *</label>
             <input className="input text-base font-semibold" value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="לדוגמה: אינסטגרם, גוגל אדס, אורגני..."
+              placeholder="לדוגמה: לקוח, ספק, פרויקט..."
               autoFocus
             />
           </div>
@@ -168,15 +168,15 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
             <label>תיאור קצר</label>
             <input className="input" value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="מה הערוץ הזה מכסה?"
+              placeholder="תיאור הפריט..."
             />
           </div>
 
           <ItemList
             items={incomes}
             onChange={setIncomes}
-            label="הכנסות חודשיות של הערוץ 💚"
-            sublabel="הכנסות שנוגעות לכל הערוץ — לא לשלב ספציפי"
+            label="הכנסות חודשיות 💚"
+            sublabel="הכנסות שנוגעות לפריט כולו — לא לשלב ספציפי"
             addLabel="הוסף הכנסה"
             type="income"
           />
@@ -184,8 +184,8 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
           <ItemList
             items={expenses}
             onChange={setExpenses}
-            label="הוצאות חודשיות של הערוץ 🔴"
-            sublabel="הוצאות שנוגעות לכל הערוץ — לא לשלב ספציפי"
+            label="הוצאות חודשיות 🔴"
+            sublabel="הוצאות שנוגעות לפריט כולו — לא לשלב ספציפי"
             addLabel="הוסף הוצאה"
             type="expense"
           />
@@ -194,7 +194,7 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
         <div className="px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl">
           <button onClick={handleSave} disabled={!name.trim()} className="btn btn-orange flex-1"
             style={{ opacity: name.trim() ? 1 : 0.5 }}>
-            {existing ? "שמור שינויים" : "צור ערוץ"}
+            {existing ? "שמור שינויים" : "צור פריט"}
           </button>
           <button onClick={onClose} className="btn btn-ghost">ביטול</button>
         </div>
