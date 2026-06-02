@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData, DailyTask } from "@/lib/types";
-import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData } from "@/lib/storage";
+import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData, saveDailyTasks, loadDailyTasksFromCloud } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import ProjectPipeline from "@/components/ProjectPipeline";
 import StageEditDrawer from "@/components/StageEditDrawer";
-import BrandModal from "@/components/BrandModal";
 import BrandWizard from "@/components/BrandWizard";
 import NewProjectModal from "@/components/NewProjectModal";
 import SubProjectModal from "@/components/SubProjectModal";
@@ -92,8 +91,9 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
   const todayStr  = new Date().toISOString().slice(0, 10);
   const hebrewDate = new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
 
-  // Load tasks from localStorage on mount and when todayStr changes
+  // Load tasks: localStorage first (instant), then cloud (sync across devices)
   useEffect(() => {
+    // Step 1: load from localStorage immediately
     try {
       const raw = localStorage.getItem(`DAILY_TASKS_${todayStr}`);
       if (raw) {
@@ -105,12 +105,19 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
     } catch {
       setTasks([]);
     }
+    // Step 2: load from cloud and prefer it if more up-to-date
+    loadDailyTasksFromCloud(todayStr).then(cloudTasks => {
+      if (!cloudTasks) return;
+      // Cloud has data — write to localStorage and use it
+      localStorage.setItem(`DAILY_TASKS_${todayStr}`, JSON.stringify(cloudTasks));
+      setTasks(cloudTasks);
+    }).catch(() => { /* silent */ });
   }, [todayStr]);
 
-  // Save tasks to localStorage whenever they change
+  // Save tasks to localStorage + cloud
   const saveTasks = (updatedTasks: DailyTask[]) => {
     setTasks(updatedTasks);
-    localStorage.setItem(`DAILY_TASKS_${todayStr}`, JSON.stringify(updatedTasks));
+    saveDailyTasks(todayStr, updatedTasks);
   };
 
   const handleAddTask = () => {
@@ -1039,7 +1046,6 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
   isDragOver: boolean;
 }) {
   const allSubs   = brand.projects.flatMap(p => p.subProjects);
-  const progress  = totalPct(allSubs);
   const nProjects = brand.projects.length;
 
   return (
@@ -1108,11 +1114,16 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
           </div>
         </div>
 
-        <button onClick={onClick} className="space-y-1.5">
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: brand.color }} />
-          </div>
-          <p className="text-xs text-gray-400">{nProjects} פרויקט{nProjects !== 1 ? "ים" : ""} · {progress}% הושלם</p>
+        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-gray-400">{nProjects} פרויקט{nProjects !== 1 ? "ים" : ""}</span>
+          {health.activeCount > 0 && (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
+              ▶ {health.activeCount} פעיל
+            </span>
+          )}
+          {health.activeCount === 0 && allSubs.length > 0 && (
+            <span className="text-xs text-gray-300">אין שלבים פעילים</span>
+          )}
         </button>
 
         {/* Setup CTA — shown when stages lack next actions */}
@@ -1122,11 +1133,12 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
             className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border-2 border-dashed text-xs font-bold transition-all hover:opacity-80"
             style={{ borderColor: "#f59e0b", color: "#b45309", background: "#fffbeb" }}
           >
-            ⚡ השלם הגדרה ({health.noNextActionCount} שלבים)
+            <span className="sm:hidden">⚡ {health.noNextActionCount} שלבים חסרים</span>
+            <span className="hidden sm:inline">⚡ השלם הגדרה ({health.noNextActionCount} שלבים)</span>
           </button>
         )}
 
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
+        <button onClick={onClick} className="hidden sm:flex btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
           פתח מותג ←
         </button>
       </div>
@@ -1145,7 +1157,6 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
   onDrop?: () => void;
   onDragEnd?: () => void;
 }) {
-  const progress = totalPct(project.subProjects);
   const blocked  = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "blocked").length, 0);
 
   return (
@@ -1195,17 +1206,26 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
           );
         })()}
 
-        <button onClick={onClick} className="space-y-1.5">
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: project.color }} />
-          </div>
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>{project.subProjects.length} מחלקות · {progress}% הושלם</span>
-            {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-          </div>
-        </button>
+        {(() => {
+          const projectActive = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "active").length, 0);
+          return (
+            <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-gray-400">{project.subProjects.length} מחלקות</span>
+              {projectActive > 0 && (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
+                  ▶ {projectActive} פעיל
+                </span>
+              )}
+              {blocked > 0 && (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                  ⚠ {blocked} תקוע
+                </span>
+              )}
+            </button>
+          );
+        })()}
 
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: project.color + "40", color: project.color }}>
+        <button onClick={onClick} className="hidden sm:flex btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: project.color + "40", color: project.color }}>
           פתח פרויקט ←
         </button>
       </div>
@@ -1218,7 +1238,6 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
   sub: SubProject; color: string;
   onClick: () => void; onEdit: () => void; onDelete: () => void;
 }) {
-  const p           = pct(sub.stages);
   const blocked     = sub.stages.filter(s => s.status === "blocked").length;
   const active      = sub.stages.filter(s => s.status === "active").length;
   const done        = sub.stages.filter(s => s.status === "done").length;
@@ -1261,15 +1280,21 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
         )}
 
         {sub.stages.length > 0 ? (
-          <button onClick={onClick} className="space-y-1.5">
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p}%`, background: color }} />
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>{done}/{sub.stages.length} הושלמו</span>
-              {active  > 0 && <span className="text-blue-500">● {active} בתהליך</span>}
-              {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-            </div>
+          <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-400">{sub.stages.length} שלבים</span>
+            {active > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
+                ▶ {active} פעיל
+              </span>
+            )}
+            {blocked > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                ⚠ {blocked} תקוע
+              </span>
+            )}
+            {done > 0 && (
+              <span className="text-[11px] font-semibold text-green-600">✓ {done}</span>
+            )}
           </button>
         ) : (
           <p className="text-sm text-gray-300">אין שלבים עדיין</p>
@@ -1288,7 +1313,6 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
   channel: Channel; color: string;
   onClick: () => void; onEdit: () => void; onDelete: () => void;
 }) {
-  const p          = pct(channel.stages);
   const done       = channel.stages.filter(s => s.status === "done").length;
   const blocked    = channel.stages.filter(s => s.status === "blocked").length;
   const active     = channel.stages.filter(s => s.status === "active").length;
@@ -1332,15 +1356,21 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
         )}
 
         {channel.stages.length > 0 ? (
-          <button onClick={onClick} className="space-y-1.5">
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p}%`, background: color }} />
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>{done}/{channel.stages.length} הושלמו</span>
-              {active  > 0 && <span className="text-blue-500">● {active} בתהליך</span>}
-              {blocked > 0 && <span className="text-red-500">● {blocked} תקוע</span>}
-            </div>
+          <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-gray-400">{channel.stages.length} שלבים</span>
+            {active > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
+                ▶ {active} פעיל
+              </span>
+            )}
+            {blocked > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                ⚠ {blocked} תקוע
+              </span>
+            )}
+            {done > 0 && (
+              <span className="text-[11px] font-semibold text-green-600">✓ {done}</span>
+            )}
           </button>
         ) : (
           <p className="text-sm text-gray-300">אין שלבים עדיין</p>
@@ -1809,16 +1839,70 @@ export default function Dashboard() {
           {/* ── CHANNELS MODE ── */}
           {hasChannels && (
             <>
-              <div className="card px-5 py-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-gray-700 text-sm">התקדמות כללית</span>
-                  <span className="font-black text-xl" style={{ color: activeProject.color }}>{chProgress}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${chProgress}%`, background: activeProject.color }} />
-                </div>
-                <p className="text-xs text-gray-400 mt-2">{activeSubProject.channels.length} פרויקטים</p>
-              </div>
+              {/* Income + Expense summary */}
+              {(() => {
+                const chRows = activeSubProject.channels.map(ch => {
+                  const inc = (ch.incomes ?? []).reduce((s, e) => s + e.amount, 0);
+                  const exp = (ch.expenses ?? []).reduce((s, e) => s + e.amount, 0)
+                    + ch.stages.reduce((s, st) => s + (st.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
+                  return { ch, inc, exp };
+                }).filter(r => r.inc > 0 || r.exp > 0);
+                const totalInc = chRows.reduce((s, r) => s + r.inc, 0);
+                const totalExp = chRows.reduce((s, r) => s + r.exp, 0);
+                const subInc   = (activeSubProject.incomes ?? []).reduce((s, e) => s + e.amount, 0);
+                const subExp   = (activeSubProject.expenses ?? []).reduce((s, e) => s + e.amount, 0);
+                const grandInc = totalInc + subInc;
+                const grandExp = totalExp + subExp;
+                if (grandInc === 0 && grandExp === 0) return null;
+                const profit = grandInc - grandExp;
+                return (
+                  <div className="card p-4">
+                    {/* Header totals */}
+                    <div className="flex items-center gap-3 mb-3 flex-wrap">
+                      {grandInc > 0 && (
+                        <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#f0fdf4", border: "1.5px solid #86efac" }}>
+                          <p className="text-[11px] text-green-600 font-semibold mb-0.5">💚 סה״כ הכנסות</p>
+                          <p className="text-lg font-black text-green-700">₪{grandInc.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                        </div>
+                      )}
+                      {grandExp > 0 && (
+                        <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#fef3c7", border: "1.5px solid #fde68a" }}>
+                          <p className="text-[11px] text-amber-600 font-semibold mb-0.5">💸 סה״כ הוצאות</p>
+                          <p className="text-lg font-black text-amber-700">₪{grandExp.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                        </div>
+                      )}
+                      {grandInc > 0 && grandExp > 0 && (
+                        <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{
+                          background: profit >= 0 ? "#f0fdf4" : "#fef2f2",
+                          border: `1.5px solid ${profit >= 0 ? "#86efac" : "#fca5a5"}`,
+                        }}>
+                          <p className="text-[11px] font-semibold mb-0.5" style={{ color: profit >= 0 ? "#16a34a" : "#dc2626" }}>
+                            {profit >= 0 ? "✨ רווח" : "⚠️ גירעון"}
+                          </p>
+                          <p className="text-lg font-black" style={{ color: profit >= 0 ? "#15803d" : "#dc2626" }}>
+                            ₪{Math.abs(profit).toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Per-channel breakdown */}
+                    {chRows.length > 0 && (
+                      <div className="space-y-1.5 border-t border-gray-100 pt-3">
+                        {chRows.map(({ ch, inc, exp }) => (
+                          <div key={ch.id} className="flex items-center gap-2">
+                            <span className="text-base shrink-0">{ch.emoji}</span>
+                            <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{ch.name}</span>
+                            <div className="flex gap-2 shrink-0">
+                              {inc > 0 && <span className="text-xs font-bold text-green-700">+₪{inc.toLocaleString("he-IL")}</span>}
+                              {exp > 0 && <span className="text-xs font-semibold text-amber-600">-₪{exp.toLocaleString("he-IL")}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {[...activeSubProject.channels].sort((a, b) => a.order - b.order).map(ch => (
@@ -1948,26 +2032,54 @@ export default function Dashboard() {
           {/* Financial overview */}
           {(() => {
             const rows = activeProject.subProjects.map(sp => ({
-              sp, exp: subMonthlyExpenses(sp)
-            })).filter(r => r.exp > 0);
+              sp,
+              inc: subMonthlyIncomes(sp),
+              exp: subMonthlyExpenses(sp),
+            })).filter(r => r.inc > 0 || r.exp > 0);
             if (!rows.length) return null;
+            const totalInc = rows.reduce((s, r) => s + r.inc, 0);
             const totalExp = rows.reduce((s, r) => s + r.exp, 0);
+            const profit   = totalInc - totalExp;
             return (
-              <div className="card p-4 border-l-4" style={{ borderLeftColor: activeProject.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-800 text-sm">💸 סיכום הוצאות חודשיות</h3>
-                  <span className="font-black text-base" style={{ color: activeProject.color }}>
-                    ₪{totalExp.toLocaleString("he-IL")}/חודש
-                  </span>
+              <div className="card p-4">
+                {/* Totals row */}
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  {totalInc > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#f0fdf4", border: "1.5px solid #86efac" }}>
+                      <p className="text-[11px] text-green-600 font-semibold mb-0.5">💚 סה״כ הכנסות</p>
+                      <p className="text-lg font-black text-green-700">₪{totalInc.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                    </div>
+                  )}
+                  {totalExp > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#fef3c7", border: "1.5px solid #fde68a" }}>
+                      <p className="text-[11px] text-amber-600 font-semibold mb-0.5">💸 סה״כ הוצאות</p>
+                      <p className="text-lg font-black text-amber-700">₪{totalExp.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                    </div>
+                  )}
+                  {totalInc > 0 && totalExp > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{
+                      background: profit >= 0 ? "#f0fdf4" : "#fef2f2",
+                      border: `1.5px solid ${profit >= 0 ? "#86efac" : "#fca5a5"}`,
+                    }}>
+                      <p className="text-[11px] font-semibold mb-0.5" style={{ color: profit >= 0 ? "#16a34a" : "#dc2626" }}>
+                        {profit >= 0 ? "✨ רווח" : "⚠️ גירעון"}
+                      </p>
+                      <p className="text-lg font-black" style={{ color: profit >= 0 ? "#15803d" : "#dc2626" }}>
+                        ₪{Math.abs(profit).toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  {rows.map(({ sp, exp }) => (
-                    <div key={sp.id} className="flex items-center gap-3">
-                      <span className="text-base">{sp.emoji}</span>
+                {/* Per-sub breakdown */}
+                <div className="space-y-1.5 border-t border-gray-100 pt-3">
+                  {rows.map(({ sp, inc, exp }) => (
+                    <div key={sp.id} className="flex items-center gap-2">
+                      <span className="text-base shrink-0">{sp.emoji}</span>
                       <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{sp.name}</span>
-                      <span className="text-xs font-semibold text-gray-600">
-                        ₪{exp.toLocaleString("he-IL")}/חודש
-                      </span>
+                      <div className="flex gap-2 shrink-0">
+                        {inc > 0 && <span className="text-xs font-bold text-green-700">+₪{inc.toLocaleString("he-IL")}</span>}
+                        {exp > 0 && <span className="text-xs font-semibold text-amber-600">-₪{exp.toLocaleString("he-IL")}</span>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2047,7 +2159,7 @@ export default function Dashboard() {
         ]} />
         {showProjectModal && <NewProjectModal order={projects.length} onClose={() => setShowProjectModal(false)} onSave={handleSaveProject} />}
         {editingProject   && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
-        {editingBrand     && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
+        {editingBrand     && <BrandWizard existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
@@ -2077,26 +2189,54 @@ export default function Dashboard() {
           {/* Brand financial summary */}
           {(() => {
             const projRows = projects.map(p => ({
-              p, exp: p.subProjects.reduce((s, sp) => s + subMonthlyExpenses(sp), 0)
-            })).filter(r => r.exp > 0);
+              p,
+              inc: p.subProjects.reduce((s, sp) => s + subMonthlyIncomes(sp), 0),
+              exp: p.subProjects.reduce((s, sp) => s + subMonthlyExpenses(sp), 0),
+            })).filter(r => r.inc > 0 || r.exp > 0);
             if (!projRows.length) return null;
+            const totalInc = projRows.reduce((s, r) => s + r.inc, 0);
             const totalExp = projRows.reduce((s, r) => s + r.exp, 0);
+            const profit   = totalInc - totalExp;
             return (
-              <div className="card p-4 border-l-4" style={{ borderLeftColor: activeBrand.color }}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-800 text-sm">💸 סיכום הוצאות חודשיות — כל הפרויקטים</h3>
-                  <span className="font-black text-base" style={{ color: activeBrand.color }}>
-                    ₪{totalExp.toLocaleString("he-IL")}/חודש
-                  </span>
+              <div className="card p-4">
+                {/* Totals */}
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  {totalInc > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#f0fdf4", border: "1.5px solid #86efac" }}>
+                      <p className="text-[11px] text-green-600 font-semibold mb-0.5">💚 סה״כ הכנסות</p>
+                      <p className="text-lg font-black text-green-700">₪{totalInc.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                    </div>
+                  )}
+                  {totalExp > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{ background: "#fef3c7", border: "1.5px solid #fde68a" }}>
+                      <p className="text-[11px] text-amber-600 font-semibold mb-0.5">💸 סה״כ הוצאות</p>
+                      <p className="text-lg font-black text-amber-700">₪{totalExp.toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span></p>
+                    </div>
+                  )}
+                  {totalInc > 0 && totalExp > 0 && (
+                    <div className="flex-1 min-w-[120px] px-3 py-2 rounded-xl" style={{
+                      background: profit >= 0 ? "#f0fdf4" : "#fef2f2",
+                      border: `1.5px solid ${profit >= 0 ? "#86efac" : "#fca5a5"}`,
+                    }}>
+                      <p className="text-[11px] font-semibold mb-0.5" style={{ color: profit >= 0 ? "#16a34a" : "#dc2626" }}>
+                        {profit >= 0 ? "✨ רווח" : "⚠️ גירעון"}
+                      </p>
+                      <p className="text-lg font-black" style={{ color: profit >= 0 ? "#15803d" : "#dc2626" }}>
+                        ₪{Math.abs(profit).toLocaleString("he-IL")}<span className="text-xs font-medium">/חודש</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  {projRows.map(({ p, exp }) => (
-                    <div key={p.id} className="flex items-center gap-3">
-                      <span className="text-base">{p.emoji}</span>
+                {/* Per-project breakdown */}
+                <div className="space-y-1.5 border-t border-gray-100 pt-3">
+                  {projRows.map(({ p, inc, exp }) => (
+                    <div key={p.id} className="flex items-center gap-2">
+                      <span className="text-base shrink-0">{p.emoji}</span>
                       <span className="text-sm text-gray-700 flex-1 min-w-0 truncate">{p.name}</span>
-                      <span className="text-xs font-semibold text-gray-600">
-                        ₪{exp.toLocaleString("he-IL")}/חודש
-                      </span>
+                      <div className="flex gap-2 shrink-0">
+                        {inc > 0 && <span className="text-xs font-bold text-green-700">+₪{inc.toLocaleString("he-IL")}</span>}
+                        {exp > 0 && <span className="text-xs font-semibold text-amber-600">-₪{exp.toLocaleString("he-IL")}</span>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2158,8 +2298,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <TopNav userEmail={userEmail} />
-      {showBrandModal && <BrandWizard onClose={() => setShowBrandModal(false)} onSave={handleSaveBrand} />}
-      {editingBrand   && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
+      {showBrandModal && (
+        <BrandWizard
+          onClose={() => setShowBrandModal(false)}
+          onSave={handleSaveBrand}
+          onEnter={brand => { setActiveBrand(brand); }}
+        />
+      )}
+      {editingBrand && (
+        <BrandWizard
+          existing={editingBrand}
+          onClose={() => setEditingBrand(null)}
+          onSave={handleSaveBrand}
+        />
+      )}
 
       {/* Brand Setup Wizard — opens when user clicks "השלם הגדרה" on a brand card */}
       {setupBrand && (

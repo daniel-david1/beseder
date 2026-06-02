@@ -1,4 +1,4 @@
-import { Brand, Project, SubProject, Stage, FinancialData } from "./types";
+import { Brand, Project, SubProject, Stage, FinancialData, DailyTask } from "./types";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "./supabase";
 
@@ -173,5 +173,43 @@ export async function loadFinancialFromCloud(brandId?: string): Promise<Financia
       return { ...parsed, incomes: parsed.incomes ?? [] };
     }
     return null;
+  } catch { return null; }
+}
+
+/* ─── Daily Tasks ─────────────────────────────────────── */
+
+export function saveDailyTasks(dateStr: string, tasks: DailyTask[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(`DAILY_TASKS_${dateStr}`, JSON.stringify(tasks));
+  (async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      // Load current financial blob, merge daily_tasks into it
+      const { data: existing } = await supabase
+        .from("user_data")
+        .select("financial")
+        .eq("user_id", user.id)
+        .single();
+      const currentFin = (existing?.financial as Record<string, unknown>) ?? {};
+      const currentDailyTasks = (currentFin.daily_tasks as Record<string, DailyTask[]>) ?? {};
+      const updatedDailyTasks = { ...currentDailyTasks, [dateStr]: tasks };
+      const updatedFin = { ...currentFin, daily_tasks: updatedDailyTasks };
+      await supabase.from("user_data").upsert(
+        { user_id: user.id, financial: updatedFin, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    } catch { /* silent */ }
+  })();
+}
+
+export async function loadDailyTasksFromCloud(dateStr: string): Promise<DailyTask[] | null> {
+  try {
+    const { data, error } = await supabase.from("user_data").select("financial").single();
+    if (error || !data || !data.financial) return null;
+    const fin = data.financial as Record<string, unknown>;
+    const dailyTasks = fin.daily_tasks as Record<string, DailyTask[]> | undefined;
+    if (!dailyTasks || !dailyTasks[dateStr]) return null;
+    return dailyTasks[dateStr];
   } catch { return null; }
 }
