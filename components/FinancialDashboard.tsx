@@ -139,7 +139,10 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       ...loan,
       annualRate: loan.annualRate ?? 0,
       manualPayment: loan.manualPayment ?? false,
+      manualDates: loan.manualDates ?? false,
       paymentDayOfMonth: loan.paymentDayOfMonth,
+      startDate: loan.startDate ?? "",
+      endDate: loan.endDate ?? "",
     });
     const [form, setForm] = useState(initForm);
     const isEditing = editingLoan === loan.id;
@@ -148,8 +151,30 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
     const remaining = loanRemaining(loan);
     const isDone = loan.paidMonths >= loan.totalMonths;
 
+    /* ── date → months helpers ── */
+    const monthsBetweenDates = (start: string, end: string) => {
+      if (!start || !end) return 0;
+      const s = new Date(start + "-01");
+      const e = new Date(end + "-01");
+      return Math.max(0, (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()));
+    };
+    const monthsSinceDate = (start: string) => {
+      if (!start) return 0;
+      const s = new Date(start + "-01");
+      const now = new Date();
+      return Math.max(0, (now.getFullYear() - s.getFullYear()) * 12 + (now.getMonth() - s.getMonth()));
+    };
+
+    // Auto-computed values from dates (when not overridden manually)
+    const autoTotalMonths = form.startDate && form.endDate ? monthsBetweenDates(form.startDate, form.endDate) : 0;
+    const autoPaidMonths  = form.startDate ? monthsSinceDate(form.startDate) : 0;
+
+    // Effective values (manual override or auto)
+    const effectiveTotalMonths = form.manualDates ? form.totalMonths : (autoTotalMonths || form.totalMonths);
+    const effectivePaidMonths  = form.manualDates ? form.paidMonths  : Math.min(autoPaidMonths, effectiveTotalMonths);
+
     /* ── helpers inside edit mode ── */
-    const autoPMT = calcPMT(form.principal, form.annualRate, form.totalMonths);
+    const autoPMT = calcPMT(form.principal, form.annualRate, effectiveTotalMonths);
     const effectivePMT = form.manualPayment ? form.monthlyPayment : autoPMT;
 
     const handleField = (field: keyof typeof form, value: number | string | boolean) => {
@@ -163,9 +188,15 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       });
     };
 
+    const handleDateField = (field: "startDate" | "endDate", value: string) => {
+      setForm(prev => ({ ...prev, [field]: value, manualDates: false }));
+    };
+
     const handleSave = () => {
       const saved: Loan = {
         ...form,
+        totalMonths: effectiveTotalMonths,
+        paidMonths: Math.min(effectivePaidMonths, effectiveTotalMonths),
         monthlyPayment: form.manualPayment ? form.monthlyPayment : autoPMT,
       };
       save({ ...data, loans: data.loans.map(l => l.id === loan.id ? saved : l) });
@@ -180,8 +211,8 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
     /* ── EDIT FORM ── */
     if (isEditing) {
-      const previewRemaining = loanRemainingBalance(form.principal, form.annualRate, effectivePMT, form.paidMonths);
-      const totalPaid = effectivePMT * form.totalMonths;
+      const previewRemaining = loanRemainingBalance(form.principal, form.annualRate, effectivePMT, effectivePaidMonths);
+      const totalPaid = effectivePMT * effectiveTotalMonths;
       const totalInterest = Math.max(0, totalPaid - form.principal);
 
       return (
@@ -205,8 +236,13 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
                 <input className={inp} type="number" step="0.01" value={form.annualRate || ""} onChange={e => handleField("annualRate", Number(e.target.value))} dir="rtl" placeholder="0" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-0.5 block">תקופה (חודשים)</label>
-                <input className={inp} type="number" value={form.totalMonths || ""} onChange={e => handleField("totalMonths", Number(e.target.value))} dir="rtl" placeholder="0" />
+                <label className="text-xs text-gray-400 mb-0.5 flex items-center gap-1">
+                  תקופה (חודשים)
+                  {autoTotalMonths > 0 && !form.manualDates && <span className="text-[9px] bg-orange-100 text-orange-600 px-1 rounded-full font-bold">מתאריכים</span>}
+                </label>
+                <div className="border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-right bg-gray-50 text-gray-700">
+                  {effectiveTotalMonths || "—"}
+                </div>
               </div>
               <div>
                 <label className="text-xs text-gray-400 mb-0.5 flex items-center gap-1">
@@ -256,22 +292,88 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
             )}
           </div>
 
-          {/* Tracking */}
+          {/* Dates → auto calc */}
+          <div className="rounded-xl bg-orange-50/60 border border-orange-100 p-3 mb-3">
+            <div className="text-[11px] font-bold text-orange-600 mb-2.5 flex items-center gap-1.5">📅 תאריכי הלוואה</div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">תאריך פתיחה</label>
+                <input
+                  className={inp}
+                  type="month"
+                  value={form.startDate ?? ""}
+                  onChange={e => handleDateField("startDate", e.target.value)}
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 mb-0.5 block">תאריך סיום</label>
+                <input
+                  className={inp}
+                  type="month"
+                  value={form.endDate ?? ""}
+                  onChange={e => handleDateField("endDate", e.target.value)}
+                  dir="ltr"
+                />
+              </div>
+            </div>
+            {/* Auto-calculated summary */}
+            {(form.startDate || form.endDate) && (
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-orange-100">
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400 mb-0.5">סה״כ חודשים</div>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-sm font-black text-gray-800">{effectiveTotalMonths || "—"}</span>
+                    {autoTotalMonths > 0 && !form.manualDates && (
+                      <span className="text-[9px] bg-orange-100 text-orange-600 px-1 rounded-full font-bold">אוטו</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400 mb-0.5">חודשים ששולמו</div>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-sm font-black text-gray-800">{effectivePaidMonths}</span>
+                    {form.startDate && !form.manualDates && (
+                      <span className="text-[9px] bg-orange-100 text-orange-600 px-1 rounded-full font-bold">אוטו</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-400 mb-0.5">יתרה לתשלום</div>
+                  <div className="text-sm font-black" style={{ color: "#dc2626" }}>
+                    {ils(loanRemainingBalance(form.principal, form.annualRate, effectivePMT, effectivePaidMonths))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Manual override toggle */}
+            {(autoTotalMonths > 0 || autoPaidMonths > 0) && (
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, manualDates: !prev.manualDates, totalMonths: effectiveTotalMonths, paidMonths: effectivePaidMonths }))}
+                className={`mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${form.manualDates ? "bg-gray-200 text-gray-600 border-gray-300" : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"}`}
+              >
+                {form.manualDates ? "✏️ עריכה ידנית פעילה" : "עקוף ידנית"}
+              </button>
+            )}
+          </div>
+
+          {/* Tracking — only show if manual override */}
+          {form.manualDates && (
           <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 mb-3">
-            <div className="text-[11px] font-bold text-gray-500 mb-2.5 flex items-center gap-1.5">📊 מעקב תשלומים</div>
+            <div className="text-[11px] font-bold text-gray-500 mb-2.5 flex items-center gap-1.5">📊 מעקב ידני</div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-gray-400 mb-0.5 block">חודשים ששולמו</label>
                 <input className={inp} type="number" value={form.paidMonths || 0} onChange={e => setForm({ ...form, paidMonths: Math.min(Number(e.target.value), form.totalMonths) })} dir="rtl" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-0.5 block">יתרה לתשלום</label>
-                <div className="border border-gray-200 rounded-lg px-2 py-1 text-sm font-black text-right bg-white" style={{ color: form.paidMonths >= form.totalMonths ? "#16a34a" : "#dc2626" }}>
-                  {ils(previewRemaining)}
-                </div>
+                <label className="text-xs text-gray-400 mb-0.5 block">סה״כ חודשים</label>
+                <input className={inp} type="number" value={form.totalMonths || 0} onChange={e => handleField("totalMonths", Number(e.target.value))} dir="rtl" />
               </div>
             </div>
           </div>
+          )}
 
           {/* Notes */}
           <div className="mb-3">
@@ -309,6 +411,13 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               <span className="font-bold text-gray-900 text-base">{loan.name}</span>
             </div>
             <div className="text-xs text-gray-400 mt-0.5">{ils(loan.monthlyPayment)}/חודש</div>
+            {(loan.startDate || loan.endDate) && (
+              <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+                {loan.startDate && <span>📅 {loan.startDate.slice(0, 7)}</span>}
+                {loan.startDate && loan.endDate && <span>→</span>}
+                {loan.endDate && <span>{loan.endDate.slice(0, 7)}</span>}
+              </div>
+            )}
           </div>
           <div className="text-left flex-shrink-0">
             <div className="font-black text-xl leading-tight" style={{ color: amountColor }}>{ils(remaining)}</div>

@@ -102,6 +102,9 @@ export interface Loan {
   manualPayment?: boolean;  // true = user manually set the payment (not auto-calculated)
   paidMonths: number;
   totalMonths: number;
+  startDate?: string;       // YYYY-MM-DD (first payment / loan start)
+  endDate?: string;         // YYYY-MM-DD (last payment / loan end)
+  manualDates?: boolean;    // true = user overrode the auto-calculated months
   notes?: string;
   paymentDayOfMonth?: number; // day of month for recurring payment (1-31)
 }
