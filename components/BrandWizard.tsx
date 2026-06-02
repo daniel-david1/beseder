@@ -258,7 +258,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
               style={{ borderColor: !isFinancial ? "#1FAEB5" : "#e5e7eb", background: !isFinancial ? "#f0f7fa" : "#f9fafb" }}
             >
               <div className="text-xl mb-0.5">🚀</div>
-              <div className="text-sm font-bold text-gray-800">מותג / פרויקט</div>
+              <div className="text-sm font-bold text-gray-800">מותג / מחלקה</div>
               <div className="text-xs text-gray-400">משימות, פריטים, תבניות</div>
             </button>
             <button
@@ -377,7 +377,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
         title="בנה את המבנה" subtitle="סמן מה רלוונטי — שמות ניתנים לעריכה">
         {/* Summary bar */}
         <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/80 text-xs text-gray-500">
-          <span className="font-semibold">{selProjects.size} פרויקטים</span>
+          <span className="font-semibold">{selProjects.size} מחלקות</span>
           <span className="text-gray-300">·</span>
           <span>{totalSubs} מחלקות</span>
           {totalStages > 0 && <><span className="text-gray-300">·</span><span>{totalStages} משימות</span></>}
@@ -516,7 +516,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
           {totalProjects > 0 && (
             <div className="flex gap-3 flex-wrap justify-center">
               {[
-                { n: totalProjects, label: "פרויקטים",  emoji: "📁" },
+                { n: totalProjects, label: "מחלקות",  emoji: "📁" },
                 { n: totalSubsCount, label: "מחלקות",   emoji: "🗂️" },
                 { n: totalStagesCount, label: "משימות",  emoji: "✅" },
               ].filter(s => s.n > 0).map(s => (

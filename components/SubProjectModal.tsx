@@ -512,7 +512,7 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
       <div className="modal w-full" style={{ maxWidth: 540 }}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
           <h2 className="text-lg font-black text-gray-900">
-            {existing ? "ערוך מחלקה" : "מחלקה חדשה"}
+            {existing ? "ערוך פרויקט" : "פרויקט חדש"}
           </h2>
           <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base">✕</button>
         </div>
@@ -530,7 +530,7 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
           </div>
 
           <div>
-            <label>שם המחלקה *</label>
+            <label>שם הפרויקט *</label>
             <input className="input text-base font-semibold" value={name}
               onChange={e => setName(e.target.value)}
               placeholder="לדוגמה: שיווק, פיתוח, תפעול..."
@@ -542,15 +542,15 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
             <label>תיאור קצר</label>
             <input className="input" value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="מה המחלקה הזו אחראית עליה?"
+              placeholder="מה הפרויקט הזה אחראי עליו?"
             />
           </div>
 
           <ItemList
             items={incomes}
             onChange={setIncomes}
-            label="הכנסות חודשיות של המחלקה 💚"
-            sublabel="הכנסות שנוגעות לכל המחלקה — לא למשימה ספציפית"
+            label="הכנסות חודשיות של הפרויקט 💚"
+            sublabel="הכנסות שנוגעות לכל הפרויקט — לא למשימה ספציפית"
             addLabel="הוסף הכנסה"
             type="income"
           />
@@ -558,8 +558,8 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
           <ItemList
             items={expenses}
             onChange={setExpenses}
-            label="הוצאות חודשיות של המחלקה 🔴"
-            sublabel="הוצאות שנוגעות לכל המחלקה — לא למשימה ספציפית"
+            label="הוצאות חודשיות של הפרויקט 🔴"
+            sublabel="הוצאות שנוגעות לכל הפרויקט — לא למשימה ספציפית"
             addLabel="הוסף הוצאה"
             type="expense"
             linkedChannelNames={linkedChannelNames}
@@ -572,7 +572,7 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
         <div className="px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl">
           <button onClick={() => handleSave()} disabled={!name.trim()} className="btn btn-orange flex-1"
             style={{ opacity: name.trim() ? 1 : 0.5 }}>
-            {existing ? "שמור שינויים" : "צור מחלקה"}
+            {existing ? "שמור שינויים" : "צור פרויקט"}
           </button>
           <button onClick={onClose} className="btn btn-ghost">ביטול</button>
         </div>

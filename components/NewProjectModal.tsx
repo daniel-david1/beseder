@@ -39,7 +39,7 @@ export default function NewProjectModal({ existing, order, onClose, onSave }: Pr
       <div className="modal w-full" style={{ maxWidth: 480 }}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
           <h2 className="text-lg font-black text-gray-900">
-            {existing ? "ערוך פרויקט" : "פרויקט חדש"}
+            {existing ? "ערוך מחלקה" : "מחלקה חדשה"}
           </h2>
           <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base">✕</button>
         </div>
@@ -61,7 +61,7 @@ export default function NewProjectModal({ existing, order, onClose, onSave }: Pr
 
           {/* Name */}
           <div>
-            <label>שם הפרויקט *</label>
+            <label>שם המחלקה *</label>
             <input
               className="input text-base font-semibold"
               value={name}
@@ -78,7 +78,7 @@ export default function NewProjectModal({ existing, order, onClose, onSave }: Pr
               className="input"
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="על מה הפרויקט הזה?"
+              placeholder="על מה המחלקה הזו?"
             />
           </div>
 
@@ -110,7 +110,7 @@ export default function NewProjectModal({ existing, order, onClose, onSave }: Pr
             className="btn btn-orange flex-1"
             style={{ opacity: name.trim() ? 1 : 0.5 }}
           >
-            {existing ? "שמור שינויים" : "צור פרויקט"}
+            {existing ? "שמור שינויים" : "צור מחלקה"}
           </button>
           <button onClick={onClose} className="btn btn-ghost">ביטול</button>
         </div>

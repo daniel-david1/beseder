@@ -628,7 +628,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
           </div>
           <div>
             <h2 className="font-black text-white text-base leading-tight">{brand.name}</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>מבט על · {brand.projects.length} פרויקטים</p>
+            <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>מבט על · {brand.projects.length} מחלקות</p>
           </div>
           {/* Mini stats */}
           <div className="flex items-center gap-2 mr-3">
@@ -648,7 +648,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
         {brand.projects.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-3">
             <div className="text-5xl opacity-30">📭</div>
-            <p className="font-semibold" style={{ color: "#4b5563" }}>אין פרויקטים במותג זה עדיין</p>
+            <p className="font-semibold" style={{ color: "#4b5563" }}>אין מחלקות במותג זה עדיין</p>
           </div>
         )}
 
@@ -678,7 +678,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                     <div className="text-right">
                       <div className="font-black text-white text-sm">{project.name}</div>
                       <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>
-                        {project.subProjects.length} מחלקות · {projPct}%
+                        {project.subProjects.length} פרויקטים · {projPct}%
                       </div>
                     </div>
                     {/* Progress ring placeholder */}
@@ -1181,7 +1181,7 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
         </div>
 
         <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-400">{nProjects} פרויקט{nProjects !== 1 ? "ים" : ""}</span>
+          <span className="text-xs text-gray-400">{nProjects} מחלקות</span>
           {health.activeCount > 0 && (
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
               ▶ {health.activeCount} פעיל
@@ -1276,7 +1276,7 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
           const projectActive = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "active").length, 0);
           return (
             <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-gray-400">{project.subProjects.length} מחלקות</span>
+              <span className="text-xs text-gray-400">{project.subProjects.length} פרויקטים</span>
               {projectActive > 0 && (
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
                   ▶ {projectActive} פעיל
@@ -1292,7 +1292,7 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
         })()}
 
         <button onClick={onClick} className="hidden sm:flex btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: project.color + "40", color: project.color }}>
-          פתח פרויקט ←
+          פתח מחלקה ←
         </button>
       </div>
     </div>
@@ -1367,7 +1367,7 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
         )}
 
         <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח מחלקה ←
+          פתח פרויקט ←
         </button>
       </div>
     </div>
@@ -1617,7 +1617,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteBrand = (id: string) => {
-    if (!confirm("למחוק מותג זה וכל הפרויקטים שלו?")) return;
+    if (!confirm("למחוק מותג זה וכל המחלקות שלו?")) return;
     const updated = brands.filter(b => b.id !== id);
     setBrands(updated);
     saveBrands(updated);
@@ -1635,7 +1635,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteProject = (id: string) => {
-    if (!activeBrand || !confirm("למחוק פרויקט זה?")) return;
+    if (!activeBrand || !confirm("למחוק מחלקה זו?")) return;
     const updated = activeBrand.projects.filter(p => p.id !== id);
     syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, projects: updated } : b));
     if (activeProject?.id === id) { setActiveProject(null); setActiveSubProject(null); }
@@ -1657,7 +1657,7 @@ export default function Dashboard() {
   };
 
   const handleDeleteSub = (id: string) => {
-    if (!activeProject || !confirm("למחוק מחלקה זו?")) return;
+    if (!activeProject || !confirm("למחוק פרויקט זה?")) return;
     updateProject({ ...activeProject, subProjects: activeProject.subProjects.filter(s => s.id !== id) });
     if (activeSubProject?.id === id) setActiveSubProject(null);
   };
@@ -2032,7 +2032,7 @@ export default function Dashboard() {
           {!hasChannels && !hasStages && (
             <div className="card p-12 text-center">
               <div className="text-4xl mb-3">✨</div>
-              <h2 className="font-black text-gray-800 text-lg mb-1">איך תרצה לארגן את המחלקה?</h2>
+              <h2 className="font-black text-gray-800 text-lg mb-1">איך תרצה לארגן את הפרויקט?</h2>
               <p className="text-gray-400 text-sm mb-7">בחר מצב אחד — אפשר לשנות בהמשך</p>
               <div className="flex gap-4 justify-center flex-wrap">
                 <button
@@ -2041,7 +2041,7 @@ export default function Dashboard() {
                 >
                   <span className="text-3xl">📋</span>
                   <span className="font-bold text-gray-800">משימות ישירות</span>
-                  <span className="text-xs text-gray-400 text-center">רשימת משימות לכל המחלקה</span>
+                  <span className="text-xs text-gray-400 text-center">רשימת משימות לכל הפרויקט</span>
                 </button>
                 <button
                   onClick={() => setShowChannelModal(true)}
@@ -2082,7 +2082,7 @@ export default function Dashboard() {
             <BackButton emoji={activeBrand.emoji} label={activeBrand.name} onClick={() => setActiveProject(null)} />
             <div className="flex gap-2">
               <button onClick={() => setEditingProject(activeProject)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              <button onClick={() => setShowSubModal(true)} className="btn btn-orange text-sm">+ מחלקה חדשה</button>
+              <button onClick={() => setShowSubModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
             </div>
           </div>
         </div>
@@ -2106,7 +2106,7 @@ export default function Dashboard() {
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
             </div>
-            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} מחלקות · {doneStages}/{totalStages} משימות הושלמו</p>
+            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} פרויקטים · {doneStages}/{totalStages} משימות הושלמו</p>
           </div>
 
           {/* Financial overview */}
@@ -2171,9 +2171,9 @@ export default function Dashboard() {
           {activeProject.subProjects.length === 0 ? (
             <div className="card p-16 text-center">
               <div className="text-5xl mb-3">📁</div>
-              <h2 className="font-black text-gray-800 text-lg mb-2">אין מחלקות עדיין</h2>
-              <p className="text-gray-400 mb-5 text-sm">כל מחלקה מקבלת משימות משלה</p>
-              <button onClick={() => setShowSubModal(true)} className="btn btn-orange">+ הוסף מחלקה ראשונה</button>
+              <h2 className="font-black text-gray-800 text-lg mb-2">אין פרויקטים עדיין</h2>
+              <p className="text-gray-400 mb-5 text-sm">כל פרויקט מקבל משימות משלו</p>
+              <button onClick={() => setShowSubModal(true)} className="btn btn-orange">+ הוסף פרויקט ראשון</button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -2192,7 +2192,7 @@ export default function Dashboard() {
                 className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
               >
                 <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">מחלקה חדשה</span>
+                <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
               </button>
             </div>
           )}
@@ -2274,12 +2274,12 @@ export default function Dashboard() {
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
           <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <BackButton label="המותגים שלי" onClick={() => { setActiveBrand(null); setShowBrandFinancial(false); }} />
+            <BackButton emoji="🏠" label="המותגים שלי" onClick={() => { setActiveBrand(null); setShowBrandFinancial(false); }} />
             <div className="flex gap-1.5 sm:gap-2">
               <button onClick={() => setShowWhiteboard(true)} className="hidden sm:inline-flex btn btn-ghost text-sm">🗺️ מפה</button>
               <button onClick={() => setShowBrandFinancial(true)} className="btn btn-ghost text-sm px-2.5 sm:px-4">💰<span className="hidden sm:inline"> פיננסי</span></button>
               <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm px-2.5 sm:px-4">✏️ <span className="hidden sm:inline">ערוך מותג</span></button>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm px-3 sm:px-4">+ <span className="hidden sm:inline">פרויקט חדש</span><span className="sm:hidden">פרויקט</span></button>
+              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm px-3 sm:px-4">+ <span className="hidden sm:inline">מחלקה חדשה</span><span className="sm:hidden">מחלקה</span></button>
             </div>
           </div>
         </div>
@@ -2366,9 +2366,9 @@ export default function Dashboard() {
           {projects.length === 0 ? (
             <div className="card p-16 text-center">
               <div className="text-5xl mb-3">🚀</div>
-              <h2 className="font-black text-gray-800 text-xl mb-2">אין פרויקטים עדיין</h2>
-              <p className="text-gray-400 mb-5 text-sm max-w-xs mx-auto">כל פרויקט מחולק למחלקות ושלבים</p>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור פרויקט ראשון</button>
+              <h2 className="font-black text-gray-800 text-xl mb-2">אין מחלקות עדיין</h2>
+              <p className="text-gray-400 mb-5 text-sm max-w-xs mx-auto">כל מחלקה מחולקת לתת-מחלקות ומשימות</p>
+              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור מחלקה ראשונה</button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
@@ -2417,7 +2417,7 @@ export default function Dashboard() {
                 className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
               >
                 <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
+                <span className="font-semibold text-gray-400 text-sm">מחלקה חדשה</span>
               </button>
             </div>
           )}

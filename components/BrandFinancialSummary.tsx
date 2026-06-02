@@ -480,7 +480,7 @@ export default function BrandFinancialSummary({
         <section>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">💚</span>
-            <h2 className="text-base font-bold text-gray-800">הכנסות לפי פרויקט</h2>
+            <h2 className="text-base font-bold text-gray-800">הכנסות לפי מחלקה</h2>
             <span className="text-xs bg-emerald-100 text-emerald-600 font-bold px-2 py-0.5 rounded-full">
               {ils(data.totalOperationalIncome)}
             </span>
@@ -518,7 +518,7 @@ export default function BrandFinancialSummary({
         <section>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">💸</span>
-            <h2 className="text-base font-bold text-gray-800">הוצאות לפי פרויקט</h2>
+            <h2 className="text-base font-bold text-gray-800">הוצאות לפי מחלקה</h2>
             <span className="text-xs bg-rose-100 text-rose-600 font-bold px-2 py-0.5 rounded-full">
               {ils(data.totalOperationalExpense)}
             </span>
