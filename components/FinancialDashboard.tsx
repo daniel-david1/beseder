@@ -131,6 +131,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       ...loan,
       annualRate: loan.annualRate ?? 0,
       manualPayment: loan.manualPayment ?? false,
+      paymentDayOfMonth: loan.paymentDayOfMonth,
     });
     const [form, setForm] = useState(initForm);
     const isEditing = editingLoan === loan.id;
@@ -268,6 +269,12 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           <div className="mb-3">
             <label className="text-xs text-gray-400 mb-0.5 block">הערות</label>
             <textarea className={inp + " resize-none"} rows={2} value={form.notes ?? ""} onChange={e => setForm({ ...form, notes: e.target.value })} dir="rtl" placeholder="הערות נוספות..." />
+          </div>
+
+          {/* Payment Day of Month */}
+          <div className="mb-3">
+            <label className="text-xs text-gray-400 mb-0.5 block">יום קבוע לתשלום (אופציונלי)</label>
+            <input className={inp} type="number" min="1" max="31" value={form.paymentDayOfMonth ?? ""} onChange={e => setForm({ ...form, paymentDayOfMonth: e.target.value ? Number(e.target.value) : undefined })} dir="rtl" placeholder="לדוגמה: 15 (ל־15 בחודש)" />
           </div>
 
           <div className="flex gap-2">

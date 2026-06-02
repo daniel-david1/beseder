@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData } from "@/lib/types";
+import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData, DailyTask } from "@/lib/types";
 import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
@@ -86,39 +86,59 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
   onBrandClick: (brand: Brand) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [goal, setGoal]           = useState("");
-  const [savedGoal, setSavedGoal] = useState("");   // the confirmed/displayed goal
-  const [editing, setEditing]     = useState(false); // editing mode
+  const [tasks, setTasks]         = useState<DailyTask[]>([]);
+  const [newTaskInput, setNewTaskInput] = useState("");
   const firstName = userEmail.split("@")[0] ?? "שלום";
   const todayStr  = new Date().toISOString().slice(0, 10);
   const hebrewDate = new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
 
+  // Load tasks from localStorage on mount and when todayStr changes
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DAILY_GOAL_KEY);
+      const raw = localStorage.getItem(`DAILY_TASKS_${todayStr}`);
       if (raw) {
-        const parsed = JSON.parse(raw) as { date: string; goal: string };
-        if (parsed.date === todayStr && parsed.goal) {
-          setGoal(parsed.goal);
-          setSavedGoal(parsed.goal);
-        }
+        const parsed = JSON.parse(raw) as DailyTask[];
+        setTasks(Array.isArray(parsed) ? parsed : []);
+      } else {
+        setTasks([]);
       }
-    } catch { /* ignore */ }
+    } catch {
+      setTasks([]);
+    }
   }, [todayStr]);
 
-  const handleSave = () => {
-    const trimmed = goal.trim();
-    if (!trimmed) return;
-    localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify({ date: todayStr, goal: trimmed }));
-    setSavedGoal(trimmed);
-    setEditing(false);
+  // Save tasks to localStorage whenever they change
+  const saveTasks = (updatedTasks: DailyTask[]) => {
+    setTasks(updatedTasks);
+    localStorage.setItem(`DAILY_TASKS_${todayStr}`, JSON.stringify(updatedTasks));
   };
 
-  const handleClear = () => {
-    localStorage.removeItem(DAILY_GOAL_KEY);
-    setGoal("");
-    setSavedGoal("");
-    setEditing(false);
+  const handleAddTask = () => {
+    const trimmed = newTaskInput.trim();
+    if (!trimmed) return;
+    const newTask: DailyTask = {
+      id: Math.random().toString(36).slice(2, 11),
+      text: trimmed,
+      status: 'todo',
+      createdDate: todayStr,
+    };
+    saveTasks([...tasks, newTask]);
+    setNewTaskInput("");
+  };
+
+  const handleToggleStatus = (taskId: string) => {
+    const updated = tasks.map(t => {
+      if (t.id !== taskId) return t;
+      const statuses: DailyTask['status'][] = ['todo', 'in-progress', 'done'];
+      const currentIndex = statuses.indexOf(t.status);
+      const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+      return { ...t, status: nextStatus };
+    });
+    saveTasks(updated);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    saveTasks(tasks.filter(t => t.id !== taskId));
   };
 
   // Filter out financial dashboards (emoji 💰), sort by urgency
@@ -151,59 +171,82 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
 
       {!collapsed && (
         <div className="px-5 py-4 space-y-5">
-          {/* Daily Goal */}
+          {/* Daily Tasks */}
           <div>
-            <p className="text-xs font-semibold text-gray-500 mb-2">🎯 המטרה שלך היום</p>
+            <p className="text-xs font-semibold text-gray-500 mb-3">📋 משימות היום</p>
 
-            {/* Saved state — show goal as pill */}
-            {savedGoal && !editing ? (
-              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "#f0fdf4", border: "1.5px solid #86efac" }}>
-                <span className="text-lg">✅</span>
-                <p className="flex-1 text-sm font-semibold text-green-800 leading-snug">{savedGoal}</p>
-                <div className="flex gap-1 shrink-0">
-                  <button
-                    onClick={e => { e.stopPropagation(); setEditing(true); }}
-                    className="text-xs px-2 py-1 rounded-lg font-semibold text-green-700 hover:bg-green-100 transition-colors"
-                  >
-                    ✏️ ערוך
-                  </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); handleClear(); }}
-                    className="text-xs px-2 py-1 rounded-lg font-semibold text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
+            {/* Task list */}
+            {tasks.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {tasks.map(task => {
+                  const statusColors = {
+                    'todo': { bg: '#fef3c7', border: '#fcd34d', text: '#92400e', icon: '○' },
+                    'in-progress': { bg: '#dbeafe', border: '#93c5fd', text: '#1d4ed8', icon: '◐' },
+                    'done': { bg: '#f0fdf4', border: '#86efac', text: '#166534', icon: '✓' },
+                  };
+                  const color = statusColors[task.status];
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-2 p-3 rounded-xl transition-all group"
+                      style={{ background: color.bg, border: `1.5px solid ${color.border}` }}
+                    >
+                      <button
+                        onClick={() => handleToggleStatus(task.id)}
+                        className="text-lg shrink-0 transition-transform hover:scale-110"
+                        style={{ color: color.text }}
+                        title={`סטטוס: ${task.status}`}
+                      >
+                        {color.icon}
+                      </button>
+                      <p className={`flex-1 text-sm font-medium leading-snug ${
+                        task.status === 'done' ? 'line-through text-gray-400' : ''
+                      }`} style={{ color: task.status === 'done' ? '#9ca3af' : color.text }}>
+                        {task.text}
+                      </p>
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="text-xs px-2 py-1 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: color.border, color: color.text }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              /* Input state */
-              <div className="flex gap-2">
-                <input
-                  className="input flex-1 text-sm"
-                  placeholder="לדוגמה: לסגור עסקה עם לקוח חדש..."
-                  value={goal}
-                  onChange={e => setGoal(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") handleSave();
-                    if (e.key === "Escape" && savedGoal) { setEditing(false); setGoal(savedGoal); }
-                  }}
-                  autoFocus={editing}
-                />
-                <button
-                  onClick={handleSave}
-                  disabled={!goal.trim()}
-                  className="btn btn-orange text-sm px-4 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  שמור ✓
-                </button>
-                {editing && (
-                  <button
-                    onClick={() => { setEditing(false); setGoal(savedGoal); }}
-                    className="btn btn-ghost text-sm px-3 shrink-0"
-                  >
-                    ביטול
-                  </button>
-                )}
+            )}
+
+            {/* Add task input */}
+            <div className="flex gap-2">
+              <input
+                className="input flex-1 text-sm"
+                placeholder="הוסף משימה חדשה..."
+                value={newTaskInput}
+                onChange={e => setNewTaskInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") handleAddTask();
+                }}
+              />
+              <button
+                onClick={handleAddTask}
+                disabled={!newTaskInput.trim()}
+                className="btn btn-orange text-sm px-4 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                + הוסף
+              </button>
+            </div>
+
+            {/* Summary */}
+            {tasks.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                <span className="font-semibold">סה״כ:</span>
+                {' '}
+                <span className="text-yellow-700">● {tasks.filter(t => t.status === 'todo').length} חדשות</span>
+                {' · '}
+                <span className="text-blue-700">◐ {tasks.filter(t => t.status === 'in-progress').length} בתהליך</span>
+                {' · '}
+                <span className="text-green-700">✓ {tasks.filter(t => t.status === 'done').length} בוצע</span>
               </div>
             )}
           </div>
@@ -1081,14 +1124,28 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
 }
 
 /* ─── Project card ────────────────────────────────────── */
-function ProjectCard({ project, onClick, onEdit, onDelete }: {
-  project: Project; onClick: () => void; onEdit: () => void; onDelete: () => void;
+function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOver, onDrop, onDragEnd }: {
+  project: Project;
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDragStart?: () => void;
+  onDragOver?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
 }) {
   const progress = totalPct(project.subProjects);
   const blocked  = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "blocked").length, 0);
 
   return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
+    <div
+      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move"
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+    >
       <div className="h-1.5 w-full" style={{ background: project.color }} />
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between gap-2">
@@ -1321,6 +1378,10 @@ export default function Dashboard() {
   const dragBrandId = useRef<string | null>(null);
   const [dragOverBrandId, setDragOverBrandId] = useState<string | null>(null);
 
+  // Drag-to-reorder project cards
+  const dragProjectId = useRef<string | null>(null);
+  const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? "");
@@ -1407,6 +1468,35 @@ export default function Dashboard() {
   const handleBrandDragEnd = () => {
     dragBrandId.current = null;
     setDragOverBrandId(null);
+  };
+
+  /* ── Drag-to-reorder projects ── */
+  const handleProjectDragStart = (e: React.DragEvent, id: string) => {
+    dragProjectId.current = id;
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleProjectDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragProjectId.current !== id) setDragOverProjectId(id);
+  };
+  const handleProjectDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const fromId = dragProjectId.current;
+    dragProjectId.current = null;
+    setDragOverProjectId(null);
+    if (!fromId || fromId === targetId || !activeBrand) return;
+    const from = activeBrand.projects.findIndex(p => p.id === fromId);
+    const to   = activeBrand.projects.findIndex(p => p.id === targetId);
+    if (from === -1 || to === -1) return;
+    const updated = [...activeBrand.projects];
+    const [removed] = updated.splice(from, 1);
+    updated.splice(to, 0, removed);
+    syncAll(brands.map(b => b.id === activeBrand.id ? { ...b, projects: updated } : b));
+  };
+  const handleProjectDragEnd = () => {
+    dragProjectId.current = null;
+    setDragOverProjectId(null);
   };
 
   /* ── Brand CRUD ── */
@@ -2021,13 +2111,23 @@ export default function Dashboard() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
               {[...projects].sort((a, b) => a.order - b.order).map(p => (
-                <ProjectCard
+                <div
                   key={p.id}
-                  project={p}
-                  onClick={() => setActiveProject(p)}
-                  onEdit={() => setEditingProject(p)}
-                  onDelete={() => handleDeleteProject(p.id)}
-                />
+                  className={dragOverProjectId === p.id ? "opacity-50" : ""}
+                  onDragOver={(e) => handleProjectDragOver(e, p.id)}
+                  onDrop={(e) => handleProjectDrop(e, p.id)}
+                >
+                  <ProjectCard
+                    project={p}
+                    onClick={() => setActiveProject(p)}
+                    onEdit={() => setEditingProject(p)}
+                    onDelete={() => handleDeleteProject(p.id)}
+                    onDragStart={() => handleProjectDragStart({} as React.DragEvent, p.id)}
+                    onDragOver={() => handleProjectDragOver({} as React.DragEvent, p.id)}
+                    onDrop={() => handleProjectDrop({} as React.DragEvent, p.id)}
+                    onDragEnd={handleProjectDragEnd}
+                  />
+                </div>
               ))}
               <button
                 onClick={() => setShowProjectModal(true)}

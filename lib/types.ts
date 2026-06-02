@@ -103,6 +103,7 @@ export interface Loan {
   paidMonths: number;
   totalMonths: number;
   notes?: string;
+  paymentDayOfMonth?: number; // day of month for recurring payment (1-31)
 }
 
 export interface FixedExpense {
@@ -148,4 +149,11 @@ export interface FinancialData {
   incomes: Income[];
   properties: Property[];
   asOfDate?: string;
+}
+
+export interface DailyTask {
+  id: string;
+  text: string;
+  status: 'todo' | 'in-progress' | 'done';
+  createdDate: string;
 }
