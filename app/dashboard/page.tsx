@@ -2331,24 +2331,40 @@ export default function Dashboard() {
           />
         )}
 
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
-            <BackButton emoji={activeSubProject.emoji} label={activeSubProject.name} onClick={() => { setActiveChannel(null); setSelectedStage(null); }} />
-            <div className="flex gap-1.5">
-              <button onClick={() => setEditingChannel(activeChannel)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
-              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> משימה חדשה</span><span className="sm:hidden"> משימה</span></button>
+        {/* ── Channel context bar ── */}
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => { setActiveChannel(null); setSelectedStage(null); }}
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors text-base font-bold"
+                aria-label="חזרה"
+              >→</button>
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm"
+                style={{ background: activeProject.color + "22", border: `1.5px solid ${activeProject.color}40` }}
+              >{activeChannel.emoji}</div>
+              <div className="min-w-0">
+                <p className="font-black text-gray-900 text-sm leading-tight truncate">{activeChannel.name}</p>
+                {activeChannel.description && (
+                  <p className="text-[10px] text-gray-400 truncate hidden sm:block">{activeChannel.description}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setEditingChannel(activeChannel)}
+                className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
+                title="ערוך"
+              >✏️</button>
+              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm px-3 h-9">+ <span className="hidden sm:inline">משימה</span></button>
             </div>
           </div>
         </div>
 
         <div className="max-w-2xl mx-auto px-4 py-5 space-y-5 animate-in">
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeChannel.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-xl">{activeChannel.name}</h1>
-              {activeChannel.description && <p className="text-sm text-gray-400 mt-0.5">{activeChannel.description}</p>}
-            </div>
-          </div>
 
           <div className="card px-5 py-4">
             <div className="flex gap-4 flex-wrap">
@@ -2421,16 +2437,40 @@ export default function Dashboard() {
         {editingChannel   && <ChannelModal existing={editingChannel} order={editingChannel.order} onClose={() => setEditingChannel(null)} onSave={handleSaveChannel} />}
         {editingSub       && <SubProjectModal existing={editingSub} order={activeSubProject.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
 
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center justify-between gap-2">
-            <BackButton emoji={activeProject.emoji} label={activeProject.name} onClick={() => { setActiveSubProject(null); setSelectedStage(null); }} />
-            <div className="flex gap-1.5">
-              <button onClick={() => setEditingSub(activeSubProject)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
+        {/* ── SubProject context bar ── */}
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
+
+            {/* Right: back + identity */}
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => { setActiveSubProject(null); setSelectedStage(null); }}
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors text-base font-bold"
+                aria-label="חזרה"
+              >→</button>
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm"
+                style={{ background: activeProject.color + "22", border: `1.5px solid ${activeProject.color}40` }}
+              >{activeSubProject.emoji}</div>
+              <div className="min-w-0">
+                <p className="font-black text-gray-900 text-sm leading-tight truncate">{activeSubProject.name}</p>
+                {activeSubProject.description && (
+                  <p className="text-[10px] text-gray-400 truncate hidden sm:block">{activeSubProject.description}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Left: actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setEditingSub(activeSubProject)}
+                className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
+                title="ערוך"
+              >✏️</button>
               {hasChannels
-                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> פריט חדש</span><span className="sm:hidden"> פריט</span></button>
+                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3 h-9">+ <span className="hidden sm:inline">פריט</span></button>
                 : hasStages
-                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> משימה חדשה</span><span className="sm:hidden"> משימה</span></button>
+                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3 h-9">+ <span className="hidden sm:inline">משימה</span></button>
                   : null
               }
             </div>
@@ -2438,14 +2478,6 @@ export default function Dashboard() {
         </div>
 
         <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-5 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeSubProject.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-xl">{activeSubProject.name}</h1>
-              {activeSubProject.description && <p className="text-sm text-gray-400 mt-0.5">{activeSubProject.description}</p>}
-            </div>
-          </div>
 
           {/* ── ROSTER MODE (פריטים) ── */}
           {hasChannels && (
@@ -2598,33 +2630,45 @@ export default function Dashboard() {
         {editingSub     && <SubProjectModal existing={editingSub} order={editingSub.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
         {editingProject && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
 
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <BackButton emoji={activeBrand.emoji} label={activeBrand.name} onClick={() => setActiveProject(null)} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingProject(activeProject)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              <button onClick={() => setShowSubModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
+        {/* ── Project context bar ── */}
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
+
+            {/* Right: back (brand) → project identity */}
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => setActiveProject(null)}
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors text-base font-bold"
+                aria-label="חזרה"
+              >→</button>
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm"
+                style={{ background: activeProject.color + "22", border: `1.5px solid ${activeProject.color}40` }}
+              >{activeProject.emoji}</div>
+              <div className="min-w-0">
+                <p className="font-black text-gray-900 text-sm leading-tight truncate">{activeProject.name}</p>
+                {totalStages > 0 && (
+                  <p className="text-[10px] text-gray-400 hidden sm:block">{activeProject.subProjects.length} פרויקטים · {doneStages}/{totalStages} הושלמו</p>
+                )}
+              </div>
+            </div>
+
+            {/* Left: actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setEditingProject(activeProject)}
+                className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
+                title="ערוך מחלקה"
+              >✏️</button>
+              <button
+                onClick={() => setShowSubModal(true)}
+                className="btn btn-orange text-sm px-3 h-9"
+              >+ <span className="hidden sm:inline">פרויקט</span></button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-6 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-3 pt-1">
-            <span className="text-3xl">{activeProject.emoji}</span>
-            <div>
-              <h1 className="font-black text-gray-900 text-2xl">{activeProject.name}</h1>
-              {activeProject.description && <p className="text-sm text-gray-400 mt-0.5">{activeProject.description}</p>}
-            </div>
-          </div>
-
-          {/* Projects summary */}
-          {totalStages > 0 && (
-            <div className="flex items-center gap-3 px-1">
-              <span className="text-xs text-gray-400">{activeProject.subProjects.length} פרויקטים · {doneStages}/{totalStages} משימות הושלמו</span>
-            </div>
-          )}
+        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-5 animate-in">
 
           {/* Financial overview */}
           {(() => {
@@ -2781,31 +2825,55 @@ export default function Dashboard() {
         {editingProject   && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
         {editingBrand     && <BrandWizard existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
-        {/* Context header */}
-        <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <BackButton emoji="🏠" label="המותגים שלי" onClick={() => { setActiveBrand(null); setShowBrandFinancial(false); }} />
-            <div className="flex gap-1.5 sm:gap-2">
-              <button onClick={() => setShowWhiteboard(true)} className="hidden sm:inline-flex btn btn-ghost text-sm">🗺️ מפה</button>
-              <button onClick={() => setShowBrandFinancial(true)} className="btn btn-ghost text-sm px-2.5 sm:px-4">💰<span className="hidden sm:inline"> פיננסי</span></button>
-              <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm px-2.5 sm:px-4">✏️ <span className="hidden sm:inline">ערוך מותג</span></button>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm px-3 sm:px-4">+ <span className="hidden sm:inline">מחלקה חדשה</span><span className="sm:hidden">מחלקה</span></button>
+        {/* ── Brand context bar — single unified header ── */}
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
+
+            {/* Right: back arrow + brand identity */}
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => { setActiveBrand(null); setShowBrandFinancial(false); }}
+                className="flex-shrink-0 w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors text-base font-bold"
+                aria-label="חזרה"
+              >→</button>
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm"
+                style={{ background: activeBrand.color + "22", border: `1.5px solid ${activeBrand.color}40` }}
+              >{activeBrand.emoji}</div>
+              <div className="min-w-0">
+                <p className="font-black text-gray-900 text-sm leading-tight truncate">{activeBrand.name}</p>
+                {activeBrand.description && (
+                  <p className="text-[10px] text-gray-400 truncate hidden sm:block">{activeBrand.description}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Left: actions */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setShowWhiteboard(true)}
+                className="hidden sm:flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
+                title="מפת מותג"
+              >🗺️</button>
+              <button
+                onClick={() => setShowBrandFinancial(true)}
+                className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 items-center justify-center text-base transition-colors"
+                title="פיננסי"
+              >💰</button>
+              <button
+                onClick={() => setEditingBrand(activeBrand)}
+                className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
+                title="ערוך מותג"
+              >✏️</button>
+              <button
+                onClick={() => setShowProjectModal(true)}
+                className="btn btn-orange text-sm px-3 h-9"
+              >+ <span className="hidden sm:inline">מחלקה</span></button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-6 animate-in">
-          {/* Title */}
-          <div className="flex items-center gap-4 pt-1">
-            {activeBrand.logo
-              ? <img src={activeBrand.logo} alt={activeBrand.name} className="w-14 h-14 rounded-2xl object-contain bg-white border border-gray-100 shadow-sm flex-shrink-0" />
-              : <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm flex-shrink-0" style={{ background: activeBrand.color + "20", border: `2px solid ${activeBrand.color}30` }}>{activeBrand.emoji}</div>
-            }
-            <div>
-              <h1 className="font-black text-gray-900 text-2xl">{activeBrand.name}</h1>
-              {activeBrand.description && <p className="text-sm text-gray-400 mt-0.5">{activeBrand.description}</p>}
-            </div>
-          </div>
+        <div className="max-w-screen-lg mx-auto px-4 py-5 space-y-5 animate-in">
 
           {/* Brand financial summary */}
           {(() => {
