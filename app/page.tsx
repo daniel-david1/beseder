@@ -138,7 +138,7 @@ function Fade({ children, className = '', delay = 0, style = {} }: { children: R
 
 function Logo({ white: _white }: { white?: boolean }) {
   return (
-    <img src="/beseder_white_2x.png" alt="beseder" style={{ height: 72, width: 'auto', display: 'block', maxWidth: 260, marginTop: -10, marginBottom: -10 }} />
+    <img src="/beseder_white_2x.png" alt="beseder" style={{ height: 'clamp(44px, 8vw, 68px)', width: 'auto', display: 'block', maxWidth: 220 }} />
   )
 }
 
@@ -327,6 +327,48 @@ export default function Home() {
           0% { background-position: -200% center; }
           100% { background-position: 200% center; }
         }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 768px) {
+          /* Nav: hide desktop items (overrides any inline display:flex) */
+          .nav-desktop-links { display: none !important; }
+          .nav-desktop-actions { display: none !important; }
+          .nav-hamburger { display: flex !important; }
+
+          /* Hero */
+          .hero-text { padding: 60px 20px 32px !important; }
+          .hero-ctas { flex-direction: column !important; align-items: stretch !important; }
+          .hero-ctas a { text-align: center !important; }
+          .hero-mockup-wrap { padding: 0 12px !important; }
+          .mockup-brand-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+          .mockup-header { padding: 8px 14px !important; }
+          .mockup-content { padding: 16px 14px 0 !important; }
+          .mockup-content-header { font-size: 14px !important; }
+          .mockup-pipeline-chips { gap: 5px !important; }
+          .mockup-pipeline-chips > div { padding: 5px 8px !important; }
+          .mockup-pipeline-chips span { font-size: 10px !important; }
+          .hero-section { min-height: auto !important; padding-bottom: 0 !important; }
+
+          /* Spotlights */
+          .spotlight-grid { grid-template-columns: 1fr !important; gap: 36px !important; direction: ltr !important; }
+          .spotlight-grid > * { direction: inherit !important; }
+
+          /* Testimonials */
+          .testimonials-grid { grid-template-columns: 1fr !important; }
+
+          /* Pricing */
+          .pricing-grid { grid-template-columns: 1fr !important; max-width: 440px !important; }
+
+          /* Footer */
+          .footer-inner { flex-direction: column !important; align-items: flex-start !important; gap: 32px !important; }
+          .footer-links-grid { grid-template-columns: repeat(2,1fr) !important; gap: 24px !important; }
+
+          /* Proof bar */
+          .proof-grid { gap: 12px 36px !important; }
+
+          /* Section padding */
+          .section-pad { padding: 72px 0 !important; }
+        }
       `}</style>
 
       {/* ── Navbar ── */}
@@ -341,7 +383,7 @@ export default function Home() {
         <div dir="ltr" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
           <a href="#" style={{ textDecoration: 'none' }}><Logo white /></a>
           {/* Desktop nav */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 36 }} className="hidden md:flex">
+          <div className="nav-desktop-links hidden md:flex" style={{ alignItems: 'center', gap: 36 }}>
             {[
               { label: t.nav.features, href: '#features' },
               { label: t.nav.howItWorks, href: '#spotlights' },
@@ -353,7 +395,7 @@ export default function Home() {
               >{link.label}</a>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="hidden md:flex">
+          <div className="nav-desktop-actions hidden md:flex" style={{ alignItems: 'center', gap: 12 }}>
             <LangToggle lang={lang} setLang={setLang} />
             <a href="/login" style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 600, color: 'rgba(232,244,246,0.6)', textDecoration: 'none', padding: '8px 16px', transition: 'color 0.2s' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#E8F4F6')}
@@ -398,7 +440,7 @@ export default function Home() {
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{ background: '#0B1B2B', minHeight: '100vh', paddingTop: 68, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <section className="hero-section" style={{ background: '#0B1B2B', minHeight: '100vh', paddingTop: 68, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* Animated mesh gradient blobs */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '5%', left: '10%', width: 700, height: 700, background: 'radial-gradient(circle,rgba(31,174,181,0.13) 0%,transparent 70%)', filter: 'blur(80px)', animation: 'mesh-drift 14s ease-in-out infinite' }} />
@@ -409,7 +451,7 @@ export default function Home() {
         </div>
 
         {/* Text block */}
-        <div style={{ position: 'relative', zIndex: 10, maxWidth: 860, margin: '0 auto', padding: '80px 24px 48px', textAlign: 'center' }}>
+        <div className="hero-text" style={{ position: 'relative', zIndex: 10, maxWidth: 860, margin: '0 auto', padding: '80px 24px 48px', textAlign: 'center' }}>
           {/* Chip */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 32, background: 'rgba(31,174,181,0.1)', border: '1px solid rgba(31,174,181,0.28)', borderRadius: 999, padding: '7px 18px' }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1FAEB5', display: 'inline-block', animation: 'pulse-glow 2s ease-in-out infinite' }} />
@@ -424,7 +466,7 @@ export default function Home() {
           {/* Subtitle */}
           <p style={{ fontSize: 18, color: 'rgba(232,244,246,0.6)', lineHeight: 1.8, marginBottom: 40, maxWidth: 520, margin: '0 auto 40px' }}>{t.hero.sub}</p>
           {/* CTAs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 20 }}>
+          <div className="hero-ctas" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', marginBottom: 20 }}>
             <a href="/signup" style={{
               background: 'linear-gradient(135deg,#1FAEB5,#0E5FA8)',
               color: '#fff', fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 16,
@@ -454,7 +496,7 @@ export default function Home() {
         </div>
 
         {/* Product mockup */}
-        <div style={{ position: 'relative', zIndex: 10, maxWidth: 1120, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <div className="hero-mockup-wrap" style={{ position: 'relative', zIndex: 10, maxWidth: 1120, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div style={{
             borderRadius: '20px 20px 0 0', overflow: 'hidden',
             border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none',
@@ -462,7 +504,7 @@ export default function Home() {
             animation: 'float-y 6s ease-in-out infinite',
           }}>
             {/* Browser chrome */}
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="mockup-header" style={{ background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ display: 'flex', gap: 6 }}>
                 {['rgba(255,95,87,0.7)', 'rgba(255,189,46,0.7)', 'rgba(39,201,63,0.7)'].map((c, i) => (
                   <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />
@@ -489,16 +531,16 @@ export default function Home() {
                 </div>
               </div>
               {/* Dashboard content */}
-              <div style={{ padding: '28px 28px 0' }}>
+              <div className="mockup-content" style={{ padding: '28px 28px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <div>
-                    <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 20, color: '#111827' }}>{isHe ? 'המותגים שלי' : 'My Brands'}</div>
+                    <div className="mockup-content-header" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 20, color: '#111827' }}>{isHe ? 'המותגים שלי' : 'My Brands'}</div>
                     <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2 }}>{isHe ? '3 מותגים פעילים' : '3 active brands'}</div>
                   </div>
-                  <div style={{ background: 'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'Sora, sans-serif' }}>{isHe ? '+ מותג חדש' : '+ New Brand'}</div>
+                  <div style={{ background: 'linear-gradient(135deg,#1FAEB5,#0E5FA8)', borderRadius: 12, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'Sora, sans-serif' }}>{isHe ? '+ חדש' : '+ New'}</div>
                 </div>
                 {/* Brand cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+                <div className="mockup-brand-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
                   {[
                     { name: isHe ? 'ואכלת' : 'Vaachalta', desc: isHe ? 'אפליקציית מסעדות' : 'Restaurant app', emoji: '🍽️', color: '#f97316', pct: 42, projects: 2 },
                     { name: isHe ? 'קמפיין חגים' : 'Holiday Campaign', desc: isHe ? 'שיווק עונתי' : 'Seasonal marketing', emoji: '🎯', color: '#3b82f6', pct: 68, projects: 3 },
@@ -525,7 +567,7 @@ export default function Home() {
                 {/* Pipeline */}
                 <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #f1f5f9', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 12, fontFamily: 'Sora, sans-serif' }}>🍽️ {isHe ? 'ואכלת — Pipeline שיווק' : 'Vaachalta — Marketing Pipeline'}</div>
-                  <div style={{ display: 'flex', gap: 8, overflowX: 'hidden' }}>
+                  <div className="mockup-pipeline-chips" style={{ display: 'flex', gap: 8, overflowX: 'hidden', flexWrap: 'wrap' }}>
                     {[
                       { name: isHe ? 'SEO ותוכן' : 'SEO & Content', status: 'done', color: '#10b981' },
                       { name: isHe ? 'קמפיין TikTok' : 'TikTok Campaign', status: 'active', color: '#3b82f6' },
@@ -551,7 +593,7 @@ export default function Home() {
       {/* ── Social proof bar ── */}
       <section style={{ background: '#0f2438', borderTop: '1px solid rgba(31,174,181,0.12)', borderBottom: '1px solid rgba(31,174,181,0.12)', padding: '28px 0' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px 64px' }}>
+          <div className="proof-grid" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px 64px' }}>
             {t.proof.map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 26, color: '#E8F4F6', backgroundImage: 'linear-gradient(135deg,#1FAEB5,#3A9BE8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.n}</div>
@@ -563,7 +605,7 @@ export default function Home() {
       </section>
 
       {/* ── Feature spotlights ── */}
-      <section id="spotlights" style={{ background: '#fff', padding: '110px 0' }}>
+      <section id="spotlights" className="section-pad" style={{ background: '#fff', padding: '110px 0' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 24px' }}>
           <Fade style={{ textAlign: 'center', marginBottom: 72 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 18, background: 'rgba(11,27,43,0.05)', border: '1px solid rgba(11,27,43,0.1)', borderRadius: 999, padding: '5px 16px' }}>
@@ -576,7 +618,7 @@ export default function Home() {
             const visual = spotlightMockups[i]
             return (
               <Fade key={i} delay={80} style={{ marginBottom: i < t.spotlights.length - 1 ? 96 : 0 }}>
-                <div style={{
+                <div className="spotlight-grid" style={{
                   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center',
                   direction: isHe ? (isEven ? 'ltr' : 'rtl') : (isEven ? 'ltr' : 'rtl'),
                 }}>
@@ -614,7 +656,7 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials ── */}
-      <section id="features" style={{ background: '#0B1B2B', padding: '110px 0', position: 'relative', overflow: 'hidden' }}>
+      <section id="features" className="section-pad" style={{ background: '#0B1B2B', padding: '110px 0', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '20%', left: '30%', width: 600, height: 400, background: 'radial-gradient(circle,rgba(31,174,181,0.07) 0%,transparent 70%)', filter: 'blur(60px)' }} />
         </div>
@@ -625,7 +667,7 @@ export default function Home() {
             </div>
             <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 'clamp(26px,4vw,46px)', color: '#E8F4F6', letterSpacing: '-0.02em' }}>{isHe ? 'ייסדרים שכבר מסודרים' : 'Founders who got sorted'}</h2>
           </Fade>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }} className="grid-cols-1 md:grid-cols-3">
+          <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
             {t.testimonials.map((test, i) => (
               <Fade key={i} delay={i * 120}>
                 <div style={{
@@ -663,7 +705,7 @@ export default function Home() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ background: '#f0f7f8', padding: '110px 0' }}>
+      <section id="pricing" className="section-pad" style={{ background: '#f0f7f8', padding: '110px 0' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
           <Fade style={{ textAlign: 'center', marginBottom: 64 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 18, background: 'rgba(31,174,181,0.12)', border: '1px solid rgba(31,174,181,0.22)', borderRadius: 999, padding: '5px 16px' }}>
@@ -671,7 +713,7 @@ export default function Home() {
             </div>
             <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 'clamp(28px,4vw,50px)', color: '#0B1B2B', letterSpacing: '-0.02em' }}>{t.pricing.h2}</h2>
           </Fade>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 780, margin: '0 auto' }} className="grid-cols-1 md:grid-cols-2">
+          <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 780, margin: '0 auto' }}>
             <Fade>
               <div style={{ background: '#fff', borderRadius: 24, padding: '40px 36px', border: '1.5px solid rgba(11,27,43,0.08)', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 24px rgba(11,27,43,0.04)' }}>
                 <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 16, color: '#0B1B2B', marginBottom: 6 }}>{t.pricing.free.name}</div>
@@ -778,12 +820,12 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer style={{ background: '#060f1a', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '64px 0 36px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', flexDirection: isHe ? 'row-reverse' : 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 48, marginBottom: 48 }}>
+          <div className="footer-inner" style={{ display: 'flex', flexDirection: isHe ? 'row-reverse' : 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 48, marginBottom: 48 }}>
             <div>
               <Logo white />
               <p style={{ fontSize: 13, color: 'rgba(232,244,246,0.35)', marginTop: 14, maxWidth: 200, lineHeight: 1.6 }}>{t.footer.tagline}</p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 40 }}>
+            <div className="footer-links-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 40 }}>
               {[
                 { title: isHe ? 'מוצר' : 'Product', items: [t.nav.features, t.nav.howItWorks, t.nav.pricing] },
                 { title: isHe ? 'חברה' : 'Company', items: [isHe ? 'אודות' : 'About', isHe ? 'בלוג' : 'Blog'] },
