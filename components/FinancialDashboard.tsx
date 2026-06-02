@@ -54,6 +54,34 @@ function calcPMT(principal: number, annualRate: number, totalMonths: number): nu
   return (principal * r * Math.pow(1 + r, totalMonths)) / (Math.pow(1 + r, totalMonths) - 1);
 }
 
+/** Back-calculate annual interest rate from known PMT, principal, totalMonths.
+ *  Uses bisection search (100 iterations → precision < 0.0001%).
+ *  Returns annual rate in % (e.g. 5.25), or 0 if impossible. */
+function calcImpliedRate(principal: number, monthlyPayment: number, totalMonths: number): number {
+  if (principal <= 0 || monthlyPayment <= 0 || totalMonths <= 0) return 0;
+  // If payment < interest-free payment → rate is 0 or debt is forgiven
+  const zeroRatePmt = principal / totalMonths;
+  if (monthlyPayment <= zeroRatePmt) return 0;
+  // Sanity cap: payment can't exceed principal (would be > 100% monthly rate)
+  if (monthlyPayment >= principal) return 0;
+
+  let lo = 0;       // monthly rate lower bound
+  let hi = 5;       // monthly rate upper bound (500% annual — absurd but safe cap)
+
+  for (let i = 0; i < 200; i++) {
+    const r = (lo + hi) / 2;
+    const pmt = r === 0
+      ? principal / totalMonths
+      : (principal * r * Math.pow(1 + r, totalMonths)) / (Math.pow(1 + r, totalMonths) - 1);
+    if (pmt < monthlyPayment) lo = r; else hi = r;
+  }
+
+  const monthlyRate = (lo + hi) / 2;
+  const annualRate  = monthlyRate * 12 * 100; // convert to %
+  // Round to 2 decimal places, cap at 40% (beyond is suspicious)
+  return annualRate > 40 ? 0 : Math.round(annualRate * 100) / 100;
+}
+
 function loanRemainingBalance(principal: number, annualRate: number, monthlyPayment: number, paidMonths: number): number {
   if (paidMonths <= 0) return principal;
   if (monthlyPayment <= 0) return principal;
@@ -233,7 +261,28 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
                 <input className={inp} type="number" value={form.principal || ""} onChange={e => handleField("principal", Number(e.target.value))} dir="rtl" placeholder="0" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-0.5 block">ריבית שנתית (%)</label>
+                <label className="text-xs text-gray-400 mb-0.5 flex items-center gap-1">
+                  ריבית שנתית (%)
+                  {/* Show implied rate suggestion when manual payment is set */}
+                  {(() => {
+                    const implied = form.manualPayment && form.principal > 0 && effectiveTotalMonths > 0 && form.monthlyPayment > 0
+                      ? calcImpliedRate(form.principal, form.monthlyPayment, effectiveTotalMonths)
+                      : 0;
+                    if (implied > 0 && Math.abs(implied - (form.annualRate ?? 0)) > 0.05) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => handleField("annualRate", implied)}
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors border border-indigo-200"
+                          title={`חשב ריבית משוערת מהתשלום החודשי`}
+                        >
+                          חשב ← {implied}%
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                </label>
                 <input className={inp} type="number" step="0.01" value={form.annualRate || ""} onChange={e => handleField("annualRate", Number(e.target.value))} dir="rtl" placeholder="0" />
               </div>
               <div>
