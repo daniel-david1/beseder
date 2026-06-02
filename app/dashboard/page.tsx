@@ -611,36 +611,74 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
   onClose: () => void;
   onNavigateTo: (project: Project, sub?: SubProject, channel?: Channel) => void;
 }) {
+  const [isDark, setIsDark] = useState(true);
+
+  const t = isDark ? {
+    bg: "#0a0c12", hdr: "#0d1018", border: "#1e2130",
+    nodeBg: "#13161f", text: "#ffffff", textSec: "#9ca3af", textMuted: "#6b7280",
+    taskDotTodo: "#2a2d3e",
+    activeBadge: { bg: "#1e3a5f", text: "#60a5fa" },
+    blockedBadge: { bg: "#4c0519", text: "#f87171" },
+    emptyText: "#4b5563", divider: "#1e2130",
+    btnBg: "#1a1d28", btnBorder: "#2a2d3e", btnText: "#9ca3af",
+    statsDone: { bg: "#14532d30", text: "#4ade80", border: "#14532d" },
+    statsActive: { bg: "#1e3a5f30", text: "#60a5fa", border: "#1e3a5f" },
+    statsBlocked: { bg: "#4c051930", text: "#f87171", border: "#4c0519" },
+  } : {
+    bg: "#f8fafc", hdr: "#ffffff", border: "#e5e7eb",
+    nodeBg: "#ffffff", text: "#111827", textSec: "#6b7280", textMuted: "#9ca3af",
+    taskDotTodo: "#e5e7eb",
+    activeBadge: { bg: "#eff6ff", text: "#2563eb" },
+    blockedBadge: { bg: "#fee2e2", text: "#dc2626" },
+    emptyText: "#9ca3af", divider: "#e5e7eb",
+    btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
+    statsDone: { bg: "#dcfce7", text: "#15803d", border: "#86efac" },
+    statsActive: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
+    statsBlocked: { bg: "#fee2e2", text: "#dc2626", border: "#fca5a5" },
+  };
+
   const totalTasks  = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.length + sp.channels.reduce((cs, c) => cs + c.stages.length, 0), 0), 0);
   const doneTasks   = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "done").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "done").length, 0), 0), 0);
   const activeCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "active").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "active").length, 0), 0), 0);
   const blockedCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "blocked").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "blocked").length, 0), 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#0a0c12", fontFamily: "'Heebo', system-ui, sans-serif", direction: "rtl" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: t.bg, fontFamily: "'Heebo', system-ui, sans-serif", direction: "rtl" }}>
 
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: "#1e2130", background: "#0d1018" }}>
+      <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: t.border, background: t.hdr }}>
+        {/* Close + theme toggle — first in DOM = right side in RTL */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ml-2"
+            style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
+          >
+            {isDark ? "☀️ בהיר" : "🌙 כהה"}
+          </button>
+          <button onClick={onClose}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+            style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
+          >× סגור</button>
+        </div>
+
+        {/* Brand info + stats — last in DOM = left side in RTL */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
             style={{ background: brand.color + "25", border: `1.5px solid ${brand.color}50` }}>
             {brand.emoji}
           </div>
           <div>
-            <h2 className="font-black text-white text-base leading-tight">{brand.name}</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>מבט על · {brand.projects.length} מחלקות</p>
+            <h2 className="font-black text-base leading-tight" style={{ color: t.text }}>{brand.name}</h2>
+            <p className="text-xs mt-0.5" style={{ color: t.textMuted }}>מבט על · {brand.projects.length} מחלקות</p>
           </div>
           {/* Mini stats */}
           <div className="flex items-center gap-2 mr-3">
-            {doneTasks > 0    && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#14532d30", color: "#4ade80", border: "1px solid #14532d" }}>✓ {doneTasks} הושלמו</span>}
-            {activeCount > 0  && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#1e3a5f30", color: "#60a5fa", border: "1px solid #1e3a5f" }}>● {activeCount} פעילות</span>}
-            {blockedCount > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#4c0519 30", color: "#f87171", border: "1px solid #4c0519" }}>⚠ {blockedCount} תקועות</span>}
+            {doneTasks > 0    && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsDone.bg, color: t.statsDone.text, border: `1px solid ${t.statsDone.border}` }}>✓ {doneTasks} הושלמו</span>}
+            {activeCount > 0  && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsActive.bg, color: t.statsActive.text, border: `1px solid ${t.statsActive.border}` }}>● {activeCount} פעילות</span>}
+            {blockedCount > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsBlocked.bg, color: t.statsBlocked.text, border: `1px solid ${t.statsBlocked.border}` }}>⚠ {blockedCount} תקועות</span>}
           </div>
         </div>
-        <button onClick={onClose}
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-          style={{ color: "#9ca3af", background: "#1a1d28", border: "1px solid #2a2d3e" }}
-        >× סגור</button>
       </div>
 
       {/* Canvas */}
@@ -648,7 +686,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
         {brand.projects.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-3">
             <div className="text-5xl opacity-30">📭</div>
-            <p className="font-semibold" style={{ color: "#4b5563" }}>אין מחלקות במותג זה עדיין</p>
+            <p className="font-semibold" style={{ color: t.emptyText }}>אין מחלקות במותג זה עדיין</p>
           </div>
         )}
 
@@ -663,7 +701,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                     onClick={() => onNavigateTo(project)}
                     className="group flex items-center gap-3 px-5 py-3 rounded-2xl transition-all hover:scale-105"
                     style={{
-                      background: "#13161f",
+                      background: t.nodeBg,
                       border: `2px solid ${project.color}60`,
                       boxShadow: `0 0 20px ${project.color}18`,
                     }}
@@ -673,7 +711,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                       {project.emoji}
                     </div>
                     <div className="text-right flex-1">
-                      <div className="font-black text-white text-sm">{project.name}</div>
+                      <div className="font-black text-sm" style={{ color: t.text }}>{project.name}</div>
                       <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>
                         {project.subProjects.length} פרויקטים
                       </div>
@@ -722,14 +760,14 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                               onClick={() => onNavigateTo(project, sub)}
                               className="w-full group rounded-xl p-3 text-right transition-all hover:scale-105"
                               style={{
-                                background: "#13161f",
+                                background: t.nodeBg,
                                 border: `1.5px solid ${project.color}35`,
                                 boxShadow: `0 2px 12px ${project.color}10`,
                               }}
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-base">{sub.emoji}</span>
-                                <span className="font-bold text-white text-xs leading-snug">{sub.name}</span>
+                                <span className="font-bold text-xs leading-snug" style={{ color: t.text }}>{sub.name}</span>
                               </div>
 
                               {/* Item chips (channels) */}
@@ -747,7 +785,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                                     </button>
                                   ))}
                                   {sub.channels.length > 4 && (
-                                    <span className="text-[10px] self-center" style={{ color: "#6b7280" }}>+{sub.channels.length - 4}</span>
+                                    <span className="text-[10px] self-center" style={{ color: t.textMuted }}>+{sub.channels.length - 4}</span>
                                   )}
                                 </div>
                               )}
@@ -757,18 +795,18 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                                 <div className="flex gap-1 mb-2 flex-wrap">
                                   {sub.stages.slice(0, 10).map(s => (
                                     <div key={s.id} className="w-2 h-2 rounded-full" style={{
-                                      background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : "#2a2d3e"
+                                      background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : t.taskDotTodo
                                     }} />
                                   ))}
-                                  {sub.stages.length > 10 && <span className="text-[9px] self-center" style={{ color: "#4b5563" }}>+{sub.stages.length - 10}</span>}
+                                  {sub.stages.length > 10 && <span className="text-[9px] self-center" style={{ color: t.emptyText }}>+{sub.stages.length - 10}</span>}
                                 </div>
                               )}
 
                               {/* Status badges */}
                               <div className="flex gap-1 mt-1.5 flex-wrap">
-                                {activeN > 0  && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "#1e3a5f", color: "#60a5fa" }}>● {activeN}</span>}
-                                {blockedN > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "#4c0519", color: "#f87171" }}>⚠ {blockedN}</span>}
-                                {subAllS === 0 && <span className="text-[9px]" style={{ color: "#374151" }}>ריק</span>}
+                                {activeN > 0  && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: t.activeBadge.bg, color: t.activeBadge.text }}>● {activeN}</span>}
+                                {blockedN > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: t.blockedBadge.bg, color: t.blockedBadge.text }}>⚠ {blockedN}</span>}
+                                {subAllS === 0 && <span className="text-[9px]" style={{ color: t.textSec }}>ריק</span>}
                               </div>
                             </button>
                           </div>
@@ -780,7 +818,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
 
                 {/* Divider between projects */}
                 {pi < brand.projects.length - 1 && (
-                  <div className="mt-8 h-px mx-auto w-1/2" style={{ background: "#1e2130" }} />
+                  <div className="mt-8 h-px mx-auto w-1/2" style={{ background: t.divider }} />
                 )}
               </div>
             );
@@ -2182,11 +2220,15 @@ export default function Dashboard() {
 
   /* ══ LOANS MANAGER (full FinancialDashboard) ══ */
   if (showLoansManager) {
-    const financeBrand = activeBrand ?? brands.find((b) => b.emoji === "💰") ?? brands[0];
-    if (financeBrand) return (
+    // When coming from personal finance button (activeBrand is null), use the dedicated finance brand's ID
+    // When coming from within a brand (activeBrand is set), use that brand's ID
+    const personalFinanceBrandId = brands.find((b) => b.emoji === "💰")?.id ?? "personal";
+    const financeBrandId = activeBrand?.id ?? personalFinanceBrandId;
+    const financeBrandName = activeBrand?.name ?? "פיננסי אישי";
+    return (
       <FinancialDashboard
-        brandId={financeBrand.id}
-        brandName={financeBrand.name}
+        brandId={financeBrandId}
+        brandName={financeBrandName}
         onBack={() => {
           setShowLoansManager(false);
           if (activeBrand) setShowBrandFinancial(true);
@@ -2213,16 +2255,6 @@ export default function Dashboard() {
 
   /* ══ LEVEL 1: Brand → Projects ══ */
   if (activeBrand) {
-    if (activeBrand.emoji === "💰") {
-      return (
-        <FinancialDashboard
-          brandId={activeBrand.id}
-          brandName={activeBrand.name}
-          onBack={() => setActiveBrand(null)}
-        />
-      );
-    }
-
     const projects = activeBrand.projects;
 
     return (
@@ -2425,9 +2457,14 @@ export default function Dashboard() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-black text-gray-900">המותגים שלי</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {brands.length === 0 ? "צור מותג ראשון" : `${brands.length} מותג${brands.length !== 1 ? "ים" : ""}`}
-            </p>
+            {(() => {
+              const visibleBrands = brands.filter(b => b.emoji !== "💰");
+              return (
+                <p className="text-sm text-gray-400 mt-0.5">
+                  {visibleBrands.length === 0 ? "צור מותג ראשון" : `${visibleBrands.length} מותג${visibleBrands.length !== 1 ? "ים" : ""}`}
+                </p>
+              );
+            })()}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
@@ -2471,7 +2508,7 @@ export default function Dashboard() {
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-              {brands.map(b => {
+              {brands.filter(b => b.emoji !== "💰").map(b => {
                 const health = getBrandHealth(b);
                 return (
                   <BrandCard

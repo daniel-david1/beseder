@@ -167,7 +167,6 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
   const [name, setName]           = useState("");
   const [emoji, setEmoji]         = useState("🚀");
   const [color, setColor]         = useState("#f97316");
-  const [isFinancial, setIsFinancial] = useState(false);
 
   /* type + template state */
   const [bizType,    setBizType]  = useState<BizType | null>(null);
@@ -183,11 +182,9 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
   const [doneBrand, setDoneBrand] = useState<Brand | null>(null);
 
   /* ── helpers ───────────────────────────────────────────── */
-  const STEP_LABELS: WizardStep[] = isFinancial
-    ? ["basics", "done"]
-    : bizType === "custom"
-      ? ["basics", "type", "action", "done"]
-      : ["basics", "type", "template", "action", "done"];
+  const STEP_LABELS: WizardStep[] = bizType === "custom"
+    ? ["basics", "type", "action", "done"]
+    : ["basics", "type", "template", "action", "done"];
 
   const stepNum = STEP_LABELS.indexOf(step) + 1;
   const stepTotal = STEP_LABELS.length;
@@ -234,8 +231,8 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
     const brand: Brand = {
       id: uuidv4(),
       name: name.trim() || "מותג חדש",
-      emoji: isFinancial ? "💰" : emoji,
-      color: isFinancial ? "#10b981" : color,
+      emoji,
+      color,
       description: "",
       projects,
       createdAt: new Date().toISOString(),
@@ -250,75 +247,43 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
     return (
       <WizardShell onClose={onClose} stepNum={stepNum} stepTotal={stepTotal} title="מותג חדש">
         <div className="space-y-5 px-6 py-5">
-          {/* Type toggle */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => { setIsFinancial(false); setEmoji("🚀"); setColor("#f97316"); }}
-              className="rounded-xl border-2 px-3 py-3 text-right transition-all"
-              style={{ borderColor: !isFinancial ? "#1FAEB5" : "#e5e7eb", background: !isFinancial ? "#f0f7fa" : "#f9fafb" }}
-            >
-              <div className="text-xl mb-0.5">🚀</div>
-              <div className="text-sm font-bold text-gray-800">מותג / מחלקה</div>
-              <div className="text-xs text-gray-400">משימות, פריטים, תבניות</div>
-            </button>
-            <button
-              onClick={() => { setIsFinancial(true); setEmoji("💰"); setColor("#10b981"); if (!name) setName("פיננסי אישי"); }}
-              className="rounded-xl border-2 px-3 py-3 text-right transition-all"
-              style={{ borderColor: isFinancial ? "#10b981" : "#e5e7eb", background: isFinancial ? "#f0fdf4" : "#f9fafb" }}
-            >
-              <div className="text-xl mb-0.5">💰</div>
-              <div className="text-sm font-bold text-gray-800">פיננסי אישי</div>
-              <div className="text-xs text-gray-400">הלוואות, נכסים, הוצאות</div>
-            </button>
-          </div>
-
           {/* Name */}
           <div>
             <label>שם המותג *</label>
             <input
               className="input text-base font-semibold" autoFocus
               value={name} onChange={e => setName(e.target.value)}
-              placeholder={isFinancial ? "פיננסי אישי" : "לדוגמה: ואכלת, דניאל סושיאל..."}
-              onKeyDown={e => { if (e.key === "Enter" && name.trim()) { isFinancial ? finish() : setStep("type"); }}}
+              placeholder="לדוגמה: ואכלת, דניאל סושיאל..."
+              onKeyDown={e => { if (e.key === "Enter" && name.trim()) setStep("type"); }}
             />
           </div>
 
-          {!isFinancial && (
-            <>
-              <div>
-                <label>אייקון</label>
-                <div className="grid grid-cols-10 gap-1 mt-1">
-                  {EMOJIS.map(e => (
-                    <button key={e} onClick={() => setEmoji(e)}
-                      className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
-                    >{e}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label>צבע מותג</label>
-                <div className="flex gap-2 mt-1">
-                  {COLORS.map(c => (
-                    <button key={c} onClick={() => setColor(c)} className="w-8 h-8 rounded-full transition-all"
-                      style={{ background: c, transform: color === c ? "scale(1.2)" : "scale(1)", outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {isFinancial && (
-            <div className="rounded-xl p-3 text-sm text-emerald-700" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-              יוצר דשבורד פיננסי עם מעקב הלוואות, נכסים, הכנסות והוצאות.
+          <div>
+            <label>אייקון</label>
+            <div className="grid grid-cols-10 gap-1 mt-1">
+              {EMOJIS.map(e => (
+                <button key={e} onClick={() => setEmoji(e)}
+                  className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
+                >{e}</button>
+              ))}
             </div>
-          )}
+          </div>
+          <div>
+            <label>צבע מותג</label>
+            <div className="flex gap-2 mt-1">
+              {COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)} className="w-8 h-8 rounded-full transition-all"
+                  style={{ background: c, transform: color === c ? "scale(1.2)" : "scale(1)", outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         <WizardFooter
           onBack={onClose} backLabel="ביטול"
-          onNext={() => isFinancial ? finish() : setStep("type")}
-          nextLabel={isFinancial ? "💰 צור דשבורד" : "הבא ←"}
+          onNext={() => setStep("type")}
+          nextLabel="הבא ←"
           nextDisabled={!name.trim()}
         />
       </WizardShell>
