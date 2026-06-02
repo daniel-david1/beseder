@@ -2165,12 +2165,16 @@ export default function Dashboard() {
   }
 
   /* ══ LOANS MANAGER (full FinancialDashboard) ══ */
-  if (showLoansManager && activeBrand) {
-    return (
+  if (showLoansManager) {
+    const financeBrand = activeBrand ?? brands.find((b) => b.emoji === "💰") ?? brands[0];
+    if (financeBrand) return (
       <FinancialDashboard
-        brandId={activeBrand.id}
-        brandName={activeBrand.name}
-        onBack={() => { setShowLoansManager(false); setShowBrandFinancial(true); }}
+        brandId={financeBrand.id}
+        brandName={financeBrand.name}
+        onBack={() => {
+          setShowLoansManager(false);
+          if (activeBrand) setShowBrandFinancial(true);
+        }}
       />
     );
   }

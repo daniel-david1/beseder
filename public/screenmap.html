@@ -1,630 +1,468 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beseder CRM — מפת מסכים</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Heebo', 'Segoe UI', system-ui, sans-serif;
-    background: #f0f4f8;
-    color: #1e293b;
-    min-height: 100vh;
-    padding: 32px 24px;
-    direction: rtl;
-  }
-
-  h1 {
-    font-size: 22px;
-    font-weight: 900;
-    color: #0f172a;
-    margin-bottom: 6px;
-    text-align: center;
-  }
-  .subtitle {
-    text-align: center;
-    font-size: 13px;
-    color: #94a3b8;
-    margin-bottom: 36px;
-  }
-
-  /* ── LEGEND ── */
-  .legend {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 36px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #475569;
-    font-weight: 600;
-  }
-  .legend-dot {
-    width: 14px; height: 14px;
-    border-radius: 4px;
-  }
-
-  /* ── TREE LAYOUT ── */
-  .tree {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  /* LEVEL ROW */
-  .level-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    position: relative;
-    margin-bottom: 20px;
-  }
-
-  /* LEVEL LABEL */
-  .level-label {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    min-width: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 0;
-    background: #e2e8f0;
-    border-radius: 6px;
-    margin-left: 12px;
-    align-self: stretch;
-  }
-
-  /* CARDS CONTAINER */
-  .cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    flex: 1;
-  }
-
-  /* ── NODE TYPES ── */
-  .node {
-    border-radius: 14px;
-    padding: 14px 16px;
-    position: relative;
-    min-width: 160px;
-    max-width: 220px;
-    flex: 1;
-  }
-
-  .node-title {
-    font-size: 13px;
-    font-weight: 800;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .node-icon {
-    font-size: 16px;
-  }
-  .node-desc {
-    font-size: 11px;
-    opacity: 0.75;
-    line-height: 1.5;
-  }
-  .node-items {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .node-item {
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    opacity: 0.85;
-  }
-  .node-item::before {
-    content: '·';
-    font-size: 16px;
-    line-height: 0;
-    opacity: 0.4;
-  }
-
-  /* SCREEN (main view) */
-  .screen {
-    background: white;
-    border: 2px solid #e2e8f0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
-
-  /* MODAL */
-  .modal-node {
-    background: #fef9f0;
-    border: 2px dashed #fbbf24;
-  }
-
-  /* DRAWER */
-  .drawer-node {
-    background: #f0fdf4;
-    border: 2px dashed #4ade80;
-  }
-
-  /* FULLSCREEN OVERLAY */
-  .overlay-node {
-    background: #f5f3ff;
-    border: 2px solid #a78bfa;
-  }
-
-  /* SPECIAL PANEL */
-  .panel-node {
-    background: #f0f9ff;
-    border: 2px solid #38bdf8;
-  }
-
-  /* ── ARROWS SECTION ── */
-  .arrows-row {
-    display: flex;
-    gap: 12px;
-    padding-right: 40px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
-  }
-  .arrow {
-    font-size: 11px;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
-    padding: 3px 10px;
-  }
-  .arrow-icon { color: #94a3b8; }
-
-  /* ── CONNECTOR LINES ── */
-  .connector-row {
-    padding-right: 40px;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .connector-line {
-    height: 24px;
-    border-right: 2px solid #cbd5e1;
-    margin-right: 80px;
-  }
-
-  /* ── SECTION HEADERS ── */
-  .section-header {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 12px 0 6px 40px;
-    border-top: 1px dashed #e2e8f0;
-    margin-top: 8px;
-    text-align: left;
-  }
-
-  /* ── MODALS GRID ── */
-  .modals-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    padding-right: 40px;
-    margin-bottom: 20px;
-  }
-
-  /* BADGE */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 99px;
-    margin-top: 6px;
-  }
-  .badge-modal { background: #fef3c7; color: #92400e; }
-  .badge-drawer { background: #dcfce7; color: #14532d; }
-  .badge-overlay { background: #ede9fe; color: #4c1d95; }
-  .badge-screen { background: #f1f5f9; color: #334155; }
-
-  /* TRIGGER CHIP */
-  .trigger {
-    font-size: 10px;
-    color: #64748b;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 2px 6px;
-    margin-top: 5px;
-    display: inline-block;
-  }
-
-  /* ── COLOR PILLS for depth levels ── */
-  .l0 { border-top: 3px solid #f97316; }
-  .l1 { border-top: 3px solid #8b5cf6; }
-  .l2 { border-top: 3px solid #3b82f6; }
-  .l3 { border-top: 3px solid #10b981; }
-  .l4 { border-top: 3px solid #f59e0b; }
-
-  /* scrollable area note */
-  .scroll-note {
-    text-align: center;
-    font-size: 11px;
-    color: #94a3b8;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 640px) {
-    .node { min-width: 140px; }
-    .level-label { display: none; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beseder CRM — Screen Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0c12;
+      --surface: #111520;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.12);
+      --teal: #0d9488;
+      --teal-light: #14b8a6;
+      --orange: #f97316;
+      --orange-light: #fb923c;
+      --emerald: #10b981;
+      --emerald-light: #34d399;
+      --arrow: #4b5563;
+      --arrow-label: #6b7280;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: auto;
+    }
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,18,0.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, #0d9488, #10b981);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-style: normal;
+    }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .legend { display: flex; align-items: center; gap: 18px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+    .canvas-wrap { padding: 40px 36px 80px; overflow-x: auto; }
+    .svg-wrap {
+      display: block;
+      min-width: 1520px;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .svg-wrap { animation: fadeInUp 0.7s ease 0.1s both; }
+    /* dot grid */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none; z-index: 0;
+    }
+    .canvas-wrap { position: relative; z-index: 1; }
+  </style>
 </head>
 <body>
 
-<h1>🗺️ מפת מסכים — Beseder CRM</h1>
-<p class="subtitle">כל המסכים, מודאלים, ותתי-תצוגות — איך הם מתחברים</p>
-
-<!-- LEGEND -->
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#fff;border:2px solid #e2e8f0;"></div> מסך ראשי</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#fef9f0;border:2px dashed #fbbf24;"></div> מודאל (Modal)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f0fdf4;border:2px dashed #4ade80;"></div> דרוור (Drawer)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f5f3ff;border:2px solid #a78bfa;"></div> מסך-מעל (Overlay)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#f0f9ff;border:2px solid #38bdf8;"></div> פאנל מוטמע</div>
-</div>
-
-<div class="tree">
-
-  <!-- ══ LEVEL 0 ══ -->
-  <div class="level-row">
-    <div class="level-label">Level 0</div>
-    <div class="cards">
-      <div class="node screen l0" style="max-width:280px;">
-        <div class="node-title"><span class="node-icon">🏠</span> דף הבית — רשימת מותגים</div>
-        <div class="node-desc">הגריד הראשי. כל המותגים מוצגים ככרטיסים.</div>
-        <div class="node-items">
-          <div class="node-item">Morning Panel — משימות יומיות + פוקוס</div>
-          <div class="node-item">כרטיסי מותג (drag to reorder)</div>
-          <div class="node-item">בריאות מותג: חסום / פעיל / לא התחיל</div>
-          <div class="node-item">כפתור "מותג חדש"</div>
-          <div class="node-item">כפתור "השלם הגדרה"</div>
-        </div>
-        <span class="badge badge-screen">מסך ראשי</span>
-      </div>
-
-      <div class="node panel-node" style="max-width:200px;">
-        <div class="node-title"><span class="node-icon">☀️</span> Morning Panel</div>
-        <div class="node-desc">מוטמע בדף הבית. ניתן לכיווץ.</div>
-        <div class="node-items">
-          <div class="node-item">תאריך עברי</div>
-          <div class="node-item">משימות יומיות (todo/בתהליך/הושלם)</div>
-          <div class="node-item">3 מותגים בפוקוס</div>
-        </div>
-        <span class="badge badge-screen">פאנל מוטמע</span>
-      </div>
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">✦</div>
+    <div>
+      <div class="header-title">Beseder CRM &mdash; מפת מסכים</div>
+      <div class="header-subtitle">Screen Architecture · v1.0</div>
     </div>
   </div>
-
-  <!-- arrows from L0 -->
-  <div class="arrows-row">
-    <div class="arrow"><span class="arrow-icon">↓</span> לחיצה על מותג → Level 1</div>
-    <div class="arrow"><span class="arrow-icon">⊞</span> "מותג חדש" → BrandWizard Modal</div>
-    <div class="arrow"><span class="arrow-icon">✏️</span> עריכת מותג → BrandWizard Modal</div>
-    <div class="arrow"><span class="arrow-icon">⚡</span> "השלם הגדרה" → BrandSetupWizard Modal</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#0d9488"></div>מסכים ראשיים</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>מודאלים / דרוארים</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>פיננסים</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4b5563;border-radius:50%"></div>ניווט</div>
   </div>
-  <div class="connector-row"><div class="connector-line"></div></div>
+</header>
 
-  <!-- ══ LEVEL 1 ══ -->
-  <div class="level-row">
-    <div class="level-label">Level 1</div>
-    <div class="cards">
-      <div class="node screen l1" style="max-width:280px;">
-        <div class="node-title"><span class="node-icon">🏢</span> תצוגת מותג — פרויקטים</div>
-        <div class="node-desc">אחרי לחיצה על מותג. מציג את כל הפרויקטים.</div>
-        <div class="node-items">
-          <div class="node-item">כרטיסי פרויקט (drag to reorder)</div>
-          <div class="node-item">Goals Panel — יעדי מותג</div>
-          <div class="node-item">Financial Summary (P&L מהיר)</div>
-          <div class="node-item">כפתור "מפה" → Whiteboard</div>
-          <div class="node-item">כפתור "פיננסי" → BrandFinancialSummary</div>
-        </div>
-        <span class="badge badge-screen">מסך ראשי</span>
-      </div>
+<div class="canvas-wrap">
+<svg class="svg-wrap" viewBox="0 0 1540 1020" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+  <defs>
+    <!-- arrowheads -->
+    <marker id="ah-nav"   markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#4b5563"/>
+    </marker>
+    <marker id="ah-modal" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#f97316" opacity="0.65"/>
+    </marker>
+    <marker id="ah-fin"   markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#10b981" opacity="0.65"/>
+    </marker>
+    <!-- node shadow filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+    <!-- glow teal -->
+    <filter id="glow-t" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- background grid -->
+    <pattern id="grid" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0L0 0 0 36" fill="none" stroke="rgba(255,255,255,0.018)" stroke-width="1"/>
+    </pattern>
+    <!-- radial glow center -->
+    <radialGradient id="vignette" cx="50%" cy="38%" r="65%">
+      <stop offset="0%"   stop-color="rgba(13,148,136,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
 
-      <div class="node panel-node" style="max-width:185px;">
-        <div class="node-title"><span class="node-icon">🎯</span> Goals Panel</div>
-        <div class="node-desc">מוטמע ב-Level 1. יעדי מותג.</div>
-        <div class="node-items">
-          <div class="node-item">הוספה / עריכה / מחיקה</div>
-          <div class="node-item">סטטוס: on-track / at-risk / done</div>
-          <div class="node-item">תאריך יעד</div>
-        </div>
-        <span class="badge badge-screen">פאנל מוטמע</span>
-      </div>
-    </div>
-  </div>
+  <!-- ── BG ── -->
+  <rect width="1540" height="1020" fill="#0a0c12"/>
+  <rect width="1540" height="1020" fill="url(#grid)"/>
+  <rect width="1540" height="1020" fill="url(#vignette)"/>
 
-  <!-- arrows from L1 -->
-  <div class="arrows-row">
-    <div class="arrow"><span class="arrow-icon">↓</span> לחיצה על פרויקט → Level 2</div>
-    <div class="arrow"><span class="arrow-icon">⊞</span> "פרויקט חדש" → NewProjectModal</div>
-    <div class="arrow"><span class="arrow-icon">🗺️</span> "מפה" → BrandWhiteboard Overlay</div>
-    <div class="arrow"><span class="arrow-icon">💰</span> "פיננסי" → BrandFinancialSummary Overlay</div>
-  </div>
-  <div class="connector-row"><div class="connector-line"></div></div>
+  <!-- corner accents -->
+  <path d="M28,28 h32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,28 v32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,28 h-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,28 v32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,992 h32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,992 v-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,992 h-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,992 v-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
 
-  <!-- ══ LEVEL 2 ══ -->
-  <div class="level-row">
-    <div class="level-label">Level 2</div>
-    <div class="cards">
-      <div class="node screen l2" style="max-width:260px;">
-        <div class="node-title"><span class="node-icon">🚀</span> תצוגת פרויקט — תת-פרויקטים</div>
-        <div class="node-desc">אחרי לחיצה על פרויקט.</div>
-        <div class="node-items">
-          <div class="node-item">כרטיסי תת-פרויקט (drag to reorder)</div>
-          <div class="node-item">פירוט פיננסי לפי תת-פרויקט</div>
-          <div class="node-item">פס התקדמות כולל</div>
-          <div class="node-item">כפתור "תת-פרויקט חדש"</div>
-        </div>
-        <span class="badge badge-screen">מסך ראשי</span>
-      </div>
-    </div>
-  </div>
+  <!-- ══════════════════════════════════════════════
+       SECTION LABELS
+  ══════════════════════════════════════════════ -->
+  <!-- Main nav label -->
+  <text x="770" y="46" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">ניווט ראשי · MAIN NAVIGATION</text>
+  <line x1="60"   y1="44" x2="490"  y2="44" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="1050" y1="44" x2="1480" y2="44" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
 
-  <!-- arrows from L2 -->
-  <div class="arrows-row">
-    <div class="arrow"><span class="arrow-icon">↓</span> לחיצה על תת-פרויקט → Level 3A / 3B</div>
-    <div class="arrow"><span class="arrow-icon">⊞</span> "תת-פרויקט חדש" → SubProjectModal</div>
-  </div>
-  <div class="connector-row"><div class="connector-line"></div></div>
+  <!-- Modals label -->
+  <text x="770" y="434" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">מודאלים ודרוארים · MODALS &amp; DRAWERS</text>
+  <line x1="60"   y1="432" x2="460"  y2="432" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="1080" y1="432" x2="1480" y2="432" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
 
-  <!-- ══ LEVEL 3 ══ -->
-  <div class="level-row">
-    <div class="level-label">Level 3</div>
-    <div class="cards">
-      <div class="node screen l3" style="max-width:240px;">
-        <div class="node-title"><span class="node-icon">📁</span> תת-פרויקט עם ערוצים</div>
-        <div class="node-desc">כאשר יש ערוצים (Channels). לחיצה על ערוץ → Level 4.</div>
-        <div class="node-items">
-          <div class="node-item">כרטיסי ערוצים (3A)</div>
-          <div class="node-item">כפתור "ערוץ חדש"</div>
-          <div class="node-item">פס התקדמות</div>
-        </div>
-        <span class="badge badge-screen">3A — עם ערוצים</span>
-      </div>
+  <!-- Financial label -->
+  <text x="770" y="814" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">פיננסים · FINANCIAL</text>
+  <line x1="60"   y1="812" x2="570"  y2="812" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="970"  y1="812" x2="1480" y2="812" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
 
-      <div class="node screen l3" style="max-width:240px;">
-        <div class="node-title"><span class="node-icon">📋</span> תת-פרויקט עם שלבים</div>
-        <div class="node-desc">כאשר אין ערוצים — שלבים ישירים.</div>
-        <div class="node-items">
-          <div class="node-item">Pipeline אופקי של שלבים (3B)</div>
-          <div class="node-item">לחיצה על שלב → StageDrawer</div>
-          <div class="node-item">כפתור "הוסף שלב"</div>
-        </div>
-        <span class="badge badge-screen">3B — שלבים ישירים</span>
-      </div>
-    </div>
-  </div>
+  <!-- dashed separators -->
+  <line x1="60" y1="408" x2="1480" y2="408" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="5,7"/>
+  <line x1="60" y1="788" x2="1480" y2="788" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="5,7"/>
 
-  <!-- arrows from L3 -->
-  <div class="arrows-row">
-    <div class="arrow"><span class="arrow-icon">↓</span> לחיצה על ערוץ → Level 4</div>
-    <div class="arrow"><span class="arrow-icon">📌</span> לחיצה על שלב → StageDrawer</div>
-    <div class="arrow"><span class="arrow-icon">⊞</span> "ערוץ חדש" → ChannelModal</div>
-  </div>
-  <div class="connector-row"><div class="connector-line"></div></div>
+  <!-- ══════════════════════════════════════════════
+       MAIN NAV ARROWS
+       Node centers (cx of rect+w/2):
+         Home     rect x=60  w=152 → cx=136  cy=148
+         Brand    rect x=284 w=152 → cx=360  cy=148
+         Project  rect x=508 w=152 → cx=584  cy=148
+         Pipeline rect x=740 w=160 → cx=820  cy=128 (top split)
+         Roster   rect x=740 w=160 → cx=820  cy=228 (bot split)
+         Stage    rect x=986 w=152 → cx=1062 cy=148
+         Tasks    rect x=1212 w=152→ cx=1288 cy=148
+  ══════════════════════════════════════════════ -->
 
-  <!-- ══ LEVEL 4 ══ -->
-  <div class="level-row">
-    <div class="level-label">Level 4</div>
-    <div class="cards">
-      <div class="node screen l4" style="max-width:260px;">
-        <div class="node-title"><span class="node-icon">📘</span> תצוגת ערוץ — Pipeline</div>
-        <div class="node-desc">העמוק ביותר. Pipeline של שלבים לערוץ ספציפי.</div>
-        <div class="node-items">
-          <div class="node-item">שלבים אופקיים (Kanban-style)</div>
-          <div class="node-item">לחיצה על שלב → StageDrawer</div>
-          <div class="node-item">ניווט ←/→ בין שלבים בתוך הדרוור</div>
-          <div class="node-item">כפתור "הוסף שלב"</div>
-        </div>
-        <span class="badge badge-screen">עמוק ביותר</span>
-      </div>
+  <!-- Home → Brand -->
+  <line x1="212" y1="148" x2="280" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="218" y="134" width="58" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="247" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ מותג</text>
 
-      <div class="node drawer-node" style="max-width:220px;">
-        <div class="node-title"><span class="node-icon">🖊️</span> StageEditDrawer</div>
-        <div class="node-desc">דרוור מימין. נפתח בכל לחיצה על שלב (ב-3B ו-4).</div>
-        <div class="node-items">
-          <div class="node-item">שם שלב + סטטוס</div>
-          <div class="node-item">פעולה הבאה (textarea)</div>
-          <div class="node-item">הוצאות שלב</div>
-          <div class="node-item">KPI tracking</div>
-          <div class="node-item">מעבר בין שלבים (N/X)</div>
-          <div class="node-item">מחיקת שלב</div>
-        </div>
-        <span class="badge badge-drawer">Drawer → מימין</span>
-      </div>
-    </div>
-  </div>
+  <!-- Brand → Project -->
+  <line x1="436" y1="148" x2="504" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="440" y="134" width="62" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="471" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ פרויקט</text>
 
-</div>
+  <!-- Project → Pipeline (fork up) -->
+  <path d="M660 130 C700 130 720 110 736 108" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="695" y="104" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">Pipeline</text>
 
-<!-- ══ SECTION: MODALS ══ -->
-<div class="section-header" style="text-align:right; padding-right:0; padding-left:0; margin-top:20px;">
-  ⊞ מודאלים — נפתחים מכל מקום
-</div>
+  <!-- Project → Roster (fork down) -->
+  <path d="M660 166 C700 166 720 208 736 210" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="695" y="200" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">Roster</text>
 
-<div class="modals-grid" style="padding-right:0; margin-top:12px;">
+  <!-- Pipeline → Stage -->
+  <path d="M900 120 C940 120 960 135 982 140" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <rect  x="916" y="107" width="52" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="942" y="117" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ שלב</text>
 
-  <div class="node modal-node">
-    <div class="node-title"><span class="node-icon">✨</span> BrandWizard</div>
-    <span class="trigger">טריגר: "מותג חדש" / עריכת מותג</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">שם, emoji, צבע, לוגו, תיאור</div>
-      <div class="node-item">סוג עסק (wizard רב-שלבי)</div>
-      <div class="node-item">בחירת תבנית</div>
-    </div>
-    <span class="badge badge-modal">Modal</span>
-  </div>
+  <!-- Roster → Stage -->
+  <path d="M900 222 C944 222 960 175 982 158" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="948" y="204" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ פריט</text>
 
-  <div class="node modal-node">
-    <div class="node-title"><span class="node-icon">⚡</span> BrandSetupWizard</div>
-    <span class="trigger">טריגר: "השלם הגדרה" על כרטיס מותג</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">מעבר שלב-שלב על שלבים ריקים</div>
-      <div class="node-item">מילוי "פעולה הבאה"</div>
-      <div class="node-item">דלג / סיים</div>
-    </div>
-    <span class="badge badge-modal">Modal Wizard</span>
-  </div>
+  <!-- Stage → Tasks -->
+  <line x1="1138" y1="148" x2="1208" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="1143" y="134" width="60" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="1173" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ משימה</text>
 
-  <div class="node modal-node">
-    <div class="node-title"><span class="node-icon">🚀</span> NewProjectModal</div>
-    <span class="trigger">טריגר: "פרויקט חדש" / עריכה</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">שם, emoji, צבע, תיאור</div>
-    </div>
-    <span class="badge badge-modal">Modal</span>
-  </div>
+  <!-- ══════════════════════════════════════════════
+       MAIN SCREEN NODES
+  ══════════════════════════════════════════════ -->
 
-  <div class="node modal-node">
-    <div class="node-title"><span class="node-icon">📁</span> SubProjectModal</div>
-    <span class="trigger">טריגר: "תת-פרויקט חדש" / עריכה</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">שם, emoji, תיאור</div>
-      <div class="node-item">הוצאות חודשיות + חד-פעמיות</div>
-      <div class="node-item">הכנסות</div>
-      <div class="node-item">Commitments (תשלומים עתידיים)</div>
-      <div class="node-item">יצירת ערוץ אוטומטי מהוצאה</div>
-    </div>
-    <span class="badge badge-modal">Modal (גדול)</span>
-  </div>
+  <!-- ── HOME ── -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.38)" stroke-width="1.3"/>
+  </g>
+  <circle cx="136" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="136" y="122" text-anchor="middle" font-size="20">🏠</text>
+  <text x="136" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">דף הבית</text>
+  <text x="136" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Home · Brands Grid</text>
+  <!-- START badge -->
+  <rect x="60" y="72" width="36" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.3)" stroke-width="1"/>
+  <text x="78" y="81.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">START</text>
 
-  <div class="node modal-node">
-    <div class="node-title"><span class="node-icon">📘</span> ChannelModal</div>
-    <span class="trigger">טריגר: "ערוץ חדש" / עריכה</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">שם, emoji, תיאור</div>
-    </div>
-    <span class="badge badge-modal">Modal</span>
-  </div>
+  <!-- ── BRAND ── -->
+  <g filter="url(#shadow)">
+    <rect x="284" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="360" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="360" y="122" text-anchor="middle" font-size="20">📁</text>
+  <text x="360" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">מותג</text>
+  <text x="360" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Brand · Projects List</text>
 
-</div>
+  <!-- ── PROJECT ── -->
+  <g filter="url(#shadow)">
+    <rect x="508" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="584" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="584" y="122" text-anchor="middle" font-size="20">🗂️</text>
+  <text x="584" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">פרויקט</text>
+  <text x="584" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Project · SubProjects</text>
 
-<!-- ══ SECTION: OVERLAYS ══ -->
-<div class="section-header" style="text-align:right; padding-right:0; padding-left:0; margin-top:16px;">
-  🖥️ מסכים-מעל (Full-screen Overlays)
-</div>
+  <!-- ── PIPELINE (top) ── -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="68" width="160" height="84" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="820" cy="97" r="16" fill="rgba(13,148,136,0.18)"/>
+  <text x="820" y="103" text-anchor="middle" font-size="16">📋</text>
+  <text x="820" y="126" text-anchor="middle" font-family="Heebo" font-size="13" font-weight="700" fill="#14b8a6">תת-פרויקט</text>
+  <text x="820" y="142" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Pipeline Mode</text>
+  <!-- pipeline badge -->
+  <rect x="740" y="60" width="58" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.28)" stroke-width="1"/>
+  <text x="769" y="69.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">PIPELINE</text>
 
-<div class="modals-grid" style="padding-right:0; margin-top:12px;">
+  <!-- ── ROSTER (bottom) ── -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="168" width="160" height="84" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="820" cy="197" r="16" fill="rgba(13,148,136,0.18)"/>
+  <text x="820" y="203" text-anchor="middle" font-size="16">👥</text>
+  <text x="820" y="226" text-anchor="middle" font-family="Heebo" font-size="13" font-weight="700" fill="#14b8a6">תת-פרויקט</text>
+  <text x="820" y="242" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Roster · Items</text>
+  <!-- roster badge -->
+  <rect x="740" y="160" width="50" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.28)" stroke-width="1"/>
+  <text x="765" y="169.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">ROSTER</text>
 
-  <div class="node overlay-node">
-    <div class="node-title"><span class="node-icon">🗺️</span> BrandWhiteboard</div>
-    <span class="trigger">טריגר: כפתור "מפה" ב-Level 1</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">תצוגת כל הפרויקטים כמפה</div>
-      <div class="node-item">תתי-פרויקטים + ערוצים כ-chips</div>
-      <div class="node-item">לחיצה → ניווט ישיר לרמה</div>
-    </div>
-    <span class="badge badge-overlay">Full-screen Overlay</span>
-  </div>
+  <!-- vertical divider between pipeline and roster -->
+  <line x1="820" y1="152" x2="820" y2="168" stroke="rgba(13,148,136,0.25)" stroke-width="1" stroke-dasharray="2,2"/>
 
-  <div class="node overlay-node">
-    <div class="node-title"><span class="node-icon">📊</span> BrandFinancialSummary</div>
-    <span class="trigger">טריגר: כפתור "פיננסי" ב-Level 1</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">סיכום כולל: הכנסות / הוצאות / חוב</div>
-      <div class="node-item">פירוט לפי פרויקט (accordion)</div>
-      <div class="node-item">הלוואות + פס התקדמות</div>
-      <div class="node-item">כפתור "ניהול הלוואות" → FinancialDashboard</div>
-    </div>
-    <span class="badge badge-overlay">Full-screen Overlay</span>
-  </div>
+  <!-- ── STAGE ── -->
+  <g filter="url(#shadow)">
+    <rect x="986" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="1062" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="1062" y="122" text-anchor="middle" font-size="20">🎯</text>
+  <text x="1062" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">שלב</text>
+  <text x="1062" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Stage · Tasks List</text>
 
-  <div class="node overlay-node" style="max-width:280px;">
-    <div class="node-title"><span class="node-icon">🏦</span> FinancialDashboard</div>
-    <span class="trigger">טריגר: "ניהול הלוואות" / מותג 💰</span>
-    <div class="node-items" style="margin-top:8px;">
-      <div class="node-item">הלוואות — ריבית, יתרה, תאריכים</div>
-      <div class="node-item">הוצאות קבועות (חודשי / שנתי)</div>
-      <div class="node-item">הכנסות</div>
-      <div class="node-item">נכסים + חובות נכס</div>
-      <div class="node-item">סורק דוח אשראי PDF</div>
-      <div class="node-item">P&L חודשי + runway</div>
-    </div>
-    <span class="badge badge-overlay">Full-screen (המורכב ביותר)</span>
-  </div>
+  <!-- ── TASKS (dashed = terminal) ── -->
+  <rect x="1212" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.07)" stroke="rgba(13,148,136,0.2)" stroke-width="1.3" stroke-dasharray="5,3"/>
+  <circle cx="1288" cy="114" r="19" fill="rgba(13,148,136,0.12)"/>
+  <text x="1288" y="122" text-anchor="middle" font-size="20">✅</text>
+  <text x="1288" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6" opacity="0.65">משימות</text>
+  <text x="1288" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Tasks View</text>
 
-</div>
+  <!-- ══════════════════════════════════════════════
+       MODAL VERTICAL CONNECTOR ARROWS
+  ══════════════════════════════════════════════ -->
+  <!-- Home → Daily Update -->
+  <path d="M122,172 L122,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Home → Settings -->
+  <path d="M152,172 L152,610" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
 
-<!-- ══ SECTION: NAVIGATION PATH ══ -->
-<div class="section-header" style="text-align:right; padding-right:0; padding-left:0; margin-top:16px;">
-  🧭 Breadcrumb — ניווט תמידי
-</div>
-<div style="padding: 12px 0; max-width:600px;">
-  <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:14px 18px; font-size:12px; color:#475569; line-height:2;">
-    <strong>Breadcrumb sidebar</strong> תמיד נראה בתחתית המסך (position: fixed).<br>
-    מציג את הנתיב הנוכחי: <code>מותג → פרויקט → תת-פרויקט → ערוץ</code><br>
-    לחיצה על כל פריט → חזרה לאותה רמה.
-  </div>
-</div>
+  <!-- Brand → Whiteboard -->
+  <path d="M332,172 L332,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Brand → New Project -->
+  <path d="M370,172 L370,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Brand → Financial Summary -->
+  <path d="M398,172 L398,610" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
 
-<!-- ══ SUMMARY TABLE ══ -->
-<div class="section-header" style="text-align:right; padding-right:0; padding-left:0; margin-top:16px;">
-  📊 סיכום מהיר — מה מציג מה
-</div>
-<div style="overflow-x:auto; margin-top:12px;">
-<table style="width:100%; border-collapse:collapse; font-size:12px; background:white; border-radius:12px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-  <thead>
-    <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-      <th style="padding:10px 14px; text-align:right; font-weight:700; color:#475569;">מסך / מרכיב</th>
-      <th style="padding:10px 14px; text-align:right; font-weight:700; color:#475569;">סוג</th>
-      <th style="padding:10px 14px; text-align:right; font-weight:700; color:#475569;">מה מציג</th>
-      <th style="padding:10px 14px; text-align:right; font-weight:700; color:#475569;">טריגר לפתיחה</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🏠 דף הבית</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">רשימת מותגים + Morning Panel</td><td style="padding:9px 14px; color:#64748b;">טעינת האפליקציה</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🏢 תצוגת מותג</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">פרויקטים + יעדים + P&L</td><td style="padding:9px 14px; color:#64748b;">לחיצה על מותג</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🚀 תצוגת פרויקט</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">תת-פרויקטים</td><td style="padding:9px 14px; color:#64748b;">לחיצה על פרויקט</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📁 תת-פרויקט (ערוצים)</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">ערוצים כרטיסים</td><td style="padding:9px 14px; color:#64748b;">לחיצה על תת-פרויקט</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📋 תת-פרויקט (שלבים)</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">Pipeline שלבים</td><td style="padding:9px 14px; color:#64748b;">תת-פרויקט ללא ערוצים</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📘 תצוגת ערוץ</td><td style="padding:9px 14px;"><span style="background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">מסך</span></td><td style="padding:9px 14px; color:#64748b;">Pipeline שלבים לערוץ</td><td style="padding:9px 14px; color:#64748b;">לחיצה על ערוץ</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🖊️ StageEditDrawer</td><td style="padding:9px 14px;"><span style="background:#dcfce7;color:#14532d;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Drawer</span></td><td style="padding:9px 14px; color:#64748b;">עריכת שלב מלאה</td><td style="padding:9px 14px; color:#64748b;">לחיצה על שלב (Level 3B/4)</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">✨ BrandWizard</td><td style="padding:9px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Modal</span></td><td style="padding:9px 14px; color:#64748b;">יצירת/עריכת מותג</td><td style="padding:9px 14px; color:#64748b;">"מותג חדש" / עריכה</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">⚡ BrandSetupWizard</td><td style="padding:9px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Modal</span></td><td style="padding:9px 14px; color:#64748b;">Wizard למילוי שלבים ריקים</td><td style="padding:9px 14px; color:#64748b;">"השלם הגדרה" על מותג</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🚀 NewProjectModal</td><td style="padding:9px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Modal</span></td><td style="padding:9px 14px; color:#64748b;">יצירת/עריכת פרויקט</td><td style="padding:9px 14px; color:#64748b;">"פרויקט חדש"</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📁 SubProjectModal</td><td style="padding:9px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Modal</span></td><td style="padding:9px 14px; color:#64748b;">יצירת/עריכת תת-פרויקט + פיננסים</td><td style="padding:9px 14px; color:#64748b;">"תת-פרויקט חדש"</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📘 ChannelModal</td><td style="padding:9px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Modal</span></td><td style="padding:9px 14px; color:#64748b;">יצירת/עריכת ערוץ</td><td style="padding:9px 14px; color:#64748b;">"ערוץ חדש"</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">🗺️ BrandWhiteboard</td><td style="padding:9px 14px;"><span style="background:#ede9fe;color:#4c1d95;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Overlay</span></td><td style="padding:9px 14px; color:#64748b;">מפה ויזואלית של מבנה המותג</td><td style="padding:9px 14px; color:#64748b;">כפתור "מפה"</td></tr>
-    <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:9px 14px; font-weight:600;">📊 BrandFinancialSummary</td><td style="padding:9px 14px;"><span style="background:#ede9fe;color:#4c1d95;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Overlay</span></td><td style="padding:9px 14px; color:#64748b;">סיכום פיננסי מותג</td><td style="padding:9px 14px; color:#64748b;">כפתור "פיננסי"</td></tr>
-    <tr><td style="padding:9px 14px; font-weight:600;">🏦 FinancialDashboard</td><td style="padding:9px 14px;"><span style="background:#ede9fe;color:#4c1d95;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">Overlay</span></td><td style="padding:9px 14px; color:#64748b;">ניהול כלכלי מלא (הלוואות/נכסים)</td><td style="padding:9px 14px; color:#64748b;">"ניהול הלוואות" / מותג 💰</td></tr>
-  </tbody>
-</table>
-</div>
+  <!-- Project → New SubProject -->
+  <path d="M584,172 L584,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
 
-<div style="margin-top:32px; text-align:center; font-size:11px; color:#cbd5e1;">
-  Generated for Beseder CRM · getbeseder.com
+  <!-- Roster → Item Modal -->
+  <path d="M790,252 L790,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+
+  <!-- Pipeline → Stage Drawer -->
+  <path d="M856,152 C870,300 970,390 1000,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.40"/>
+  <!-- Roster → Stage Drawer -->
+  <path d="M866,252 C878,350 980,400 1010,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL NODES  (row 1: y=444)
+  ══════════════════════════════════════════════ -->
+
+  <!-- Daily Update (x=60) -->
+  <rect x="60"  y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="127" y="469" text-anchor="middle" font-size="17">📝</text>
+  <text x="127" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">עדכון יומי</text>
+  <text x="127" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Daily Update Modal</text>
+  <rect x="60"  y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="80" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Whiteboard (x=212) -->
+  <rect x="212" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="279" y="469" text-anchor="middle" font-size="17">🧠</text>
+  <text x="279" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">לוח לבן</text>
+  <text x="279" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Brand Whiteboard</text>
+  <rect x="212" y="437" width="48" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="236" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">OVERLAY</text>
+
+  <!-- New Project (x=364) -->
+  <rect x="364" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="431" y="469" text-anchor="middle" font-size="17">➕</text>
+  <text x="431" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">פרויקט חדש</text>
+  <text x="431" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">New Project Modal</text>
+  <rect x="364" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="384" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- New SubProject (x=516) -->
+  <rect x="516" y="444" width="148" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="590" y="469" text-anchor="middle" font-size="17">📐</text>
+  <text x="590" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">תת-פרויקט חדש</text>
+  <text x="590" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">New SubProject Modal</text>
+  <rect x="516" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="536" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Item Modal (x=682) -->
+  <rect x="682" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="749" y="469" text-anchor="middle" font-size="17">📦</text>
+  <text x="749" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">פריט חדש</text>
+  <text x="749" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Item Modal</text>
+  <rect x="682" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="702" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Stage Drawer (x=848) -->
+  <rect x="848" y="444" width="148" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="922" y="469" text-anchor="middle" font-size="17">📌</text>
+  <text x="922" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">Stage Drawer</text>
+  <text x="922" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Side Panel Drawer</text>
+  <rect x="848" y="437" width="52" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="874" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">DRAWER</text>
+
+  <!-- ── MODAL ROW 2 (y=610) ── -->
+  <!-- Settings (x=60) -->
+  <rect x="60"  y="610" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.28)" stroke-width="1.2"/>
+  <text x="127" y="635" text-anchor="middle" font-size="17">⚙️</text>
+  <text x="127" y="656" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">הגדרות</text>
+  <text x="127" y="671" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Settings Modal</text>
+  <rect x="60"  y="603" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.22)" stroke-width="1"/>
+  <text x="80"  y="612" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Brand Financial Summary (x=212) -->
+  <rect x="212" y="610" width="152" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.28)" stroke-width="1.2"/>
+  <text x="288" y="635" text-anchor="middle" font-size="17">💼</text>
+  <text x="288" y="656" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">סיכום פיננסי</text>
+  <text x="288" y="671" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Brand Financial Summary</text>
+  <rect x="212" y="603" width="48" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.22)" stroke-width="1"/>
+  <text x="236" y="612" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">OVERLAY</text>
+
+  <!-- Notes box (x=1030, y=444) -->
+  <rect x="1030" y="444" width="270" height="130" rx="10" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <text x="1048" y="466" font-family="Heebo" font-size="10" font-weight="700" fill="#374151" letter-spacing="0.8">הערות ניווט</text>
+  <line x1="1048" y1="472" x2="1286" y2="472" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="1048" y="490" font-family="Heebo" font-size="9.5" fill="#4b5563">• Stage Drawer נגיש מ-Pipeline וגם Roster</text>
+  <text x="1048" y="507" font-family="Heebo" font-size="9.5" fill="#4b5563">• Daily Update נגיש תמיד מדף הבית</text>
+  <text x="1048" y="524" font-family="Heebo" font-size="9.5" fill="#4b5563">• מותג 💰 מנתב לדשבורד פיננסי</text>
+  <text x="1048" y="541" font-family="Heebo" font-size="9.5" fill="#4b5563">• Items ב-Roster כוללים Stages → Tasks</text>
+  <text x="1048" y="558" font-family="Heebo" font-size="9.5" fill="#4b5563">• כל מסך ראשי תומך בניווט חזרה</text>
+
+  <!-- count badge -->
+  <rect x="1030" y="590" width="270" height="36" rx="8" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <text x="1165" y="606" text-anchor="middle" font-family="Heebo" font-size="10" fill="#374151">7 מסכים · 8 מודאלים · 4 views פיננסיים</text>
+  <text x="1165" y="620" text-anchor="middle" font-family="Heebo" font-size="9" fill="#2d3748">סה״כ 19 views</text>
+
+  <!-- ══════════════════════════════════════════════
+       FINANCIAL SECTION  (y≈828)
+  ══════════════════════════════════════════════ -->
+
+  <!-- Arrow from Home → Financial Dashboard (long curve) -->
+  <path d="M136,172 C136,480 600,828 680,870" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="5,4" marker-end="url(#ah-fin)" opacity="0.45"/>
+  <rect x="240" y="752" width="108" height="15" rx="4" fill="#0a0c12"/>
+  <text x="294" y="762" text-anchor="middle" font-family="Heebo" font-size="10" fill="#10b981" opacity="0.7">לחץ 💰 מותג</text>
+
+  <!-- Financial Dashboard node -->
+  <g filter="url(#shadow)">
+    <rect x="614" y="828" width="176" height="96" rx="14" fill="rgba(16,185,129,0.11)" stroke="rgba(16,185,129,0.38)" stroke-width="1.3"/>
+  </g>
+  <circle cx="702" cy="862" r="21" fill="rgba(16,185,129,0.18)"/>
+  <text x="702" y="870" text-anchor="middle" font-size="21">💰</text>
+  <text x="702" y="898" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#34d399">ניהול פיננסי</text>
+  <text x="702" y="914" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Financial Dashboard</text>
+  <rect x="614" y="820" width="52" height="13" rx="3" fill="#0f172a" stroke="rgba(16,185,129,0.3)" stroke-width="1"/>
+  <text x="640" y="829.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#10b981" letter-spacing="0.3">SCREEN</text>
+
+  <!-- Arrow to sub-sections -->
+  <line x1="790" y1="876" x2="840" y2="876" stroke="#10b981" stroke-width="1.2" marker-end="url(#ah-fin)" opacity="0.45"/>
+  <text x="820" y="868" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#10b981" opacity="0.6">תצוגות</text>
+
+  <!-- Loans -->
+  <rect x="842"  y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="897"  y="870" text-anchor="middle" font-size="14">🏦</text>
+  <text x="897"  y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הלוואות</text>
+  <text x="897"  y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Loans</text>
+
+  <line x1="952" y1="876" x2="962" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Liabilities -->
+  <rect x="964"  y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1019" y="870" text-anchor="middle" font-size="14">📊</text>
+  <text x="1019" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">התחייבויות</text>
+  <text x="1019" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Liabilities</text>
+
+  <line x1="1074" y1="876" x2="1084" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Income -->
+  <rect x="1086" y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1141" y="870" text-anchor="middle" font-size="14">💵</text>
+  <text x="1141" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הכנסות</text>
+  <text x="1141" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Income</text>
+
+  <line x1="1196" y1="876" x2="1206" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Expenses -->
+  <rect x="1208" y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1263" y="870" text-anchor="middle" font-size="14">💸</text>
+  <text x="1263" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הוצאות</text>
+  <text x="1263" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Expenses</text>
+
+  <!-- ══════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════ -->
+  <text x="770" y="985" text-anchor="middle" font-family="Heebo" font-size="10" fill="#1e2433" letter-spacing="0.5">Beseder CRM · מפת מסכים · 2024</text>
+
+  <!-- top-right watermark -->
+  <text x="1480" y="34" text-anchor="end" font-family="Heebo" font-size="10" fill="#1e2433" font-weight="700" letter-spacing="1">BESEDER CRM</text>
+  <text x="1480" y="48" text-anchor="end" font-family="Heebo" font-size="9.5" fill="#1a2035">Screen Architecture v1.0</text>
+
+</svg>
 </div>
 
 </body>
