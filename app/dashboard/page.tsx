@@ -78,6 +78,48 @@ const HEALTH_COLORS: Record<BrandHealth["level"], string> = {
   empty:     "#9ca3af",
 };
 
+/* ─── Background themes (like Gmail) ─────────────────── */
+const BG_THEME_KEY = "beseder_bg_theme_v1";
+
+interface BgTheme {
+  id: string;
+  label: string;
+  preview: string; // CSS value for the swatch
+  bgColor: string; // body backgroundColor
+  bgImage?: string;
+  bgSize?: string;
+}
+
+const BG_THEMES: BgTheme[] = [
+  { id: "default",   label: "ברירת מחדל",  preview: "#f8fafc",  bgColor: "#f8fafc" },
+  { id: "warm",      label: "קרם",          preview: "#fef9f0",  bgColor: "#fef9f0" },
+  { id: "mint",      label: "מנטה",         preview: "#f0fdf4",  bgColor: "#f0fdf4" },
+  { id: "lavender",  label: "לבנדר",        preview: "#faf5ff",  bgColor: "#faf5ff" },
+  { id: "sky",       label: "שמיים",        preview: "#f0f9ff",  bgColor: "#f0f9ff" },
+  { id: "rose",      label: "ורוד",         preview: "#fff1f2",  bgColor: "#fff1f2" },
+  { id: "peach",     label: "אפרסק",        preview: "#fff7ed",  bgColor: "#fff7ed" },
+  { id: "slate",     label: "אפור כחלחל",   preview: "#f1f5f9",  bgColor: "#f1f5f9" },
+  { id: "charcoal",  label: "פחם",          preview: "#1e2130",  bgColor: "#1e2130" },
+  { id: "dark-navy", label: "כחול לילה",    preview: "#0f172a",  bgColor: "#0f172a" },
+  { id: "dark-green",label: "ירוק כהה",     preview: "#052e16",  bgColor: "#052e16" },
+  { id: "dark-wine", label: "יין",          preview: "#3b0764",  bgColor: "#3b0764" },
+  { id: "sunrise",   label: "זריחה",        preview: "linear-gradient(135deg,#fff7ed,#fef3c7)",         bgColor: "#fff7ed", bgImage: "linear-gradient(135deg,#fff7ed 0%,#fef3c7 60%,#fefce8 100%)" },
+  { id: "ocean",     label: "אוקיינוס",     preview: "linear-gradient(135deg,#f0f9ff,#e0f2fe)",         bgColor: "#f0f9ff", bgImage: "linear-gradient(160deg,#f0f9ff 0%,#e0f2fe 45%,#ecfdf5 100%)" },
+  { id: "dusk",      label: "שקיעה",        preview: "linear-gradient(135deg,#312e81,#4c1d95)",         bgColor: "#1e1b4b", bgImage: "linear-gradient(160deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%)" },
+  { id: "forest",    label: "יער",          preview: "linear-gradient(135deg,#14532d,#166534)",         bgColor: "#052e16", bgImage: "linear-gradient(160deg,#052e16 0%,#14532d 60%,#166534 100%)" },
+  { id: "dots",      label: "נקודות",       preview: "#f1f5f9",  bgColor: "#f1f5f9", bgImage: "radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px)", bgSize: "24px 24px" },
+  { id: "grid",      label: "גריד",         preview: "#f8fafc",  bgColor: "#f8fafc", bgImage: "linear-gradient(rgba(0,0,0,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.055) 1px,transparent 1px)", bgSize: "22px 22px" },
+];
+
+function applyBgTheme(theme: BgTheme) {
+  if (typeof document === "undefined") return;
+  document.body.style.backgroundColor  = theme.bgColor;
+  document.body.style.backgroundImage  = theme.bgImage ?? "";
+  document.body.style.backgroundSize   = theme.bgSize ?? "";
+  document.body.style.backgroundAttachment = "fixed";
+  document.body.style.minHeight = "100vh";
+}
+
 /* ─── Morning Panel ───────────────────────────────────── */
 const DAILY_GOAL_KEY = "beseder_daily_goal_v1";
 
@@ -1236,10 +1278,24 @@ function GoalsPanel({ goals, color, onChange }: {
 /* ─── Top Nav ─────────────────────────────────────────── */
 function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () => void }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen]               = useState(false);
+  const [loggingOut, setLoggingOut]   = useState(false);
+  const [showBgPicker, setShowBgPicker] = useState(false);
+  const [bgThemeId, setBgThemeId]     = useState<string>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem(BG_THEME_KEY) ?? "default";
+    return "default";
+  });
+  const ref    = useRef<HTMLDivElement>(null);
+  const bgRef  = useRef<HTMLDivElement>(null);
 
+  // Apply saved theme on mount
+  useEffect(() => {
+    const theme = BG_THEMES.find(t => t.id === bgThemeId) ?? BG_THEMES[0];
+    applyBgTheme(theme);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close user dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -1248,9 +1304,17 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const initials = userEmail
-    ? userEmail.split("@")[0].slice(0, 2).toUpperCase()
-    : "?";
+  // Close bg picker on outside click
+  useEffect(() => {
+    if (!showBgPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (bgRef.current && !bgRef.current.contains(e.target as Node)) setShowBgPicker(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showBgPicker]);
+
+  const initials = userEmail ? userEmail.split("@")[0].slice(0, 2).toUpperCase() : "?";
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -1258,9 +1322,18 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
     router.push("/login");
   };
 
+  const handlePickTheme = (theme: BgTheme) => {
+    setBgThemeId(theme.id);
+    localStorage.setItem(BG_THEME_KEY, theme.id);
+    applyBgTheme(theme);
+  };
+
+  const currentTheme = BG_THEMES.find(t => t.id === bgThemeId) ?? BG_THEMES[0];
+
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
       <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
+
         {/* User menu — right side in RTL */}
         <div className="relative" ref={ref}>
           <button
@@ -1279,10 +1352,9 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
           </button>
 
           {open && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden animate-in"
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden"
               style={{ animation: "fadeSlideDown 0.15s ease-out" }}
             >
-              {/* User info */}
               <div className="px-4 py-3.5 border-b border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
@@ -1294,8 +1366,6 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
                   </div>
                 </div>
               </div>
-
-              {/* Actions */}
               <div className="p-1.5">
                 <button
                   onClick={handleLogout}
@@ -1312,17 +1382,99 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
           )}
         </div>
 
-        {/* Center area: finance shortcut */}
+        {/* Center: finance + bg-picker buttons */}
         <div className="flex items-center gap-2">
           {onFinance && (
-            <button
-              onClick={onFinance}
+            <button onClick={onFinance}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-colors"
             >
               <span>💰</span>
               <span className="hidden sm:inline">פיננסי</span>
             </button>
           )}
+
+          {/* 🎨 Background theme button */}
+          <div className="relative" ref={bgRef}>
+            <button
+              onClick={() => setShowBgPicker(v => !v)}
+              title="שנה רקע"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors"
+              style={{ borderColor: showBgPicker ? "#f97316" : undefined, color: showBgPicker ? "#f97316" : undefined }}
+            >
+              {/* Mini swatch of current theme */}
+              <span className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0 inline-block"
+                style={{ background: currentTheme.preview }} />
+              <span className="hidden sm:inline">רקע</span>
+            </button>
+
+            {/* ── Theme picker panel ── */}
+            {showBgPicker && (
+              <div
+                className="absolute left-0 mt-2 rounded-2xl bg-white border border-gray-100 shadow-2xl shadow-gray-200/60 overflow-hidden"
+                style={{ zIndex: 9999, width: 320, animation: "fadeSlideDown 0.15s ease-out" }}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="px-4 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
+                  <h3 className="font-black text-gray-900 text-sm">🎨 בחר רקע</h3>
+                  <button onClick={() => setShowBgPicker(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">×</button>
+                </div>
+
+                {/* Theme swatches */}
+                <div className="p-4">
+                  {/* Solid colors */}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">צבעים אחידים</p>
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {BG_THEMES.filter(t => !t.bgImage).map(theme => (
+                      <button
+                        key={theme.id}
+                        onClick={() => handlePickTheme(theme)}
+                        title={theme.label}
+                        className="flex flex-col items-center gap-1 group"
+                      >
+                        <div
+                          className="w-full h-11 rounded-xl transition-transform group-hover:scale-105"
+                          style={{
+                            background: theme.preview,
+                            border: bgThemeId === theme.id
+                              ? "2.5px solid #f97316"
+                              : "2px solid rgba(0,0,0,0.08)",
+                            boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                          }}
+                        />
+                        <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Gradients */}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">גרדיאנטים</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {BG_THEMES.filter(t => !!t.bgImage).map(theme => (
+                      <button
+                        key={theme.id}
+                        onClick={() => handlePickTheme(theme)}
+                        title={theme.label}
+                        className="flex flex-col items-center gap-1 group"
+                      >
+                        <div
+                          className="w-full h-11 rounded-xl transition-transform group-hover:scale-105"
+                          style={{
+                            background: theme.preview,
+                            border: bgThemeId === theme.id
+                              ? "2.5px solid #f97316"
+                              : "2px solid rgba(0,0,0,0.08)",
+                            boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                          }}
+                        />
+                        <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Logo — left side in RTL */}
@@ -2020,7 +2172,7 @@ export default function Dashboard() {
     const progress = sorted.length > 0 ? Math.round((done / sorted.length) * 100) : 0;
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeProject.color} items={[
           { emoji: activeBrand.emoji,      name: activeBrand.name,      onClick: () => { setActiveProject(null); setActiveSubProject(null); setActiveChannel(null); setSelectedStage(null); }, isCurrent: false },
@@ -2108,7 +2260,7 @@ export default function Dashboard() {
     const chProgress  = hasChannels ? pct(activeSubProject.channels.flatMap(c => c.stages)) : 0;
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         {selectedStage && !hasChannels && (
           <StageEditDrawer
@@ -2297,7 +2449,7 @@ export default function Dashboard() {
     const progress    = totalStages > 0 ? Math.round((doneStages / totalStages) * 100) : 0;
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji,  name: activeBrand.name,  onClick: () => setActiveProject(null), isCurrent: false },
@@ -2482,7 +2634,7 @@ export default function Dashboard() {
     const projects = activeBrand.projects;
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
         <BreadcrumbSidebar color={activeBrand.color} items={[
           { emoji: activeBrand.emoji, name: activeBrand.name, onClick: () => {}, isCurrent: true },
@@ -2648,7 +2800,7 @@ export default function Dashboard() {
 
   /* ══ LEVEL 0: Brands home ══ */
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
       {showBrandModal && (
         <BrandWizard
