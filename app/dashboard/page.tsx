@@ -14,6 +14,7 @@ import SubProjectModal from "@/components/SubProjectModal";
 import ChannelModal from "@/components/ChannelModal";
 import FinancialDashboard from "@/components/FinancialDashboard";
 import BrandFinancialSummary from "@/components/BrandFinancialSummary";
+import { HebrewDateInput } from "@/components/HebrewDateInput";
 
 /* ─── Brand health ────────────────────────────────────── */
 interface BrandHealth {
@@ -851,11 +852,10 @@ function GoalsPanel({ goals, color, onChange }: {
                       <option value="at-risk">בסיכון ⚠️</option>
                       <option value="done">הושלם 🎉</option>
                     </select>
-                    <input
-                      type="date"
+                    <HebrewDateInput
                       value={g.deadline ?? ""}
-                      onChange={e => updateGoal(g.id, { deadline: e.target.value || undefined })}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                      onChange={v => updateGoal(g.id, { deadline: v || undefined })}
+                      className="text-xs"
                     />
                     <button onClick={() => setEditingId(null)} className="text-xs font-bold text-teal-600 px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors">
                       שמור
@@ -918,11 +918,10 @@ function GoalsPanel({ goals, color, onChange }: {
             />
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
+            <HebrewDateInput
               value={newDeadline}
-              onChange={e => setNewDeadline(e.target.value)}
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              onChange={v => setNewDeadline(v)}
+              className="text-xs"
             />
             <span className="text-xs text-gray-400">תאריך יעד (אופציונלי)</span>
           </div>

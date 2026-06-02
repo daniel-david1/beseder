@@ -12,6 +12,7 @@ import {
 } from "@/lib/types";
 import { loadFinancialData, saveFinancialData, loadFinancialFromCloud } from "@/lib/storage";
 import CreditReportScanner from "./CreditReportScanner";
+import { HebrewMonthInput, HebrewDateInput } from "./HebrewDateInput";
 
 /* ─── helpers ─────────────────────────────────────────── */
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -295,25 +296,21 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           {/* Dates → auto calc */}
           <div className="rounded-xl bg-orange-50/60 border border-orange-100 p-3 mb-3">
             <div className="text-[11px] font-bold text-orange-600 mb-2.5 flex items-center gap-1.5">📅 תאריכי הלוואה</div>
-            <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="grid grid-cols-1 gap-2 mb-2">
               <div>
                 <label className="text-xs text-gray-400 mb-0.5 block">תאריך פתיחה</label>
-                <input
-                  className={inp}
-                  type="month"
+                <HebrewMonthInput
                   value={form.startDate ?? ""}
-                  onChange={e => handleDateField("startDate", e.target.value)}
-                  dir="ltr"
+                  onChange={v => handleDateField("startDate", v)}
+                  placeholder="חודש פתיחה"
                 />
               </div>
               <div>
                 <label className="text-xs text-gray-400 mb-0.5 block">תאריך סיום</label>
-                <input
-                  className={inp}
-                  type="month"
+                <HebrewMonthInput
                   value={form.endDate ?? ""}
-                  onChange={e => handleDateField("endDate", e.target.value)}
-                  dir="ltr"
+                  onChange={v => handleDateField("endDate", v)}
+                  placeholder="חודש סיום"
                 />
               </div>
             </div>
@@ -753,7 +750,14 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               <span className="hidden sm:inline">ייבוא דוח אשראי</span>
             </button>
             {editingDate ? (
-              <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
+              <div className="flex items-center gap-1">
+                <HebrewDateInput
+                  value={data.asOfDate ?? new Date().toISOString().slice(0, 10)}
+                  onChange={v => { save({ ...data, asOfDate: v }); setEditingDate(false); }}
+                  className="text-xs"
+                />
+                <button onClick={() => setEditingDate(false)} className="text-gray-400 text-xs px-1 hover:text-gray-600">✕</button>
+              </div>
             ) : (
               <button onClick={() => setEditingDate(true)} className="text-xs text-gray-400 hover:text-gray-700 transition-colors px-1.5 sm:px-2 py-1 rounded-lg hover:bg-gray-50 whitespace-nowrap" title="לחץ לשינוי תאריך">
                 <span className="hidden sm:inline">נכון ל: </span>{data.asOfDate ? hebrewMonthYear(data.asOfDate) : "היום"}

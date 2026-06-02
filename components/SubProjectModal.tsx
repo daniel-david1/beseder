@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { SubProject, StageExpense, PaymentCommitment, CommitmentPayment } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
+import { HebrewMonthInput } from "./HebrewDateInput";
 
 const EMOJIS = ["📁","🚀","📱","💡","📢","💰","🎯","🛠️","🎨","📊","🔥","💪","🌱","🏆","⚡","🔬","🤝","🗄️","📋","🎬"];
 
@@ -296,11 +297,11 @@ function CommitmentList({
                   {item.frequency !== 'milestone' && (
                     <div className="flex items-center gap-1 mr-1">
                       <span className="text-xs text-gray-400">מ-</span>
-                      <input
-                        type="month"
-                        className="input text-xs py-0.5 w-32"
+                      <HebrewMonthInput
                         value={item.startDate ?? ''}
-                        onChange={e => updateC(ci, { startDate: e.target.value })}
+                        onChange={v => updateC(ci, { startDate: v })}
+                        placeholder="חודש התחלה"
+                        className="text-xs"
                       />
                     </div>
                   )}
@@ -353,16 +354,16 @@ function CommitmentList({
                           <td className="px-2 py-2 text-gray-400">{pi + 1}</td>
                           <td className="px-2 py-2">
                             {item.frequency === 'milestone' ? (
-                              <input
-                                type="month"
-                                className="input text-xs py-0.5 w-28"
+                              <HebrewMonthInput
                                 value={pay.dueDate ?? ''}
-                                onChange={e => updatePayment(ci, pi, { dueDate: e.target.value })}
+                                onChange={v => updatePayment(ci, pi, { dueDate: v })}
+                                placeholder="חודש"
+                                className="text-xs"
                               />
                             ) : (
                               <span className="text-gray-500">
                                 {pay.dueDate
-                                  ? new Date(pay.dueDate + '-01').toLocaleDateString('he-IL', { month: 'short', year: '2-digit' })
+                                  ? (() => { const [yr,mo] = pay.dueDate.split('-'); return `${mo}/${yr?.slice(2)}`; })()
                                   : '—'}
                               </span>
                             )}
