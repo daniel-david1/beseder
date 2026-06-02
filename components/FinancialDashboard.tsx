@@ -672,17 +672,57 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
     const updateLiability = (updated: PropertyLiability) => save({ ...data, properties: data.properties.map(p => p.id === propId ? { ...p, liabilities: p.liabilities.map(l => l.id === liability.id ? updated : l) } : p) });
     const deleteLiability = () => { if (!confirm("למחוק?")) return; save({ ...data, properties: data.properties.map(p => p.id === propId ? { ...p, liabilities: p.liabilities.filter(l => l.id !== liability.id) } : p) }); setEditingLiability(null); };
 
+    // Derived display values
+    const paidMonths = liability.paidMonths ?? (liability.monthlyPayment > 0 ? Math.round(liability.paidSoFar / liability.monthlyPayment) : 0);
+    const totalPayments = liability.monthlyPayment > 0 ? Math.ceil(liability.totalDebt / liability.monthlyPayment) : 0;
+    const remaining = liability.annualRate
+      ? loanRemainingBalance(liability.totalDebt, liability.annualRate, liability.monthlyPayment, paidMonths)
+      : Math.max(0, liability.totalDebt - paidMonths * liability.monthlyPayment);
+    const progress = totalPayments > 0 ? Math.min(100, (paidMonths / totalPayments) * 100) : 0;
+
+    // Form derived values
+    const formPaidMonths = form.paidMonths ?? (form.monthlyPayment > 0 ? Math.round(form.paidSoFar / form.monthlyPayment) : 0);
+    const formTotalPayments = form.monthlyPayment > 0 ? Math.ceil(form.totalDebt / form.monthlyPayment) : 0;
+    const formRemaining = form.annualRate
+      ? loanRemainingBalance(form.totalDebt, form.annualRate, form.monthlyPayment, formPaidMonths)
+      : Math.max(0, form.totalDebt - formPaidMonths * form.monthlyPayment);
+
     if (isEditing) {
       return (
-        <div className="py-2 px-1 border-b border-gray-100">
+        <div className="py-3 px-2 border-b border-gray-100 bg-orange-50/30 rounded-lg mb-1">
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div className="col-span-2"><label className="text-xs text-gray-400 mb-0.5 block">שם</label><input className={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} dir="rtl" /></div>
-            <div><label className="text-xs text-gray-400 mb-0.5 block">סך חוב (₪)</label><input className={inp} type="number" value={form.totalDebt} onChange={e => setForm({ ...form, totalDebt: Number(e.target.value) })} dir="rtl" /></div>
-            <div><label className="text-xs text-gray-400 mb-0.5 block">תשלום חודשי (₪)</label><input className={inp} type="number" value={form.monthlyPayment} onChange={e => setForm({ ...form, monthlyPayment: Number(e.target.value) })} dir="rtl" /></div>
-            <div><label className="text-xs text-gray-400 mb-0.5 block">שולם עד כה (₪)</label><input className={inp} type="number" value={form.paidSoFar} onChange={e => setForm({ ...form, paidSoFar: Number(e.target.value) })} dir="rtl" /></div>
+            <div>
+              <label className="text-xs text-gray-400 mb-0.5 block">סה״כ חוב (₪)</label>
+              <input className={inp} type="number" value={form.totalDebt} onChange={e => setForm({ ...form, totalDebt: Number(e.target.value) })} dir="rtl" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-0.5 block">החזר חודשי (₪)</label>
+              <input className={inp} type="number" value={form.monthlyPayment} onChange={e => setForm({ ...form, monthlyPayment: Number(e.target.value) })} dir="rtl" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-0.5 block">ריבית שנתית (%)</label>
+              <input className={inp} type="number" step="0.1" value={form.annualRate ?? ""} placeholder="0 = ללא ריבית" onChange={e => setForm({ ...form, annualRate: e.target.value ? Number(e.target.value) : undefined })} dir="rtl" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-0.5 block">תשלומים ששולמו</label>
+              <div className="flex items-center gap-1">
+                <button className="w-7 h-8 rounded border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 text-sm font-bold" onClick={() => setForm(f => ({ ...f, paidMonths: Math.max(0, (f.paidMonths ?? 0) - 1) }))}>−</button>
+                <input className={`${inp} text-center flex-1`} type="number" value={form.paidMonths ?? 0} onChange={e => setForm({ ...form, paidMonths: Number(e.target.value) })} dir="ltr" />
+                <button className="w-7 h-8 rounded border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 text-sm font-bold" onClick={() => setForm(f => ({ ...f, paidMonths: (f.paidMonths ?? 0) + 1 }))}>+</button>
+              </div>
+            </div>
           </div>
+          {/* Auto-calculated summary */}
+          {formTotalPayments > 0 && (
+            <div className="bg-white rounded-lg p-2 mb-2 border border-gray-100 text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1 text-right" dir="rtl">
+              <span>סה״כ תשלומים: <strong className="text-gray-700">{formTotalPayments}</strong></span>
+              <span>שולמו: <strong className="text-orange-600">{formPaidMonths}</strong></span>
+              <span>יתרה לתשלום: <strong className="text-red-600">{ils(formRemaining)}</strong></span>
+            </div>
+          )}
           <div className="flex gap-2">
-            <button className="btn btn-orange text-xs px-3 py-1" onClick={() => { updateLiability(form); setEditingLiability(null); }}>שמור</button>
+            <button className="btn btn-orange text-xs px-3 py-1" onClick={() => { updateLiability({ ...form, paidSoFar: (form.paidMonths ?? 0) * form.monthlyPayment }); setEditingLiability(null); }}>שמור</button>
             <button className="btn btn-ghost text-xs px-3 py-1" onClick={() => setEditingLiability(null)}>ביטול</button>
             <button className="btn btn-red text-xs px-3 py-1 mr-auto" onClick={deleteLiability}>מחק</button>
           </div>
@@ -696,10 +736,15 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           <button className="w-5 h-5 rounded bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center text-[10px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" onClick={() => setEditingLiability(liability.id)}>✏️</button>
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-xs text-gray-500">
-          <span className="text-red-600 font-semibold">{ils(liability.totalDebt)} חוב</span>
+          <span className="text-red-600 font-semibold">יתרה: {ils(remaining)}</span>
           {liability.monthlyPayment > 0 && <span>{ils(liability.monthlyPayment)}/חודש</span>}
-          {liability.paidSoFar > 0 && <span className="text-green-600">שולם: {ils(liability.paidSoFar)}</span>}
+          {totalPayments > 0 && <span className="text-gray-400">{paidMonths}/{totalPayments} תשלומים</span>}
         </div>
+        {totalPayments > 0 && (
+          <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+          </div>
+        )}
       </div>
     );
   };
@@ -717,7 +762,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
 
     const addIncome = () => { const n = { id: uid(), name: "הכנסה חדשה", amount: 0 }; save({ ...data, properties: data.properties.map(p => p.id === property.id ? { ...p, incomes: [...p.incomes, n] } : p) }); setEditingIncome(n.id); };
     const addExpense = () => { const n: FixedExpense = { id: uid(), name: "הוצאה חדשה", amount: 0, frequency: "monthly" }; save({ ...data, properties: data.properties.map(p => p.id === property.id ? { ...p, expenses: [...p.expenses, n] } : p) }); setEditingPropExpense(n.id); };
-    const addLiability = () => { const n: PropertyLiability = { id: uid(), name: "חוב חדש", totalDebt: 0, monthlyPayment: 0, paidSoFar: 0 }; save({ ...data, properties: data.properties.map(p => p.id === property.id ? { ...p, liabilities: [...p.liabilities, n] } : p) }); setEditingLiability(n.id); };
+    const addLiability = () => { const n: PropertyLiability = { id: uid(), name: "חוב חדש", totalDebt: 0, monthlyPayment: 0, paidSoFar: 0, paidMonths: 0 }; save({ ...data, properties: data.properties.map(p => p.id === property.id ? { ...p, liabilities: [...p.liabilities, n] } : p) }); setEditingLiability(n.id); };
     const savePropertyName = () => { save({ ...data, properties: data.properties.map(p => p.id === property.id ? { ...p, ...nameForm } : p) }); setEditingName(false); };
 
     return (

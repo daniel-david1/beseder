@@ -125,9 +125,11 @@ export interface PropertyIncome {
 export interface PropertyLiability {
   id: string;
   name: string;
-  totalDebt: number;
+  totalDebt: number;        // original principal / total debt
   monthlyPayment: number;
-  paidSoFar: number;
+  paidSoFar: number;        // legacy: total ₪ paid (kept for backward compat)
+  paidMonths?: number;      // number of payments made (replaces paidSoFar as primary)
+  annualRate?: number;      // interest rate % (optional, for mortgage accuracy)
 }
 
 export interface Property {
