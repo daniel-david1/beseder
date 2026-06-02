@@ -13,6 +13,7 @@ import NewProjectModal from "@/components/NewProjectModal";
 import SubProjectModal from "@/components/SubProjectModal";
 import ChannelModal from "@/components/ChannelModal";
 import FinancialDashboard from "@/components/FinancialDashboard";
+import BrandFinancialSummary from "@/components/BrandFinancialSummary";
 
 /* ─── Brand health ────────────────────────────────────── */
 interface BrandHealth {
@@ -1414,6 +1415,7 @@ export default function Dashboard() {
   const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
   const [showWhiteboard,       setShowWhiteboard]       = useState(false);
   const [showBrandFinancial,   setShowBrandFinancial]   = useState(false);
+  const [showLoansManager,     setShowLoansManager]     = useState(false);
   const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
   const [userEmail,        setUserEmail]       = useState("");
 
@@ -1602,6 +1604,18 @@ export default function Dashboard() {
     const p = { ...activeProject, subProjects: activeProject.subProjects.map(s => s.id === sub.id ? sub : s) };
     updateProject(p);
     setActiveSubProject(sub);
+  };
+
+  /** Called from SubProjectModal when user clicks "פתח ערוץ ←" on an expense row */
+  const handleNavigateToChannel = (subProjectId: string, channelId: string) => {
+    if (!activeProject) return;
+    // Find the updated subProject (after save)
+    const sub = activeProject.subProjects.find(s => s.id === subProjectId);
+    if (!sub) return;
+    const ch = sub.channels.find(c => c.id === channelId);
+    if (!ch) return;
+    setActiveSubProject(sub);
+    setActiveChannel(ch);
   };
 
   const handleSaveStage = (stage: Stage) => {
@@ -1810,7 +1824,7 @@ export default function Dashboard() {
         ]} />
         {showChannelModal && <ChannelModal order={activeSubProject.channels.length} onClose={() => setShowChannelModal(false)} onSave={handleSaveChannel} />}
         {editingChannel   && <ChannelModal existing={editingChannel} order={editingChannel.order} onClose={() => setEditingChannel(null)} onSave={handleSaveChannel} />}
-        {editingSub       && <SubProjectModal existing={editingSub} order={activeSubProject.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} />}
+        {editingSub       && <SubProjectModal existing={editingSub} order={activeSubProject.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
 
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
@@ -1994,8 +2008,8 @@ export default function Dashboard() {
           { emoji: activeBrand.emoji,  name: activeBrand.name,  onClick: () => setActiveProject(null), isCurrent: false },
           { emoji: activeProject.emoji, name: activeProject.name, onClick: () => {},                  isCurrent: true  },
         ]} />
-        {showSubModal   && <SubProjectModal order={activeProject.subProjects.length} onClose={() => setShowSubModal(false)} onSave={handleSaveSub} />}
-        {editingSub     && <SubProjectModal existing={editingSub} order={editingSub.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} />}
+        {showSubModal   && <SubProjectModal order={activeProject.subProjects.length} onClose={() => setShowSubModal(false)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
+        {editingSub     && <SubProjectModal existing={editingSub} order={editingSub.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
         {editingProject && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
 
         {/* Context header */}
@@ -2126,10 +2140,25 @@ export default function Dashboard() {
   /* ══ BRAND FINANCIAL PANEL ══ */
   if (showBrandFinancial && activeBrand) {
     return (
+      <BrandFinancialSummary
+        brand={activeBrand}
+        onBack={() => setShowBrandFinancial(false)}
+        onOpenLoansManager={() => {
+          setShowBrandFinancial(false);
+          // navigate to the 💰 personal finance brand or open full FinancialDashboard
+          setShowLoansManager(true);
+        }}
+      />
+    );
+  }
+
+  /* ══ LOANS MANAGER (full FinancialDashboard) ══ */
+  if (showLoansManager && activeBrand) {
+    return (
       <FinancialDashboard
         brandId={activeBrand.id}
         brandName={activeBrand.name}
-        onBack={() => setShowBrandFinancial(false)}
+        onBack={() => { setShowLoansManager(false); setShowBrandFinancial(true); }}
       />
     );
   }

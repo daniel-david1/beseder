@@ -11,6 +11,7 @@ import {
   PropertyLiability,
 } from "@/lib/types";
 import { loadFinancialData, saveFinancialData, loadFinancialFromCloud } from "@/lib/storage";
+import CreditReportScanner from "./CreditReportScanner";
 
 /* ─── helpers ─────────────────────────────────────────── */
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -83,8 +84,15 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
   const [editingIncome,      setEditingIncome]       = useState<string | null>(null);
   const [editingPropExpense, setEditingPropExpense]  = useState<string | null>(null);
   const [editingLiability,   setEditingLiability]   = useState<string | null>(null);
+  const [showScanner,        setShowScanner]         = useState(false);
 
   const save = (updated: FinancialData) => { setData(updated); saveFinancialData(updated, brandId); };
+
+  const handleScannerImport = (importedLoans: import("@/lib/types").Loan[]) => {
+    const updated = { ...data, loans: [...data.loans, ...importedLoans] };
+    save(updated);
+    setOpenSection("loans");
+  };
 
   useEffect(() => {
     loadFinancialFromCloud(brandId).then(cloud => {
@@ -627,6 +635,14 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           </button>
           <h1 className="font-black text-gray-900 text-base sm:text-lg truncate">💰 {brandName ?? "פיננסי אישי"}</h1>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowScanner(true)}
+              className="inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 font-semibold text-xs hover:bg-teal-100 hover:border-teal-300 transition-all"
+              title="ייבוא מדוח אשראי"
+            >
+              <span>📄</span>
+              <span className="hidden sm:inline">ייבוא דוח אשראי</span>
+            </button>
             {editingDate ? (
               <input type="date" className="border border-gray-200 rounded-lg px-2 py-1 text-xs text-right bg-white focus:outline-none focus:border-teal-400" value={data.asOfDate ?? new Date().toISOString().slice(0, 10)} onChange={e => { save({ ...data, asOfDate: e.target.value }); setEditingDate(false); }} onBlur={() => setEditingDate(false)} autoFocus />
             ) : (
@@ -769,6 +785,17 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           )}
         </div>
       </div>
+
+      {/* Credit Report Scanner modal */}
+      {showScanner && (
+        <CreditReportScanner
+          onClose={() => setShowScanner(false)}
+          onImport={(importedLoans) => {
+            handleScannerImport(importedLoans);
+            setShowScanner(false);
+          }}
+        />
+      )}
     </div>
   );
 }

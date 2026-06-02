@@ -6,11 +6,34 @@ import { v4 as uuidv4 } from "uuid";
 
 const EMOJIS = ["📁","🚀","📱","💡","📢","💰","🎯","🛠️","🎨","📊","🔥","💪","🌱","🏆","⚡","🔬","🤝","🗄️","📋","🎬"];
 
+/* ── guess emoji by expense/channel name ── */
+function guessChannelEmoji(name: string): string {
+  const n = name.toLowerCase();
+  if (/meta|מטא|פייסבוק|facebook|אינסטגרם|instagram/.test(n)) return "📘";
+  if (/tiktok|טיקטוק/.test(n)) return "🎵";
+  if (/youtube|יוטיוב/.test(n)) return "🎥";
+  if (/google|גוגל/.test(n)) return "🔍";
+  if (/taboola|טאבולה/.test(n)) return "📊";
+  if (/outbrain/.test(n)) return "📡";
+  if (/linkedin|לינקדאין/.test(n)) return "💼";
+  if (/twitter|x\.com|טוויטר/.test(n)) return "🐦";
+  if (/email|מייל|אימייל/.test(n)) return "📧";
+  if (/sms|וואטסאפ|whatsapp/.test(n)) return "💬";
+  if (/שיווק|פרסום/.test(n)) return "📢";
+  if (/תוכן|כתיבה/.test(n)) return "✍️";
+  if (/עיצוב|גרפיק/.test(n)) return "🎨";
+  if (/פיתוח|קוד|dev/.test(n)) return "💻";
+  if (/שכירות|משרד/.test(n)) return "🏢";
+  if (/משכורת|עובד/.test(n)) return "👤";
+  return "📣";
+}
+
 interface Props {
   existing?: SubProject;
   order: number;
   onClose: () => void;
   onSave: (sub: SubProject) => void;
+  onNavigateToChannel?: (subProjectId: string, channelId: string) => void;
 }
 
 function ItemList({
@@ -20,6 +43,8 @@ function ItemList({
   sublabel,
   addLabel,
   type,
+  linkedChannelNames,
+  onGoToChannel,
 }: {
   items: StageExpense[];
   onChange: (items: StageExpense[]) => void;
@@ -27,6 +52,8 @@ function ItemList({
   sublabel: string;
   addLabel: string;
   type: "income" | "expense";
+  linkedChannelNames?: Set<string>;
+  onGoToChannel?: (expenseName: string) => void;
 }) {
   const total = items.reduce((s, e) => s + e.amount, 0);
   const isIncome = type === "income";
@@ -55,7 +82,10 @@ function ItemList({
       </div>
       <p className="text-xs text-gray-400 mb-2">{sublabel}</p>
       <div className="space-y-1.5">
-        {items.map((item, i) => (
+        {items.map((item, i) => {
+          const hasChannel = type === "expense" && !!item.name.trim() && linkedChannelNames?.has(item.name.trim().toLowerCase());
+          const willCreate = type === "expense" && !!item.name.trim() && !hasChannel;
+          return (
           <div
             key={item.id}
             className={`flex flex-col gap-1 p-2 rounded-lg border border-transparent transition-colors ${rowHover}`}
@@ -82,6 +112,26 @@ function ItemList({
                 className={`icon-btn w-9 h-9 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${delHover}`}
               >×</button>
             </div>
+            {/* Channel link badge */}
+            {type === "expense" && item.name.trim() && (
+              <div className="flex items-center gap-1 pr-1 pt-0.5">
+                {hasChannel ? (
+                  <button
+                    type="button"
+                    onClick={() => onGoToChannel?.(item.name.trim())}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-teal-200 hover:bg-teal-100 transition-colors"
+                  >
+                    <span>📋</span>
+                    <span>פתח ערוץ ←</span>
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-500 border border-orange-200">
+                    <span>✨</span>
+                    <span>יצור ערוץ בשמירה</span>
+                  </span>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-1 pr-1">
               {([
                 { value: 'monthly',  label: 'חודשי',    active: 'bg-teal-500 text-white border-teal-500' },
@@ -101,7 +151,8 @@ function ItemList({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       <button
         onClick={() => onChange([...items, { id: uuidv4(), name: "", amount: 0, frequency: 'monthly' }])}
@@ -385,28 +436,73 @@ function CommitmentList({
   );
 }
 
-export default function SubProjectModal({ existing, order, onClose, onSave }: Props) {
+export default function SubProjectModal({ existing, order, onClose, onSave, onNavigateToChannel }: Props) {
   const [name,        setName]        = useState(existing?.name ?? "");
   const [emoji,       setEmoji]       = useState(existing?.emoji ?? "📁");
   const [description, setDescription] = useState(existing?.description ?? "");
   const [expenses,    setExpenses]    = useState<StageExpense[]>(existing?.expenses ?? []);
   const [incomes,     setIncomes]     = useState<StageExpense[]>(existing?.incomes  ?? []);
   const [commitments, setCommitments] = useState<PaymentCommitment[]>(existing?.commitments ?? []);
+  const [channels,    setChannels]    = useState(existing?.channels ?? []);
 
-  const handleSave = () => {
+  // Set of existing channel names (lowercase) for badge display
+  const linkedChannelNames = new Set(channels.map(ch => ch.name.trim().toLowerCase()));
+
+  const handleGoToChannel = (expenseName: string) => {
+    const ch = channels.find(c => c.name.trim().toLowerCase() === expenseName.trim().toLowerCase());
+    if (ch && existing?.id && onNavigateToChannel) {
+      // Save first, then navigate
+      handleSave(ch.id);
+    }
+  };
+
+  const handleSave = (navigateToChannelId?: string) => {
     if (!name.trim()) return;
-    onSave({
+
+    // Auto-create channels for each expense that doesn't already have one
+    const filteredExpenses = expenses.filter(e => e.name.trim() || e.amount > 0);
+    const updatedChannels = [...channels];
+    const newChannelIds: Record<string, string> = {};
+
+    for (const exp of filteredExpenses) {
+      if (!exp.name.trim()) continue;
+      const alreadyExists = updatedChannels.some(
+        ch => ch.name.trim().toLowerCase() === exp.name.trim().toLowerCase()
+      );
+      if (!alreadyExists) {
+        const newId = uuidv4();
+        newChannelIds[exp.name.trim().toLowerCase()] = newId;
+        updatedChannels.push({
+          id: newId,
+          name: exp.name.trim(),
+          emoji: guessChannelEmoji(exp.name),
+          description: "",
+          stages: [],
+          order: updatedChannels.length,
+        });
+      }
+    }
+
+    const savedSub = {
       id:          existing?.id ?? uuidv4(),
       name:        name.trim(),
       emoji,
       description: description.trim(),
       stages:      existing?.stages ?? [],
-      channels:    existing?.channels ?? [],
+      channels:    updatedChannels,
       order:       existing?.order ?? order,
-      expenses:    expenses.filter(e => e.name.trim() || e.amount > 0),
+      expenses:    filteredExpenses,
       incomes:     incomes.filter(e => e.name.trim() || e.amount > 0),
       commitments: commitments.filter(c => c.name.trim()),
-    });
+    };
+
+    onSave(savedSub);
+
+    // Navigate to channel if requested
+    if (navigateToChannelId && onNavigateToChannel) {
+      onNavigateToChannel(savedSub.id, navigateToChannelId);
+    }
+
     onClose();
   };
 
@@ -465,13 +561,15 @@ export default function SubProjectModal({ existing, order, onClose, onSave }: Pr
             sublabel="הוצאות שנוגעות לכל המחלקה — לא לשלב ספציפי"
             addLabel="הוסף הוצאה"
             type="expense"
+            linkedChannelNames={linkedChannelNames}
+            onGoToChannel={handleGoToChannel}
           />
 
           <CommitmentList items={commitments} onChange={setCommitments} />
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl">
-          <button onClick={handleSave} disabled={!name.trim()} className="btn btn-orange flex-1"
+          <button onClick={() => handleSave()} disabled={!name.trim()} className="btn btn-orange flex-1"
             style={{ opacity: name.trim() ? 1 : 0.5 }}>
             {existing ? "שמור שינויים" : "צור מחלקה"}
           </button>
