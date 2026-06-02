@@ -48,7 +48,7 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
               <p className="font-bold text-gray-900 text-sm">{form.name || `שלב ${stageNumber}`}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm transition-colors">✕</button>
+          <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base transition-colors">✕</button>
         </div>
 
         {/* Body */}
@@ -170,7 +170,7 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
                     </div>
                     <button
                       onClick={() => set("expenses", (form.expenses ?? []).filter((_, j) => j !== i))}
-                      className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center text-sm font-bold shrink-0 transition-colors"
+                      className="icon-btn w-9 h-9 rounded-lg bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-500 flex items-center justify-center text-base font-bold shrink-0 transition-colors"
                     >×</button>
                   </div>
                   <div className="flex items-center gap-1 pr-1">

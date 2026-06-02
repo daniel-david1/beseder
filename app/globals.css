@@ -35,6 +35,14 @@ body {
 /* Ensure touch targets are large enough */
 @media (max-width: 640px) {
   .btn { min-height: 44px; }
+  /* Icon-only buttons: minimum 36px visual + 44px tap area via padding */
+  .icon-btn {
+    min-width: 36px !important;
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
 }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }

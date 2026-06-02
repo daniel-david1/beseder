@@ -188,13 +188,14 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
                   return (
                     <div
                       key={task.id}
-                      className="flex items-center gap-2 p-3 rounded-xl transition-all group"
+                      className="flex items-center gap-2 p-3 rounded-xl transition-all"
                       style={{ background: color.bg, border: `1.5px solid ${color.border}` }}
                     >
+                      {/* Status toggle — large touch target */}
                       <button
                         onClick={() => handleToggleStatus(task.id)}
-                        className="text-lg shrink-0 transition-transform hover:scale-110"
-                        style={{ color: color.text }}
+                        className="icon-btn w-9 h-9 rounded-xl shrink-0 transition-transform active:scale-95 text-base font-bold"
+                        style={{ color: color.text, background: color.border + "80" }}
                         title={`סטטוס: ${task.status}`}
                       >
                         {color.icon}
@@ -204,10 +205,12 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
                       }`} style={{ color: task.status === 'done' ? '#9ca3af' : color.text }}>
                         {task.text}
                       </p>
+                      {/* Delete — always visible on mobile */}
                       <button
                         onClick={() => handleDeleteTask(task.id)}
-                        className="text-xs px-2 py-1 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="icon-btn w-9 h-9 rounded-xl font-bold text-base shrink-0 transition-all hover:opacity-80 active:scale-95"
                         style={{ background: color.border, color: color.text }}
+                        aria-label="מחק משימה"
                       >
                         ×
                       </button>
@@ -435,7 +438,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
           <h2 className="font-black text-gray-900 text-lg">
             {brand.emoji} השלם הגדרה — {brand.name}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-bold transition-colors">×</button>
+          <button onClick={onClose} className="icon-btn w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-xl font-bold transition-colors">×</button>
         </div>
 
         {/* Progress */}
@@ -476,10 +479,10 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
 
         {/* Navigation */}
         <div className="flex items-center gap-2 justify-between">
-          <button onClick={() => applyAndMove(true)} className="btn btn-ghost text-sm">← דלג</button>
+          <button onClick={() => applyAndMove(true)} className="btn btn-ghost">← דלג</button>
           <button
             onClick={() => applyAndMove(false)}
-            className="btn btn-orange text-sm flex-1"
+            className="btn btn-orange flex-1"
           >
             {currentIdx + 1 >= total ? "סיום ✓" : "הבא ←"}
           </button>
@@ -539,15 +542,21 @@ interface BreadcrumbItem { emoji: string; name: string; onClick: () => void; isC
 
 function BreadcrumbSidebar({ items, color }: { items: BreadcrumbItem[]; color: string }) {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex pointer-events-none" style={{ maxWidth: "calc(100vw - 24px)" }}>
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-20 flex pointer-events-none"
+      style={{
+        maxWidth: "calc(100vw - 24px)",
+        bottom: "max(16px, calc(env(safe-area-inset-bottom) + 8px))",
+      }}
+    >
       <div
         className="rounded-full flex flex-row items-center pointer-events-auto overflow-hidden"
         style={{
-          background: "rgba(20,20,22,0.72)",
+          background: "rgba(20,20,22,0.78)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.06) inset",
-          padding: "5px 6px",
+          padding: "6px 8px",
           gap: 2,
         }}
       >
@@ -558,19 +567,20 @@ function BreadcrumbSidebar({ items, color }: { items: BreadcrumbItem[]; color: s
             title={item.name}
             className="flex flex-row items-center gap-1.5 rounded-full transition-all duration-200"
             style={{
-              padding: item.isCurrent ? "5px 12px 5px 10px" : "5px 9px",
+              padding: item.isCurrent ? "7px 14px 7px 10px" : "7px 10px",
+              minHeight: 36,
               background: item.isCurrent ? "rgba(255,255,255,0.15)" : "transparent",
-              opacity: item.isCurrent ? 1 : 0.45,
+              opacity: item.isCurrent ? 1 : 0.5,
             }}
           >
-            <span style={{ fontSize: 15, lineHeight: 1, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}>{item.emoji}</span>
+            <span style={{ fontSize: 16, lineHeight: 1, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}>{item.emoji}</span>
             {item.isCurrent && (
               <span
                 className="font-semibold text-white"
                 style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   lineHeight: 1,
-                  maxWidth: 110,
+                  maxWidth: 120,
                   overflow: "hidden",
                   whiteSpace: "nowrap",
                   textOverflow: "ellipsis",
@@ -851,8 +861,8 @@ function GoalsPanel({ goals, color, onChange }: {
                       <p className="text-sm font-semibold text-gray-800 leading-snug flex-1">{g.text}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
-                      <button onClick={() => setEditingId(g.id)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
-                      <button onClick={() => deleteGoal(g.id)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold transition-colors">×</button>
+                      <button onClick={() => setEditingId(g.id)} className="icon-btn w-8 h-8 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
+                      <button onClick={() => deleteGoal(g.id)} className="icon-btn w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold transition-colors">×</button>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -998,7 +1008,7 @@ function TopNav({ userEmail }: { userEmail: string }) {
 
         {/* Logo — left side in RTL */}
         <div dir="ltr">
-          <img src="/beseder_primary_2x.png" alt="beseder" className="block" style={{ height: 48, width: 'auto', maxWidth: 160, marginTop: -6, marginBottom: -6 }} />
+          <img src="/beseder_primary_2x.png" alt="beseder" className="block" style={{ height: 40, width: 'auto', maxWidth: 140 }} />
         </div>
       </div>
     </nav>
@@ -1009,11 +1019,12 @@ function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; 
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group"
+      className="inline-flex items-center gap-2 px-3.5 rounded-xl bg-white border border-gray-200 shadow-sm text-sm font-semibold text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:shadow-md transition-all duration-150 group active:scale-95"
+      style={{ minHeight: 44 }}
     >
       <span className="text-gray-400 group-hover:text-gray-700 transition-colors text-base leading-none">→</span>
       {emoji && <span className="text-base leading-none">{emoji}</span>}
-      <span>{label}</span>
+      <span className="max-w-[130px] sm:max-w-none truncate">{label}</span>
     </button>
   );
 }
@@ -1091,8 +1102,8 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
               style={{ fontSize: 14 }}
             >⠿</span>
             <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-              <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-              <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+              <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+              <button onClick={e => { e.stopPropagation(); onDelete(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
             </div>
           </div>
         </div>
@@ -1157,8 +1168,8 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
             </div>
           </button>
           <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
 
@@ -1226,9 +1237,9 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
               {sub.description && <p className="text-sm text-gray-400 mt-0.5">{sub.description}</p>}
             </div>
           </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={onEdit}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={onDelete} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
 
@@ -1297,9 +1308,9 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
               {channel.description && <p className="text-sm text-gray-400 mt-0.5">{channel.description}</p>}
             </div>
           </button>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={onEdit}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={onDelete} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
 
@@ -1673,11 +1684,11 @@ export default function Dashboard() {
         )}
 
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
             <BackButton emoji={activeSubProject.emoji} label={activeSubProject.name} onClick={() => { setActiveChannel(null); setSelectedStage(null); }} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingChannel(activeChannel)} className="btn btn-ghost text-sm">✏️ ערוך</button>
-              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm">+ שלב חדש</button>
+            <div className="flex gap-1.5">
+              <button onClick={() => setEditingChannel(activeChannel)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
+              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> שלב חדש</span><span className="sm:hidden"> שלב</span></button>
             </div>
           </div>
         </div>
@@ -1771,14 +1782,14 @@ export default function Dashboard() {
 
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeProject.color}10`, borderColor: `${activeProject.color}25` }}>
-          <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="max-w-screen-lg mx-auto px-4 py-2 flex items-center justify-between gap-2">
             <BackButton emoji={activeProject.emoji} label={activeProject.name} onClick={() => { setActiveSubProject(null); setSelectedStage(null); }} />
-            <div className="flex gap-2">
-              <button onClick={() => setEditingSub(activeSubProject)} className="btn btn-ghost text-sm">✏️ ערוך</button>
+            <div className="flex gap-1.5">
+              <button onClick={() => setEditingSub(activeSubProject)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
               {hasChannels
-                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm">+ פרויקט חדש</button>
+                ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> פרויקט חדש</span><span className="sm:hidden"> פרויקט</span></button>
                 : hasStages
-                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm">+ שלב חדש</button>
+                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> שלב חדש</span><span className="sm:hidden"> שלב</span></button>
                   : null
               }
             </div>

@@ -79,7 +79,7 @@ function ItemList({
               </div>
               <button
                 onClick={() => onChange(items.filter((_, j) => j !== i))}
-                className={`w-7 h-7 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${delHover}`}
+                className={`icon-btn w-9 h-9 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${delHover}`}
               >×</button>
             </div>
             <div className="flex items-center gap-1 pr-1">
@@ -140,7 +140,7 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
           <h2 className="text-lg font-black text-gray-900">
             {existing ? "ערוך ערוץ" : "ערוץ חדש"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm">✕</button>
+          <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base">✕</button>
         </div>
 
         <div className="px-6 py-5 space-y-4">

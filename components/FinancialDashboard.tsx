@@ -325,7 +325,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
                 + תשלום
               </button>
             )}
-            <button onClick={() => setEditingLoan(loan.id)} className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
+            <button onClick={() => setEditingLoan(loan.id)} className="icon-btn w-8 h-8 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs transition-colors">✏️</button>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span className="font-medium" style={{ color: barColor }}>{pct}%</span>
@@ -379,7 +379,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
         <div className="flex-1 text-right font-semibold text-gray-800 text-sm">{expense.name}</div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className="text-sm font-bold text-teal-600">{ils(expense.amount)}/{expense.frequency === "monthly" ? "חודש" : "שנה"}</span>
-          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingExpense(expense.id)}>✏️</button>
+          <button className="icon-btn w-8 h-8 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs opacity-100 transition-opacity" onClick={() => setEditingExpense(expense.id)}>✏️</button>
         </div>
       </div>
     );
@@ -429,7 +429,7 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
             {income.frequency === "monthly" ? "חודשי" : "חד פעמי"}
           </span>
           <span className="text-sm font-bold text-green-600">{ils(income.amount)}</span>
-          <button className="w-6 h-6 rounded-md bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={() => setEditingIncomeLine(income.id)}>✏️</button>
+          <button className="icon-btn w-8 h-8 rounded-md bg-gray-100 hover:bg-green-50 text-gray-400 hover:text-green-600 flex items-center justify-center text-xs opacity-100 transition-opacity" onClick={() => setEditingIncomeLine(income.id)}>✏️</button>
         </div>
       </div>
     );

@@ -51,7 +51,7 @@ export default function BrandModal({ existing, onClose, onSave }: Props) {
           <h2 className="text-lg font-black text-gray-900">
             {existing ? "ערוך מותג" : "מותג חדש"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm">✕</button>
+          <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base">✕</button>
         </div>
 
         <div className="px-6 py-5 space-y-5">

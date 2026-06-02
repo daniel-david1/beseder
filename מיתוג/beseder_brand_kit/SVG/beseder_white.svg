@@ -1,0 +1,12 @@
+<svg width="244" height="90" viewBox="0 0 244 90" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="beseder">
+  <defs>
+    <linearGradient id="g2w" x1="20" y1="20" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2FE0D6"/><stop offset="1" stop-color="#3A9BE8"/>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="19" width="52" height="52" rx="15" fill="url(#g2w)"/>
+  <rect x="30" y="31" width="32" height="6" rx="3" fill="#0B1B2B" opacity="0.92"/>
+  <rect x="30" y="42" width="24" height="6" rx="3" fill="#0B1B2B" opacity="0.72"/>
+  <rect x="30" y="53" width="30" height="6" rx="3" fill="#0B1B2B" opacity="0.55"/>
+  <text x="90" y="57" font-family="Sora, sans-serif" font-size="30" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">beseder</text>
+</svg>
