@@ -1842,7 +1842,7 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
 
   return (
     <div
-      className="card overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move"
+      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move h-full"
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -1850,24 +1850,24 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
       onDragEnd={onDragEnd}
     >
       <div className="h-1 w-full" style={{ background: project.color }} />
-      <div className="p-3">
+      <div className="p-3 flex flex-col gap-2 flex-1">
         {/* Title + actions row */}
-        <div className="flex items-center justify-between gap-1">
+        <div className="flex items-start justify-between gap-1">
           <button onClick={onClick} className="flex items-center gap-2 flex-1 text-right min-w-0">
-            <span className="text-xl flex-shrink-0">{project.emoji}</span>
-            <h3 className="font-black text-gray-900 text-sm leading-tight truncate">{project.name}</h3>
+            <span className="text-2xl flex-shrink-0">{project.emoji}</span>
+            <h3 className="font-black text-gray-900 text-sm leading-tight">{project.name}</h3>
           </button>
           <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-[10px]">✏️</button>
-            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-6 h-6 rounded-md bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-xs font-bold">×</button>
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
         {/* Stats */}
-        <div className="flex items-center gap-1.5 mt-1.5">
-          <span className="text-[10px] text-gray-400">{project.subProjects.length} פרויקטים</span>
-          {active  > 0 && <span className="text-[9px] font-bold px-1 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
-          {blocked > 0 && <span className="text-[9px] font-bold px-1 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blocked}</span>}
-        </div>
+        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
+          <span className="text-[11px] text-gray-400">{project.subProjects.length} פרויקטים</span>
+          {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
+          {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blocked}</span>}
+        </button>
       </div>
     </div>
   );
@@ -1887,61 +1887,22 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
   return (
     <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group h-full">
       <div className="h-1 w-full" style={{ background: color, opacity: 0.6 }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-center gap-3 flex-1 text-right">
-            <span className="text-2xl">{sub.emoji}</span>
-            <div>
-              <h3 className="font-bold text-gray-900 text-base leading-tight">{sub.name}</h3>
-              {sub.description && <p className="text-sm text-gray-400 mt-0.5">{sub.description}</p>}
-            </div>
+      <div className="p-3 flex flex-col gap-2 flex-1">
+        <div className="flex items-start justify-between gap-1">
+          <button onClick={onClick} className="flex items-center gap-2 flex-1 text-right min-w-0">
+            <span className="text-2xl flex-shrink-0">{sub.emoji}</span>
+            <h3 className="font-black text-gray-900 text-sm leading-tight">{sub.name}</h3>
           </button>
-          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+          <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
-
-        {(monthlyInc > 0 || monthlyExp > 0) && (
-          <div className="flex gap-1.5 flex-wrap">
-            {monthlyInc > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#f0fdf4", border: "1px solid #86efac" }}>
-                <span className="text-xs">💚</span>
-                <span className="text-xs font-bold text-green-700">₪{monthlyInc.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-            {monthlyExp > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#fef3c7", border: "1px solid #fde68a" }}>
-                <span className="text-xs">💸</span>
-                <span className="text-xs font-bold text-amber-700">₪{monthlyExp.toLocaleString("he-IL")}/חודש</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {sub.stages.length > 0 ? (
-          <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-gray-400">{sub.stages.length} משימות</span>
-            {active > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
-                ▶ {active} פעיל
-              </span>
-            )}
-            {blocked > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
-                ⚠ {blocked} תקוע
-              </span>
-            )}
-            {done > 0 && (
-              <span className="text-[11px] font-semibold text-green-600">✓ {done}</span>
-            )}
-          </button>
-        ) : (
-          <p className="text-sm text-gray-300">אין משימות עדיין</p>
-        )}
-
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח פרויקט ←
+        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
+          <span className="text-[11px] text-gray-400">{sub.stages.length} שלבים</span>
+          {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
+          {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50  text-red-600">⚠ {blocked}</span>}
+          {done    > 0 && <span className="text-[10px] font-semibold text-green-600">✓ {done}</span>}
         </button>
       </div>
     </div>
@@ -2745,10 +2706,10 @@ export default function Dashboard() {
               ))}
               <button
                 onClick={() => setShowSubModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-8 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
+                className="card flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
               >
-                <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">פרויקט חדש</span>
+                <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-xl">+</div>
+                <span className="font-semibold text-gray-400 text-xs">פרויקט חדש</span>
               </button>
             </div>
           )}
@@ -2920,11 +2881,11 @@ export default function Dashboard() {
               <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור מחלקה ראשונה</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" style={{ gridAutoRows: "1fr" }}>
               {[...projects].sort((a, b) => a.order - b.order).map(p => (
                 <div
                   key={p.id}
-                  className={dragOverProjectId === p.id ? "opacity-50" : ""}
+                  className={`h-full${dragOverProjectId === p.id ? " opacity-50" : ""}`}
                   onDragOver={(e) => handleProjectDragOver(e, p.id)}
                   onDrop={(e) => handleProjectDrop(e, p.id)}
                 >
@@ -2943,22 +2904,24 @@ export default function Dashboard() {
               {/* Financial card */}
               <button
                 onClick={() => setShowBrandFinancial(true)}
-                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 h-full"
                 style={{ border: "1.5px solid #d1fae5" }}
               >
                 <div className="h-1 w-full" style={{ background: "#10b981" }} />
-                <div className="p-3 flex items-center gap-2">
-                  <span className="text-xl flex-shrink-0">💰</span>
-                  <h3 className="font-black text-gray-900 text-sm leading-tight">ניהול פיננסי</h3>
+                <div className="p-3 flex flex-col gap-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl flex-shrink-0">💰</span>
+                    <h3 className="font-black text-gray-900 text-sm leading-tight">ניהול פיננסי</h3>
+                  </div>
+                  <span className="text-[11px] text-gray-400 mt-auto">הלוואות, הוצאות, הכנסות</span>
                 </div>
               </button>
 
               <button
                 onClick={() => setShowProjectModal(true)}
-                className="card flex flex-col items-center justify-center gap-1.5 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-                style={{ minHeight: 64 }}
+                className="card flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
               >
-                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-500 flex items-center justify-center text-lg">+</div>
+                <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-xl">+</div>
                 <span className="font-semibold text-gray-400 text-xs">מחלקה חדשה</span>
               </button>
             </div>
