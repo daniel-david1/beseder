@@ -145,11 +145,13 @@ export function saveFinancialData(financial: FinancialData, brandId?: string): v
     if (!user) return;
     // Store per-brand in a financial_brands map inside the financial column
     const { data: existing } = await supabase.from("user_data").select("financial").eq("user_id", user.id).single();
-    const currentMap: Record<string, FinancialData> = existing?.financial?.brands ?? {};
+    const existingFin = (existing?.financial as Record<string, unknown>) ?? {};
+    const currentMap: Record<string, FinancialData> = (existingFin.brands as Record<string, FinancialData>) ?? {};
     const brandKey = brandId ?? "legacy";
     const updatedMap = { ...currentMap, [brandKey]: financial };
+    // Spread existing keys (e.g. daily_tasks) so they're not overwritten
     await supabase.from("user_data").upsert(
-      { user_id: user.id, financial: { brands: updatedMap }, updated_at: new Date().toISOString() },
+      { user_id: user.id, financial: { ...existingFin, brands: updatedMap }, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
   })();

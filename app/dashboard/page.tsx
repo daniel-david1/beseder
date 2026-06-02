@@ -1138,7 +1138,7 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
           </button>
         )}
 
-        <button onClick={onClick} className="hidden sm:flex btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
+        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
           פתח מותג ←
         </button>
       </div>
@@ -2374,7 +2374,7 @@ export default function Dashboard() {
               onBrandClick={b => setActiveBrand(b)}
             />
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {brands.map(b => {
                 const health = getBrandHealth(b);
                 return (
