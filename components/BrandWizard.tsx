@@ -31,7 +31,7 @@ function mkProj(name: string, emoji: string, color: string, subs: TplSub[]): Tpl
 const TEMPLATES: Record<BizType, TplProject[]> = {
   service: [
     mkProj("ניהול לקוחות", "🤝", "#8b5cf6", [
-      mkSub("לקוחות פעילים",  "💼", "פריט לכל לקוח — שלבי ניהול שוטף", true,  []),
+      mkSub("לקוחות פעילים",  "💼", "פריט לכל לקוח — ניהול שוטף", true,  []),
       mkSub("גיוס לקוחות",   "🚀", "מהליד הראשון ועד חתימה",           false, ["ליד", "שיחת מכירה", "הצעת מחיר", "חתימה", "אונבורדינג"]),
       mkSub("שימור ונאמנות", "❤️", "מניעת נטישה ושדרוג",               false, ["מעקב חודשי", "דוח ביצועים", "הצעת שדרוג"]),
     ]),
@@ -259,7 +259,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
             >
               <div className="text-xl mb-0.5">🚀</div>
               <div className="text-sm font-bold text-gray-800">מותג / פרויקט</div>
-              <div className="text-xs text-gray-400">שלבים, פריטים, תבניות</div>
+              <div className="text-xs text-gray-400">משימות, פריטים, תבניות</div>
             </button>
             <button
               onClick={() => { setIsFinancial(true); setEmoji("💰"); setColor("#10b981"); if (!name) setName("פיננסי אישי"); }}
@@ -380,7 +380,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
           <span className="font-semibold">{selProjects.size} פרויקטים</span>
           <span className="text-gray-300">·</span>
           <span>{totalSubs} מחלקות</span>
-          {totalStages > 0 && <><span className="text-gray-300">·</span><span>{totalStages} שלבים</span></>}
+          {totalStages > 0 && <><span className="text-gray-300">·</span><span>{totalStages} משימות</span></>}
         </div>
 
         <div className="overflow-y-auto" style={{ maxHeight: "52vh" }}>
@@ -440,7 +440,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
                         {ts.useChannels
                           ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-500 font-medium">פריטים</span>
                           : ts.stages.length > 0
-                            ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{ts.stages.length} שלבים</span>
+                            ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{ts.stages.length} משימות</span>
                             : null
                         }
                         <button
@@ -473,8 +473,8 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
         title="פעולה ראשונה" subtitle="מה הדבר הראשון שצריך לקרות?">
         <div className="px-6 py-6 space-y-4">
           <div className="rounded-2xl p-4" style={{ background: color + "0f", border: `1.5px solid ${color}30` }}>
-            <p className="text-sm text-gray-600 mb-1">🎯 הפעולה הזו תיכנס לשלב הראשון במחלקה הראשונה</p>
-            <p className="text-xs text-gray-400">כל שלב שנוצר יחכה לך — תוכל למלא לפי הקצב שלך</p>
+            <p className="text-sm text-gray-600 mb-1">🎯 הפעולה הזו תיכנס למשימה הראשונה במחלקה הראשונה</p>
+            <p className="text-xs text-gray-400">כל משימה שנוצרת תחכה לך — תוכל למלא לפי הקצב שלך</p>
           </div>
           <textarea
             autoFocus
@@ -518,7 +518,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
               {[
                 { n: totalProjects, label: "פרויקטים",  emoji: "📁" },
                 { n: totalSubsCount, label: "מחלקות",   emoji: "🗂️" },
-                { n: totalStagesCount, label: "שלבים",  emoji: "✅" },
+                { n: totalStagesCount, label: "משימות",  emoji: "✅" },
               ].filter(s => s.n > 0).map(s => (
                 <div key={s.label} className="px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-100">
                   <div className="text-xl mb-0.5">{s.emoji}</div>

@@ -294,11 +294,11 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
                         )}
                       </div>
                       {health.level === "empty" ? (
-                        <p className="text-xs text-gray-400 mt-0.5">אין שלבים — בוא נקים</p>
+                        <p className="text-xs text-gray-400 mt-0.5">אין משימות — בוא נקים</p>
                       ) : (
                         <>
                           {health.noNextActionCount > 0 && (
-                            <p className="text-xs text-gray-400 mt-0.5">{health.noNextActionCount} שלבים ללא פעולה הבאה</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{health.noNextActionCount} משימות ללא פעולה הבאה</p>
                           )}
                           {health.topNextAction && (
                             <p className="text-xs text-gray-500 mt-0.5 truncate">→ {health.topNextAction}</p>
@@ -368,8 +368,8 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
         <div className="modal p-5 sm:p-7" onClick={e => e.stopPropagation()}>
           <div className="text-center py-10">
             <div className="text-4xl mb-3">🎉</div>
-            <h2 className="font-black text-gray-900 text-xl mb-2">כל השלבים מוגדרים!</h2>
-            <p className="text-gray-400 mb-5">אין שלבים ללא פעולה הבאה</p>
+            <h2 className="font-black text-gray-900 text-xl mb-2">כל המשימות מוגדרות!</h2>
+            <p className="text-gray-400 mb-5">אין משימות ללא פעולה הבאה</p>
             <button onClick={onClose} className="btn btn-orange">סגור</button>
           </div>
         </div>
@@ -422,7 +422,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
           <div className="text-center py-10 px-2">
             <div className="text-5xl mb-4">🎉</div>
             <h2 className="font-black text-gray-900 text-2xl mb-2">הגדרה הושלמה!</h2>
-            <p className="text-gray-500 text-sm mb-6">מילאת פעולות הבאה ל-{filledCount} שלבים מתוך {total}</p>
+            <p className="text-gray-500 text-sm mb-6">מילאת פעולות הבאה ל-{filledCount} משימות מתוך {total}</p>
             <button onClick={onClose} className="btn btn-orange px-8">סגור</button>
           </div>
         </div>
@@ -454,7 +454,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
         {/* Progress */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs text-gray-500 font-semibold">שלב {currentIdx + 1} מתוך {total}</span>
+            <span className="text-xs text-gray-500 font-semibold">משימה {currentIdx + 1} מתוך {total}</span>
             <span className="text-xs text-gray-400">{Math.round(((currentIdx) / total) * 100)}%</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -476,7 +476,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
 
         {/* Next action textarea */}
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">מה הפעולה הבאה לשלב הזה?</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">מה הפעולה הבאה למשימה הזו?</label>
           <textarea
             className="input w-full resize-none"
             rows={3}
@@ -735,7 +735,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                             <div className="h-full rounded-full" style={{ width: `${subPct}%`, background: project.color }} />
                           </div>
                           <span className="text-[9px] text-gray-400 font-semibold whitespace-nowrap">
-                            {itemCount} {hasChannels ? "פריטים" : "שלבים"}
+                            {itemCount} {hasChannels ? "פריטים" : "משימות"}
                           </span>
                         </div>
                       </div>
@@ -1136,7 +1136,7 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
             </span>
           )}
           {health.activeCount === 0 && allSubs.length > 0 && (
-            <span className="text-xs text-gray-300">אין שלבים פעילים</span>
+            <span className="text-xs text-gray-300">אין משימות פעילות</span>
           )}
         </button>
 
@@ -1147,8 +1147,8 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
             className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border-2 border-dashed text-xs font-bold transition-all hover:opacity-80"
             style={{ borderColor: "#f59e0b", color: "#b45309", background: "#fffbeb" }}
           >
-            <span className="sm:hidden">⚡ {health.noNextActionCount} שלבים חסרים</span>
-            <span className="hidden sm:inline">⚡ השלם הגדרה ({health.noNextActionCount} שלבים)</span>
+            <span className="sm:hidden">⚡ {health.noNextActionCount} משימות חסרות</span>
+            <span className="hidden sm:inline">⚡ השלם הגדרה ({health.noNextActionCount} משימות)</span>
           </button>
         )}
 
@@ -1295,7 +1295,7 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
 
         {sub.stages.length > 0 ? (
           <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-gray-400">{sub.stages.length} שלבים</span>
+            <span className="text-xs text-gray-400">{sub.stages.length} משימות</span>
             {active > 0 && (
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
                 ▶ {active} פעיל
@@ -1311,7 +1311,7 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
             )}
           </button>
         ) : (
-          <p className="text-sm text-gray-300">אין שלבים עדיין</p>
+          <p className="text-sm text-gray-300">אין משימות עדיין</p>
         )}
 
         <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
@@ -1371,7 +1371,7 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
 
         {channel.stages.length > 0 ? (
           <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-gray-400">{channel.stages.length} שלבים</span>
+            <span className="text-xs text-gray-400">{channel.stages.length} משימות</span>
             {active > 0 && (
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
                 ▶ {active} פעיל
@@ -1387,7 +1387,7 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
             )}
           </button>
         ) : (
-          <p className="text-sm text-gray-300">אין שלבים עדיין</p>
+          <p className="text-sm text-gray-300">אין משימות עדיין</p>
         )}
 
         <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
@@ -1746,7 +1746,7 @@ export default function Dashboard() {
             <BackButton emoji={activeSubProject.emoji} label={activeSubProject.name} onClick={() => { setActiveChannel(null); setSelectedStage(null); }} />
             <div className="flex gap-1.5">
               <button onClick={() => setEditingChannel(activeChannel)} className="btn btn-ghost text-sm px-3">✏️<span className="hidden sm:inline"> ערוך</span></button>
-              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> שלב חדש</span><span className="sm:hidden"> שלב</span></button>
+              <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> משימה חדשה</span><span className="sm:hidden"> משימה</span></button>
             </div>
           </div>
         </div>
@@ -1784,14 +1784,14 @@ export default function Dashboard() {
 
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-gray-800">שלבים</h2>
+              <h2 className="font-bold text-gray-800">משימות</h2>
               <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">לחץ לעריכה</span>
             </div>
             {sorted.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 <p className="text-4xl mb-2">📋</p>
-                <p className="font-medium mb-3">אין שלבים עדיין</p>
-                <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm">+ הוסף שלב ראשון</button>
+                <p className="font-medium mb-3">אין משימות עדיין</p>
+                <button onClick={handleAddChannelStageEnd} className="btn btn-orange text-sm">+ הוסף משימה ראשונה</button>
               </div>
             ) : (
               <ProjectPipeline stages={sorted} onClickStage={setSelectedStage} activeStageId={selectedStage?.id ?? null} />
@@ -1847,7 +1847,7 @@ export default function Dashboard() {
               {hasChannels
                 ? <button onClick={() => setShowChannelModal(true)} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> פריט חדש</span><span className="sm:hidden"> פריט</span></button>
                 : hasStages
-                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> שלב חדש</span><span className="sm:hidden"> שלב</span></button>
+                  ? <button onClick={handleAddStageEnd} className="btn btn-orange text-sm px-3">+<span className="hidden sm:inline"> משימה חדשה</span><span className="sm:hidden"> משימה</span></button>
                   : null
               }
             </div>
@@ -1968,7 +1968,7 @@ export default function Dashboard() {
               </div>
               <div className="card p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-gray-800">שלבים</h2>
+                  <h2 className="font-bold text-gray-800">משימות</h2>
                   <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">לחץ לעריכה</span>
                 </div>
                 <ProjectPipeline stages={sorted} onClickStage={setSelectedStage} activeStageId={selectedStage?.id ?? null} />
@@ -1988,8 +1988,8 @@ export default function Dashboard() {
                   className="card p-6 flex flex-col items-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 w-44 cursor-pointer border-2 hover:border-teal-200"
                 >
                   <span className="text-3xl">📋</span>
-                  <span className="font-bold text-gray-800">שלבים ישירים</span>
-                  <span className="text-xs text-gray-400 text-center">רשימה אחת של שלבים לכל המחלקה</span>
+                  <span className="font-bold text-gray-800">משימות ישירות</span>
+                  <span className="text-xs text-gray-400 text-center">רשימת משימות לכל המחלקה</span>
                 </button>
                 <button
                   onClick={() => setShowChannelModal(true)}
@@ -1997,7 +1997,7 @@ export default function Dashboard() {
                 >
                   <span className="text-3xl">🗂️</span>
                   <span className="font-bold text-gray-800">פריטים (רשימה)</span>
-                  <span className="text-xs text-gray-400 text-center">לקוחות / ספקים / פריטים — לכל אחד שלבים</span>
+                  <span className="text-xs text-gray-400 text-center">לקוחות / ספקים / פריטים — לכל אחד משימות</span>
                 </button>
               </div>
             </div>
@@ -2054,7 +2054,7 @@ export default function Dashboard() {
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
             </div>
-            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} מחלקות · {doneStages}/{totalStages} שלבים הושלמו</p>
+            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} מחלקות · {doneStages}/{totalStages} משימות הושלמו</p>
           </div>
 
           {/* Financial overview */}
@@ -2120,7 +2120,7 @@ export default function Dashboard() {
             <div className="card p-16 text-center">
               <div className="text-5xl mb-3">📁</div>
               <h2 className="font-black text-gray-800 text-lg mb-2">אין מחלקות עדיין</h2>
-              <p className="text-gray-400 mb-5 text-sm">כל מחלקה מקבלת שלבים משלה</p>
+              <p className="text-gray-400 mb-5 text-sm">כל מחלקה מקבלת משימות משלה</p>
               <button onClick={() => setShowSubModal(true)} className="btn btn-orange">+ הוסף מחלקה ראשונה</button>
             </div>
           ) : (
@@ -2423,7 +2423,7 @@ export default function Dashboard() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-4xl mb-6 shadow-lg shadow-teal-200">🏢</div>
             <h2 className="font-black text-gray-900 text-2xl mb-3">ברוך הבא ל-beseder</h2>
             <p className="text-gray-400 text-base leading-relaxed mb-8 max-w-sm">
-              הכל מתחיל ממותג. תן שם לעסק שלך, הגדר מטרה — ה-AI ייצור לך מחלקות ושלבים מוכנים.
+              הכל מתחיל ממותג. תן שם לעסק שלך, הגדר מטרה — ה-AI ייצור לך מחלקות ומשימות מוכנות.
             </p>
             <button
               onClick={() => setShowBrandModal(true)}
@@ -2433,7 +2433,7 @@ export default function Dashboard() {
             </button>
             <div className="mt-10 grid grid-cols-3 gap-4 w-full">
               {[
-                { emoji: "🎯", title: "מטרות ברורות", desc: "הגדר KPIs לכל שלב" },
+                { emoji: "🎯", title: "מטרות ברורות", desc: "הגדר KPIs לכל משימה" },
                 { emoji: "🤖", title: "AI wizard", desc: "קבל מבנה מוכן תוך שניות" },
                 { emoji: "💸", title: "ניהול פיננסי", desc: "הוצאות, הכנסות, הלוואות" },
               ].map(f => (

@@ -550,7 +550,7 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
             items={incomes}
             onChange={setIncomes}
             label="הכנסות חודשיות של המחלקה 💚"
-            sublabel="הכנסות שנוגעות לכל המחלקה — לא לשלב ספציפי"
+            sublabel="הכנסות שנוגעות לכל המחלקה — לא למשימה ספציפית"
             addLabel="הוסף הכנסה"
             type="income"
           />
@@ -559,7 +559,7 @@ export default function SubProjectModal({ existing, order, onClose, onSave, onNa
             items={expenses}
             onChange={setExpenses}
             label="הוצאות חודשיות של המחלקה 🔴"
-            sublabel="הוצאות שנוגעות לכל המחלקה — לא לשלב ספציפי"
+            sublabel="הוצאות שנוגעות לכל המחלקה — לא למשימה ספציפית"
             addLabel="הוסף הוצאה"
             type="expense"
             linkedChannelNames={linkedChannelNames}

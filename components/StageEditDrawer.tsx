@@ -41,11 +41,11 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-black text-sm">
-              {stageNumber}
+              ✓
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-medium">עורך שלב</p>
-              <p className="font-bold text-gray-900 text-sm">{form.name || `שלב ${stageNumber}`}</p>
+              <p className="text-xs text-gray-400 font-medium">עורך משימה</p>
+              <p className="font-bold text-gray-900 text-sm">{form.name || "משימה ללא שם"}</p>
             </div>
           </div>
           <button onClick={onClose} className="icon-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-base transition-colors">✕</button>
@@ -54,9 +54,9 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
         {/* Body */}
         <div className="flex-1 px-6 py-5 space-y-5">
 
-          {/* Stage name */}
+          {/* Task name */}
           <div>
-            <label>שם השלב</label>
+            <label>שם המשימה</label>
             <input
               className="input text-base font-semibold"
               value={form.name}
@@ -87,18 +87,18 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
 
           {/* Step */}
           <div>
-            <label>מה הצעד הזה? <span className="text-gray-400 font-normal normal-case text-xs">— הסבר קצר</span></label>
+            <label>תיאור <span className="text-gray-400 font-normal normal-case text-xs">— הסבר קצר</span></label>
             <textarea
               className="textarea"
               value={form.step}
               onChange={e => set("step", e.target.value)}
-              placeholder="מה בדיוק עושים בשלב הזה?"
+              placeholder="מה בדיוק צריך לעשות?"
             />
           </div>
 
           {/* Goal */}
           <div>
-            <label>מה המטרה? <span className="text-gray-400 font-normal normal-case text-xs">— מה ההצלחה נראית כך</span></label>
+            <label>מה ההצלחה? <span className="text-gray-400 font-normal normal-case text-xs">— מה המטרה</span></label>
             <textarea
               className="textarea"
               value={form.goal}
@@ -219,10 +219,10 @@ export default function StageEditDrawer({ stage, stageNumber, totalStages, onClo
               onClick={() => { onAddAfter(); onClose(); }}
               className="btn btn-ghost flex-1 text-sm text-blue-600 border-blue-100 hover:bg-blue-50"
             >
-              + הוסף שלב אחרי זה
+              + הוסף משימה
             </button>
             <button
-              onClick={() => { if (confirm("למחוק שלב זה?")) { onDelete(stage.id); onClose(); } }}
+              onClick={() => { if (confirm("למחוק משימה זו?")) { onDelete(stage.id); onClose(); } }}
               className="btn btn-red text-sm"
             >
               מחק

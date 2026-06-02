@@ -176,7 +176,7 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
             items={incomes}
             onChange={setIncomes}
             label="הכנסות חודשיות 💚"
-            sublabel="הכנסות שנוגעות לפריט כולו — לא לשלב ספציפי"
+            sublabel="הכנסות שנוגעות לפריט כולו — לא למשימה ספציפית"
             addLabel="הוסף הכנסה"
             type="income"
           />
@@ -185,7 +185,7 @@ export default function ChannelModal({ existing, order, onClose, onSave }: Props
             items={expenses}
             onChange={setExpenses}
             label="הוצאות חודשיות 🔴"
-            sublabel="הוצאות שנוגעות לפריט כולו — לא לשלב ספציפי"
+            sublabel="הוצאות שנוגעות לפריט כולו — לא למשימה ספציפית"
             addLabel="הוסף הוצאה"
             type="expense"
           />
