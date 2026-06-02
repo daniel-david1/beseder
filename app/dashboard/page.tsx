@@ -145,6 +145,7 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
   };
 
   const handleDeleteTask = (taskId: string) => {
+    if (!confirm("למחוק את המשימה?")) return;
     saveTasks(tasks.filter(t => t.id !== taskId));
   };
 
