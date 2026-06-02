@@ -709,9 +709,9 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
           {/* View mode buttons */}
           <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: viewMode==='cards' ? "#d1d5db" : t.btnBorder }}>
             {([
-              { mode: 'diagram' as const, label: '🕸️ דיאגרמה' },
-              { mode: 'cards'   as const, label: '📋 כרטיסיות' },
-            ]).map(({ mode, label }) => {
+              { mode: 'diagram' as const, label: '🕸️', labelFull: 'דיאגרמה' },
+              { mode: 'cards'   as const, label: '📋', labelFull: 'כרטיסיות' },
+            ]).map(({ mode, label, labelFull }) => {
               const isActive = viewMode === mode;
               const activeStyle = viewMode === 'cards'
                 ? { bg: "#f97316", border: "transparent", text: "#ffffff" }
@@ -722,20 +722,24 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
               const s = isActive ? activeStyle : idleStyle;
               return (
                 <button key={mode} onClick={() => setViewMode(mode)}
-                  className="text-xs font-semibold px-3 py-1.5 transition-all"
+                  className="text-xs font-semibold px-2.5 py-1.5 transition-all flex items-center gap-1"
                   style={{ background: s.bg, color: s.text }}>
-                  {label}
+                  <span>{label}</span>
+                  <span className="hidden sm:inline">{labelFull}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Dark/light toggle — only visible in diagram mode */}
+          {/* Dark/light toggle — only in diagram mode */}
           {viewMode === 'diagram' && (
             <button onClick={() => setIsDark(!isDark)}
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all"
               style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
-            >{isDark ? "☀️ בהיר" : "🌙 כהה"}</button>
+            >
+              <span>{isDark ? "☀️" : "🌙"}</span>
+              <span className="hidden sm:inline">{isDark ? " בהיר" : " כהה"}</span>
+            </button>
           )}
         </div>
 
@@ -888,11 +892,11 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                   ? `0 0 56px ${brand.color}20, 0 12px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)`
                   : `0 0 28px ${brand.color}15, 0 6px 28px rgba(0,0,0,0.1)`,
                 borderRadius: 20,
-                padding: "14px 24px",
+                padding: "12px 18px",
                 display: "flex",
                 alignItems: "center",
-                gap: 14,
-                minWidth: 280,
+                gap: 12,
+                width: "min(340px, calc(100vw - 48px))",
               }}>
                 <div style={{
                   width: 50, height: 50, borderRadius: 14,
@@ -941,7 +945,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                         gap: 14,
                         cursor: "pointer",
                         transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                        minWidth: 240,
+                        minWidth: "min(240px, 70vw)",
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
@@ -1008,7 +1012,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                                     gap: 8,
                                     cursor: "pointer",
                                     transition: "transform 0.15s ease",
-                                    width: 172,
+                                    width: "clamp(130px, 40vw, 172px)",
                                     textAlign: "right",
                                   }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05) translateY(-2px)"; }}
@@ -1407,72 +1411,70 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
               <span className="hidden sm:inline">רקע</span>
             </button>
 
-            {/* ── Theme picker panel ── */}
+            {/* ── Theme picker panel — fixed + centered so it never overflows on mobile ── */}
             {showBgPicker && (
-              <div
-                className="absolute left-0 mt-2 rounded-2xl bg-white border border-gray-100 shadow-2xl shadow-gray-200/60 overflow-hidden"
-                style={{ zIndex: 9999, width: 320, animation: "fadeSlideDown 0.15s ease-out" }}
-                onClick={e => e.stopPropagation()}
-              >
-                {/* Header */}
-                <div className="px-4 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
-                  <h3 className="font-black text-gray-900 text-sm">🎨 בחר רקע</h3>
-                  <button onClick={() => setShowBgPicker(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">×</button>
-                </div>
-
-                {/* Theme swatches */}
-                <div className="p-4">
-                  {/* Solid colors */}
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">צבעים אחידים</p>
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    {BG_THEMES.filter(t => !t.bgImage).map(theme => (
-                      <button
-                        key={theme.id}
-                        onClick={() => handlePickTheme(theme)}
-                        title={theme.label}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div
-                          className="w-full h-11 rounded-xl transition-transform group-hover:scale-105"
-                          style={{
-                            background: theme.preview,
-                            border: bgThemeId === theme.id
-                              ? "2.5px solid #f97316"
-                              : "2px solid rgba(0,0,0,0.08)",
-                            boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
-                          }}
-                        />
-                        <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
-                      </button>
-                    ))}
+              <>
+                {/* Backdrop */}
+                <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setShowBgPicker(false)} />
+                <div
+                  className="rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden"
+                  style={{
+                    position: "fixed",
+                    top: 64,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 9999,
+                    width: "min(340px, calc(100vw - 16px))",
+                    maxHeight: "calc(100vh - 80px)",
+                    overflowY: "auto",
+                    animation: "fadeSlideDown 0.15s ease-out",
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="px-4 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
+                    <h3 className="font-black text-gray-900 text-sm">🎨 בחר רקע</h3>
+                    <button onClick={() => setShowBgPicker(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">×</button>
                   </div>
 
-                  {/* Gradients */}
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">גרדיאנטים</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {BG_THEMES.filter(t => !!t.bgImage).map(theme => (
-                      <button
-                        key={theme.id}
-                        onClick={() => handlePickTheme(theme)}
-                        title={theme.label}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div
-                          className="w-full h-11 rounded-xl transition-transform group-hover:scale-105"
-                          style={{
-                            background: theme.preview,
-                            border: bgThemeId === theme.id
-                              ? "2.5px solid #f97316"
-                              : "2px solid rgba(0,0,0,0.08)",
-                            boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
-                          }}
-                        />
-                        <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
-                      </button>
-                    ))}
+                  {/* Theme swatches */}
+                  <div className="p-4">
+                    {/* Solid colors */}
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">צבעים אחידים</p>
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      {BG_THEMES.filter(t => !t.bgImage).map(theme => (
+                        <button key={theme.id} onClick={() => handlePickTheme(theme)} title={theme.label}
+                          className="flex flex-col items-center gap-1 group">
+                          <div className="w-full h-10 rounded-xl transition-transform group-hover:scale-105"
+                            style={{
+                              background: theme.preview,
+                              border: bgThemeId === theme.id ? "2.5px solid #f97316" : "2px solid rgba(0,0,0,0.08)",
+                              boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                            }} />
+                          <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Gradients */}
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">גרדיאנטים</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {BG_THEMES.filter(t => !!t.bgImage).map(theme => (
+                        <button key={theme.id} onClick={() => handlePickTheme(theme)} title={theme.label}
+                          className="flex flex-col items-center gap-1 group">
+                          <div className="w-full h-10 rounded-xl transition-transform group-hover:scale-105"
+                            style={{
+                              background: theme.preview,
+                              border: bgThemeId === theme.id ? "2.5px solid #f97316" : "2px solid rgba(0,0,0,0.08)",
+                              boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                            }} />
+                          <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -2726,33 +2728,28 @@ export default function Dashboard() {
                   />
                 </div>
               ))}
-              {/* Financial card */}
+              {/* Financial card — matches compact ProjectCard */}
               <button
                 onClick={() => setShowBrandFinancial(true)}
                 className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 h-full"
-                style={{ border: "2px solid #d1fae5" }}
+                style={{ border: "1.5px solid #d1fae5" }}
               >
-                <div className="h-1.5 w-full" style={{ background: "#10b981" }} />
-                <div className="p-5 flex flex-col gap-3 flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: "#f0fdf4" }}>💰</div>
-                    <div>
-                      <h3 className="font-black text-gray-900 text-base leading-tight">ניהול פיננסי</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">הלוואות, הוצאות, הכנסות, נכסים</p>
-                    </div>
+                <div className="h-1 w-full" style={{ background: "#10b981" }} />
+                <div className="p-3 flex flex-col gap-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl flex-shrink-0">💰</span>
+                    <h3 className="font-black text-gray-900 text-sm leading-tight">ניהול פיננסי</h3>
                   </div>
-                  <div className="btn w-full justify-center text-sm mt-auto" style={{ borderColor: "#10b98140", color: "#10b981", border: "1.5px solid #10b98140", borderRadius: 12, padding: "6px 0" }}>
-                    פתח פאנל ←
-                  </div>
+                  <span className="text-[11px] text-gray-400 mt-auto">הלוואות, הוצאות, הכנסות</span>
                 </div>
               </button>
 
               <button
                 onClick={() => setShowProjectModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-8 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
+                className="card flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
               >
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">מחלקה חדשה</span>
+                <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-xl">+</div>
+                <span className="font-semibold text-gray-400 text-xs">מחלקה חדשה</span>
               </button>
             </div>
           )}
