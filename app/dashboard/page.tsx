@@ -365,7 +365,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
   if (stageItems.length === 0) {
     return (
       <div className="modal-bg" onClick={onClose}>
-        <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal p-5 sm:p-7" onClick={e => e.stopPropagation()}>
           <div className="text-center py-10">
             <div className="text-4xl mb-3">🎉</div>
             <h2 className="font-black text-gray-900 text-xl mb-2">כל השלבים מוגדרים!</h2>
@@ -418,8 +418,8 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
   if (done) {
     return (
       <div className="modal-bg" onClick={onClose}>
-        <div className="modal" onClick={e => e.stopPropagation()}>
-          <div className="text-center py-10 px-6">
+        <div className="modal p-5 sm:p-7" onClick={e => e.stopPropagation()}>
+          <div className="text-center py-10 px-2">
             <div className="text-5xl mb-4">🎉</div>
             <h2 className="font-black text-gray-900 text-2xl mb-2">הגדרה הושלמה!</h2>
             <p className="text-gray-500 text-sm mb-6">מילאת פעולות הבאה ל-{filledCount} שלבים מתוך {total}</p>
@@ -442,7 +442,7 @@ function BrandSetupWizard({ brand, onClose, onSave }: {
 
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+      <div className="modal p-5 sm:p-7" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-black text-gray-900 text-lg">
