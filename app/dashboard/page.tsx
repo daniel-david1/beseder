@@ -611,186 +611,274 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
   onClose: () => void;
   onNavigateTo: (project: Project, sub?: SubProject, channel?: Channel) => void;
 }) {
-  const [isDark, setIsDark] = useState(true);
+  const [viewMode, setViewMode] = useState<'diagram' | 'cards'>('diagram');
+  const [isDark,   setIsDark]   = useState(true);
 
+  /* ── diagram theme ── */
   const t = isDark ? {
     bg: "#0a0c12", hdr: "#0d1018", border: "#1e2130",
     nodeBg: "#13161f", text: "#ffffff", textSec: "#9ca3af", textMuted: "#6b7280",
-    taskDotTodo: "#2a2d3e",
+    taskDotTodo: "#2a2d3e", emptyText: "#4b5563", divider: "#1e2130",
     activeBadge: { bg: "#1e3a5f", text: "#60a5fa" },
     blockedBadge: { bg: "#4c0519", text: "#f87171" },
-    emptyText: "#4b5563", divider: "#1e2130",
     btnBg: "#1a1d28", btnBorder: "#2a2d3e", btnText: "#9ca3af",
-    statsDone: { bg: "#14532d30", text: "#4ade80", border: "#14532d" },
-    statsActive: { bg: "#1e3a5f30", text: "#60a5fa", border: "#1e3a5f" },
+    modeBtnActive: { bg: "#1e2333", border: "#3b4256", text: "#e2e8f0" },
+    modeBtnIdle:   { bg: "transparent", border: "#2a2d3e", text: "#6b7280" },
+    statsDone:    { bg: "#14532d30", text: "#4ade80", border: "#14532d" },
+    statsActive:  { bg: "#1e3a5f30", text: "#60a5fa", border: "#1e3a5f" },
     statsBlocked: { bg: "#4c051930", text: "#f87171", border: "#4c0519" },
   } : {
     bg: "#f8fafc", hdr: "#ffffff", border: "#e5e7eb",
     nodeBg: "#ffffff", text: "#111827", textSec: "#6b7280", textMuted: "#9ca3af",
-    taskDotTodo: "#e5e7eb",
+    taskDotTodo: "#e5e7eb", emptyText: "#9ca3af", divider: "#e5e7eb",
     activeBadge: { bg: "#eff6ff", text: "#2563eb" },
     blockedBadge: { bg: "#fee2e2", text: "#dc2626" },
-    emptyText: "#9ca3af", divider: "#e5e7eb",
     btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
-    statsDone: { bg: "#dcfce7", text: "#15803d", border: "#86efac" },
-    statsActive: { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
+    modeBtnActive: { bg: "#f0f9ff", border: "#bae6fd", text: "#0369a1" },
+    modeBtnIdle:   { bg: "transparent", border: "#d1d5db", text: "#9ca3af" },
+    statsDone:    { bg: "#dcfce7", text: "#15803d", border: "#86efac" },
+    statsActive:  { bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
     statsBlocked: { bg: "#fee2e2", text: "#dc2626", border: "#fca5a5" },
   };
 
-  const totalTasks  = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.length + sp.channels.reduce((cs, c) => cs + c.stages.length, 0), 0), 0);
-  const doneTasks   = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "done").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "done").length, 0), 0), 0);
-  const activeCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "active").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "active").length, 0), 0), 0);
-  const blockedCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "blocked").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "blocked").length, 0), 0), 0);
+  const totalTasks   = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.length + sp.channels.reduce((cs, c) => cs + c.stages.length, 0), 0), 0);
+  const doneTasks    = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "done").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "done").length, 0), 0), 0);
+  const activeCount  = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "active").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "active").length, 0), 0), 0);
+  const blockedCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "blocked").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "blocked").length, 0), 0), 0);
+
+  /* cards-view bg always light */
+  const outerBg = viewMode === 'cards' ? "#f8fafc" : t.bg;
+  const hdrBg   = viewMode === 'cards' ? "#ffffff"  : t.hdr;
+  const hdrBorder = viewMode === 'cards' ? "#e5e7eb" : t.border;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: t.bg, fontFamily: "'Heebo', system-ui, sans-serif", direction: "rtl" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: outerBg, fontFamily: "'Heebo', system-ui, sans-serif", direction: "rtl" }}>
 
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: t.border, background: t.hdr }}>
-        {/* Close + theme toggle — first in DOM = right side in RTL */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsDark(!isDark)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ml-2"
-            style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
-          >
-            {isDark ? "☀️ בהיר" : "🌙 כהה"}
-          </button>
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b gap-3" style={{ borderColor: hdrBorder, background: hdrBg }}>
+
+        {/* RIGHT (first in DOM = RTL start): close + view-mode toggle + dark toggle */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button onClick={onClose}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-            style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
+            style={{ color: viewMode==='cards' ? "#6b7280" : t.btnText, background: viewMode==='cards' ? "#f3f4f6" : t.btnBg, border: `1px solid ${viewMode==='cards' ? "#d1d5db" : t.btnBorder}` }}
           >× סגור</button>
+
+          {/* View mode buttons */}
+          <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: viewMode==='cards' ? "#d1d5db" : t.btnBorder }}>
+            {([
+              { mode: 'diagram' as const, label: '🕸️ דיאגרמה' },
+              { mode: 'cards'   as const, label: '📋 כרטיסיות' },
+            ]).map(({ mode, label }) => {
+              const isActive = viewMode === mode;
+              const activeStyle = viewMode === 'cards'
+                ? { bg: "#f97316", border: "transparent", text: "#ffffff" }
+                : t.modeBtnActive;
+              const idleStyle = viewMode === 'cards'
+                ? { bg: "#ffffff", border: "transparent", text: "#9ca3af" }
+                : t.modeBtnIdle;
+              const s = isActive ? activeStyle : idleStyle;
+              return (
+                <button key={mode} onClick={() => setViewMode(mode)}
+                  className="text-xs font-semibold px-3 py-1.5 transition-all"
+                  style={{ background: s.bg, color: s.text }}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dark/light toggle — only visible in diagram mode */}
+          {viewMode === 'diagram' && (
+            <button onClick={() => setIsDark(!isDark)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+              style={{ color: t.btnText, background: t.btnBg, border: `1px solid ${t.btnBorder}` }}
+            >{isDark ? "☀️ בהיר" : "🌙 כהה"}</button>
+          )}
         </div>
 
-        {/* Brand info + stats — last in DOM = left side in RTL */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
-            style={{ background: brand.color + "25", border: `1.5px solid ${brand.color}50` }}>
-            {brand.emoji}
+        {/* LEFT (last in DOM = RTL end): brand info + stats */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shrink-0"
+              style={{ background: brand.color + "25", border: `1.5px solid ${brand.color}50` }}>
+              {brand.emoji}
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-black text-sm leading-tight truncate" style={{ color: viewMode==='cards' ? "#111827" : t.text }}>{brand.name}</h2>
+              <p className="text-[11px]" style={{ color: viewMode==='cards' ? "#9ca3af" : t.textMuted }}>מבט על · {brand.projects.length} מחלקות</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-black text-base leading-tight" style={{ color: t.text }}>{brand.name}</h2>
-            <p className="text-xs mt-0.5" style={{ color: t.textMuted }}>מבט על · {brand.projects.length} מחלקות</p>
-          </div>
-          {/* Mini stats */}
-          <div className="flex items-center gap-2 mr-3">
-            {doneTasks > 0    && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsDone.bg, color: t.statsDone.text, border: `1px solid ${t.statsDone.border}` }}>✓ {doneTasks} הושלמו</span>}
-            {activeCount > 0  && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsActive.bg, color: t.statsActive.text, border: `1px solid ${t.statsActive.border}` }}>● {activeCount} פעילות</span>}
-            {blockedCount > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: t.statsBlocked.bg, color: t.statsBlocked.text, border: `1px solid ${t.statsBlocked.border}` }}>⚠ {blockedCount} תקועות</span>}
+          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+            {doneTasks > 0    && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: viewMode==='cards' ? "#dcfce7" : t.statsDone.bg, color: viewMode==='cards' ? "#15803d" : t.statsDone.text }}>✓ {doneTasks}</span>}
+            {activeCount > 0  && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: viewMode==='cards' ? "#eff6ff" : t.statsActive.bg, color: viewMode==='cards' ? "#2563eb" : t.statsActive.text }}>● {activeCount}</span>}
+            {blockedCount > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: viewMode==='cards' ? "#fee2e2" : t.statsBlocked.bg, color: viewMode==='cards' ? "#dc2626" : t.statsBlocked.text }}>⚠ {blockedCount}</span>}
           </div>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="flex-1 overflow-auto p-6 pb-16">
-        {brand.projects.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-64 gap-3">
-            <div className="text-5xl opacity-30">📭</div>
-            <p className="font-semibold" style={{ color: t.emptyText }}>אין מחלקות במותג זה עדיין</p>
-          </div>
-        )}
+      {/* ══ CARDS VIEW ══ */}
+      {viewMode === 'cards' && (
+        <div className="flex-1 overflow-auto p-5 pb-16" style={{ background: "#f8fafc" }}>
+          {brand.projects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="text-5xl opacity-30">📭</div>
+              <p className="font-semibold text-gray-400">אין מחלקות במותג זה עדיין</p>
+            </div>
+          ) : (
+            <div className="max-w-screen-lg mx-auto space-y-5">
+              {brand.projects.map(project => {
+                const subDone    = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length, 0);
+                const subActive  = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "active").length, 0);
+                const subBlocked = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "blocked").length, 0);
+                return (
+                  <div key={project.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    {/* Project header */}
+                    <button
+                      onClick={() => onNavigateTo(project)}
+                      className="w-full flex items-center gap-3 px-5 py-4 text-right hover:opacity-90 transition-opacity"
+                      style={{ background: project.color + "0c", borderBottom: `1px solid ${project.color}20` }}
+                    >
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                           style={{ background: project.color + "20", border: `1.5px solid ${project.color}40` }}>
+                        {project.emoji}
+                      </div>
+                      <div className="flex-1 text-right">
+                        <h3 className="font-black text-gray-900 text-base">{project.name}</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">{project.subProjects.length} פרויקטים</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {subDone    > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700">✓ {subDone}</span>}
+                        {subActive  > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">● {subActive}</span>}
+                        {subBlocked > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {subBlocked}</span>}
+                        <span className="text-sm font-bold" style={{ color: project.color }}>←</span>
+                      </div>
+                    </button>
 
-        <div className="space-y-10 max-w-screen-xl mx-auto">
-          {brand.projects.map((project, pi) => {
+                    {/* SubProjects grid */}
+                    {project.subProjects.length > 0 && (
+                      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {project.subProjects.map(sub => {
+                          const hasChannels = sub.channels.length > 0;
+                          const taskCount   = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.length, 0) : sub.stages.length;
+                          const doneN       = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0) : sub.stages.filter(s => s.status === "done").length;
+                          const actN        = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0) : sub.stages.filter(s => s.status === "active").length;
+                          const blkN        = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0) : sub.stages.filter(s => s.status === "blocked").length;
+                          return (
+                            <button
+                              key={sub.id}
+                              onClick={() => onNavigateTo(project, sub)}
+                              className="flex flex-col gap-2 p-3 rounded-xl border text-right hover:shadow-md transition-all hover:-translate-y-0.5 group"
+                              style={{ borderColor: project.color + "30", background: project.color + "05" }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{sub.emoji}</span>
+                                <span className="font-bold text-gray-800 text-xs leading-snug flex-1">{sub.name}</span>
+                              </div>
+                              {hasChannels && sub.channels.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {sub.channels.slice(0, 3).map(ch => (
+                                    <button key={ch.id} onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
+                                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold hover:opacity-70"
+                                      style={{ background: project.color + "15", color: project.color }}>
+                                      <span>{ch.emoji}</span><span className="max-w-[40px] truncate">{ch.name}</span>
+                                    </button>
+                                  ))}
+                                  {sub.channels.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{sub.channels.length - 3}</span>}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {taskCount > 0 && <span className="text-[10px] text-gray-400">{taskCount} משימות</span>}
+                                {actN  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">● {actN}</span>}
+                                {blkN  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blkN}</span>}
+                                {doneN > 0 && <span className="text-[10px] font-semibold text-green-600">✓ {doneN}</span>}
+                                {taskCount === 0 && <span className="text-[10px] text-gray-300">ריק</span>}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
-            return (
+      {/* ══ DIAGRAM VIEW ══ */}
+      {viewMode === 'diagram' && (
+        <div className="flex-1 overflow-auto p-6 pb-16">
+          {brand.projects.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="text-5xl opacity-30">📭</div>
+              <p className="font-semibold" style={{ color: t.emptyText }}>אין מחלקות במותג זה עדיין</p>
+            </div>
+          )}
+
+          <div className="space-y-10 max-w-screen-xl mx-auto">
+            {brand.projects.map((project, pi) => (
               <div key={project.id}>
-                {/* ── Project node ── */}
+                {/* Project node */}
                 <div className="flex justify-center mb-2">
                   <button
                     onClick={() => onNavigateTo(project)}
                     className="group flex items-center gap-3 px-5 py-3 rounded-2xl transition-all hover:scale-105"
-                    style={{
-                      background: t.nodeBg,
-                      border: `2px solid ${project.color}60`,
-                      boxShadow: `0 0 20px ${project.color}18`,
-                    }}
+                    style={{ background: t.nodeBg, border: `2px solid ${project.color}60`, boxShadow: `0 0 20px ${project.color}18` }}
                   >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shrink-0"
-                      style={{ background: project.color + "25" }}>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: project.color + "25" }}>
                       {project.emoji}
                     </div>
                     <div className="text-right flex-1">
                       <div className="font-black text-sm" style={{ color: t.text }}>{project.name}</div>
-                      <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>
-                        {project.subProjects.length} פרויקטים
-                      </div>
+                      <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>{project.subProjects.length} פרויקטים</div>
                     </div>
                     <span className="text-xs opacity-40 group-hover:opacity-80 transition-opacity" style={{ color: project.color }}>←</span>
                   </button>
                 </div>
 
-                {/* Connector from project to subs */}
                 {project.subProjects.length > 0 && (
                   <div className="flex justify-center mb-2">
                     <div className="w-px h-4" style={{ background: project.color + "40" }} />
                   </div>
                 )}
 
-                {/* ── SubProjects row ── */}
                 {project.subProjects.length > 0 && (
                   <div className="relative">
-                    {/* Horizontal connector line */}
                     <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ height: 1 }}>
                       <div className="w-3/4 h-px" style={{ background: project.color + "30" }} />
                     </div>
-
                     <div className="flex gap-4 justify-center flex-wrap pt-4">
                       {project.subProjects.map(sub => {
                         const hasChannels = sub.channels.length > 0;
-                        const subAllS  = hasChannels
-                          ? sub.channels.reduce((n, c) => n + c.stages.length, 0)
-                          : sub.stages.length;
-                        const subDoneS = hasChannels
-                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0)
-                          : sub.stages.filter(s => s.status === "done").length;
-                        const blockedN = hasChannels
-                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0)
-                          : sub.stages.filter(s => s.status === "blocked").length;
-                        const activeN  = hasChannels
-                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0)
-                          : sub.stages.filter(s => s.status === "active").length;
-
+                        const subAllS  = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.length, 0) : sub.stages.length;
+                        const blockedN = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0) : sub.stages.filter(s => s.status === "blocked").length;
+                        const activeN  = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0) : sub.stages.filter(s => s.status === "active").length;
                         return (
                           <div key={sub.id} className="flex flex-col items-center gap-1" style={{ minWidth: 150, maxWidth: 200 }}>
-                            {/* Vertical connector to sub */}
                             <div className="w-px h-3" style={{ background: project.color + "35" }} />
-
                             <button
                               onClick={() => onNavigateTo(project, sub)}
                               className="w-full group rounded-xl p-3 text-right transition-all hover:scale-105"
-                              style={{
-                                background: t.nodeBg,
-                                border: `1.5px solid ${project.color}35`,
-                                boxShadow: `0 2px 12px ${project.color}10`,
-                              }}
+                              style={{ background: t.nodeBg, border: `1.5px solid ${project.color}35`, boxShadow: `0 2px 12px ${project.color}10` }}
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-base">{sub.emoji}</span>
                                 <span className="font-bold text-xs leading-snug" style={{ color: t.text }}>{sub.name}</span>
                               </div>
-
-                              {/* Item chips (channels) */}
                               {hasChannels && (
                                 <div className="flex flex-wrap gap-1 mb-2">
                                   {sub.channels.slice(0, 4).map(ch => (
-                                    <button
-                                      key={ch.id}
-                                      onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
+                                    <button key={ch.id} onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
                                       className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-opacity hover:opacity-70"
-                                      style={{ background: project.color + "20", color: project.color + "dd", border: `1px solid ${project.color}30` }}
-                                    >
-                                      <span>{ch.emoji}</span>
-                                      <span className="max-w-[48px] truncate">{ch.name}</span>
+                                      style={{ background: project.color + "20", color: project.color + "dd", border: `1px solid ${project.color}30` }}>
+                                      <span>{ch.emoji}</span><span className="max-w-[48px] truncate">{ch.name}</span>
                                     </button>
                                   ))}
-                                  {sub.channels.length > 4 && (
-                                    <span className="text-[10px] self-center" style={{ color: t.textMuted }}>+{sub.channels.length - 4}</span>
-                                  )}
+                                  {sub.channels.length > 4 && <span className="text-[10px] self-center" style={{ color: t.textMuted }}>+{sub.channels.length - 4}</span>}
                                 </div>
                               )}
-
-                              {/* Task dots */}
                               {!hasChannels && sub.stages.length > 0 && (
                                 <div className="flex gap-1 mb-2 flex-wrap">
                                   {sub.stages.slice(0, 10).map(s => (
@@ -801,12 +889,10 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                                   {sub.stages.length > 10 && <span className="text-[9px] self-center" style={{ color: t.emptyText }}>+{sub.stages.length - 10}</span>}
                                 </div>
                               )}
-
-                              {/* Status badges */}
                               <div className="flex gap-1 mt-1.5 flex-wrap">
-                                {activeN > 0  && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: t.activeBadge.bg, color: t.activeBadge.text }}>● {activeN}</span>}
+                                {activeN  > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: t.activeBadge.bg, color: t.activeBadge.text }}>● {activeN}</span>}
                                 {blockedN > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: t.blockedBadge.bg, color: t.blockedBadge.text }}>⚠ {blockedN}</span>}
-                                {subAllS === 0 && <span className="text-[9px]" style={{ color: t.textSec }}>ריק</span>}
+                                {subAllS  === 0 && <span className="text-[9px]" style={{ color: t.textSec }}>ריק</span>}
                               </div>
                             </button>
                           </div>
@@ -816,15 +902,14 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                   </div>
                 )}
 
-                {/* Divider between projects */}
                 {pi < brand.projects.length - 1 && (
                   <div className="mt-8 h-px mx-auto w-1/2" style={{ background: t.divider }} />
                 )}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
