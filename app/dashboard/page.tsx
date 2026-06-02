@@ -15,6 +15,387 @@ import SubProjectModal from "@/components/SubProjectModal";
 import ChannelModal from "@/components/ChannelModal";
 import FinancialDashboard from "@/components/FinancialDashboard";
 
+/* ─── Brand health ────────────────────────────────────── */
+interface BrandHealth {
+  level: "critical" | "attention" | "good" | "empty";
+  blockedCount: number;
+  activeCount: number;
+  noNextActionCount: number;
+  topNextAction: string | null;
+  topNextActionStage: string | null;
+}
+
+function getBrandHealth(brand: Brand): BrandHealth {
+  // Collect all stages with context
+  const allStages: { stage: Stage; stageName: string }[] = [];
+  for (const project of brand.projects) {
+    for (const sub of project.subProjects) {
+      for (const stage of sub.stages) {
+        allStages.push({ stage, stageName: stage.name });
+      }
+      for (const channel of sub.channels) {
+        for (const stage of channel.stages) {
+          allStages.push({ stage, stageName: stage.name });
+        }
+      }
+    }
+  }
+
+  if (allStages.length === 0) {
+    return { level: "empty", blockedCount: 0, activeCount: 0, noNextActionCount: 0, topNextAction: null, topNextActionStage: null };
+  }
+
+  const blockedCount = allStages.filter(({ stage }) => stage.status === "blocked").length;
+  const activeCount  = allStages.filter(({ stage }) => stage.status === "active").length;
+  const nonDone      = allStages.filter(({ stage }) => stage.status !== "done");
+  const noNextActionCount = nonDone.filter(({ stage }) => !stage.nextAction?.trim()).length;
+
+  let level: BrandHealth["level"] = "good";
+  if (blockedCount > 0) level = "critical";
+  else if (noNextActionCount > 2) level = "attention";
+
+  // topNextAction: blocked with nextAction first, then active, then any non-done
+  const findTop = (items: typeof allStages) => items.find(({ stage }) => stage.nextAction?.trim());
+  const blocked = allStages.filter(({ stage }) => stage.status === "blocked");
+  const active  = allStages.filter(({ stage }) => stage.status === "active");
+  const top = findTop(blocked) ?? findTop(active) ?? findTop(nonDone) ?? null;
+
+  return {
+    level,
+    blockedCount,
+    activeCount,
+    noNextActionCount,
+    topNextAction: top?.stage.nextAction?.trim() ?? null,
+    topNextActionStage: top?.stageName ?? null,
+  };
+}
+
+const HEALTH_COLORS: Record<BrandHealth["level"], string> = {
+  critical:  "#dc2626",
+  attention: "#d97706",
+  good:      "#16a34a",
+  empty:     "#9ca3af",
+};
+
+/* ─── Morning Panel ───────────────────────────────────── */
+const DAILY_GOAL_KEY = "beseder_daily_goal_v1";
+
+function MorningPanel({ brands, userEmail, onBrandClick }: {
+  brands: Brand[];
+  userEmail: string;
+  onBrandClick: (brand: Brand) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [goal, setGoal]           = useState("");
+  const [saved, setSaved]         = useState(false);
+  const firstName = userEmail.split("@")[0] ?? "שלום";
+  const todayStr  = new Date().toISOString().slice(0, 10);
+  const hebrewDate = new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DAILY_GOAL_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { date: string; goal: string };
+        if (parsed.date === todayStr) setGoal(parsed.goal);
+      }
+    } catch { /* ignore */ }
+  }, [todayStr]);
+
+  const handleSave = () => {
+    localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify({ date: todayStr, goal }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  // Filter out financial dashboards (emoji 💰), sort by urgency
+  const levelOrder: Record<BrandHealth["level"], number> = { critical: 0, attention: 1, good: 2, empty: 3 };
+  const priorityBrands = brands
+    .filter(b => b.emoji !== "💰")
+    .map(b => ({ brand: b, health: getBrandHealth(b) }))
+    .sort((a, b) => levelOrder[a.health.level] - levelOrder[b.health.level])
+    .slice(0, 3);
+
+  return (
+    <div className="card rounded-2xl shadow-sm mb-6 overflow-hidden">
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
+        style={{ background: "linear-gradient(135deg, #f0f9ff 0%, #fefce8 100%)", borderBottom: collapsed ? "none" : "1px solid #f3f4f6" }}
+        onClick={() => setCollapsed(v => !v)}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">☀️</span>
+          <div>
+            <h2 className="font-black text-gray-900 text-base leading-tight">בוקר טוב, {firstName}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{hebrewDate}</p>
+          </div>
+        </div>
+        <button className="text-gray-400 hover:text-gray-700 transition-colors text-lg px-2" aria-label="collapse">
+          {collapsed ? "▼" : "▲"}
+        </button>
+      </div>
+
+      {!collapsed && (
+        <div className="px-5 py-4 space-y-5">
+          {/* Daily Goal */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-2">🎯 מה המטרה שלך היום?</p>
+            <div className="flex gap-2">
+              <input
+                className="input flex-1 text-sm"
+                placeholder="לדוגמה: לסגור עסקה עם לקוח חדש..."
+                value={goal}
+                onChange={e => setGoal(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+              />
+              <button
+                onClick={handleSave}
+                className="btn btn-orange text-sm px-4 shrink-0"
+              >
+                {saved ? "✓ נשמר" : "שמור"}
+              </button>
+            </div>
+          </div>
+
+          {/* Priority brands */}
+          {priorityBrands.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">פוקוס מומלץ</p>
+              <div className="space-y-2">
+                {priorityBrands.map(({ brand, health }) => (
+                  <button
+                    key={brand.id}
+                    onClick={() => onBrandClick(brand)}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-right group"
+                  >
+                    {/* Colored dot */}
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: HEALTH_COLORS[health.level] }} />
+
+                    {/* Brand name */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-gray-800 text-sm">{brand.emoji} {brand.name}</span>
+                        {health.blockedCount > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                            {health.blockedCount} תקוע
+                          </span>
+                        )}
+                        {health.activeCount > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>
+                            {health.activeCount} בתהליך
+                          </span>
+                        )}
+                      </div>
+                      {health.level === "empty" ? (
+                        <p className="text-xs text-gray-400 mt-0.5">אין שלבים — בוא נקים</p>
+                      ) : (
+                        <>
+                          {health.noNextActionCount > 0 && (
+                            <p className="text-xs text-gray-400 mt-0.5">{health.noNextActionCount} שלבים ללא פעולה הבאה</p>
+                          )}
+                          {health.topNextAction && (
+                            <p className="text-xs text-gray-500 mt-0.5 truncate">→ {health.topNextAction}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Right arrow (RTL: far left visually) */}
+                    <span className="text-gray-300 group-hover:text-gray-500 transition-colors shrink-0">←</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Brand Setup Wizard ──────────────────────────────── */
+interface SetupStageItem {
+  stage: Stage;
+  projectName: string;
+  subName: string;
+  /** Mutate path: projectId → subProjectId → (channelId | null) → stageId */
+  path: { projectId: string; subId: string; channelId: string | null };
+}
+
+function BrandSetupWizard({ brand, onClose, onSave }: {
+  brand: Brand;
+  onClose: () => void;
+  onSave: (brand: Brand) => void;
+}) {
+  // Collect all stages without nextAction
+  const stageItems: SetupStageItem[] = [];
+  for (const project of brand.projects) {
+    for (const sub of project.subProjects) {
+      for (const stage of sub.stages) {
+        if (stage.status !== "done" && !stage.nextAction?.trim()) {
+          stageItems.push({ stage, projectName: project.name, subName: sub.name, path: { projectId: project.id, subId: sub.id, channelId: null } });
+        }
+      }
+      for (const channel of sub.channels) {
+        for (const stage of channel.stages) {
+          if (stage.status !== "done" && !stage.nextAction?.trim()) {
+            stageItems.push({ stage, projectName: `${project.name} / ${channel.name}`, subName: sub.name, path: { projectId: project.id, subId: sub.id, channelId: channel.id } });
+          }
+        }
+      }
+    }
+  }
+
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [nextActions, setNextActions] = useState<Record<string, string>>(() => {
+    const m: Record<string, string> = {};
+    for (const item of stageItems) m[item.stage.id] = item.stage.nextAction ?? "";
+    return m;
+  });
+  const [done, setDone] = useState(false);
+  const [filledCount, setFilledCount] = useState(0);
+
+  if (stageItems.length === 0) {
+    return (
+      <div className="modal-bg" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="text-center py-10">
+            <div className="text-4xl mb-3">🎉</div>
+            <h2 className="font-black text-gray-900 text-xl mb-2">כל השלבים מוגדרים!</h2>
+            <p className="text-gray-400 mb-5">אין שלבים ללא פעולה הבאה</p>
+            <button onClick={onClose} className="btn btn-orange">סגור</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const current = stageItems[currentIdx];
+  const total   = stageItems.length;
+
+  const applyAndMove = (skip: boolean) => {
+    if (!skip) {
+      const val = nextActions[current.stage.id]?.trim();
+      if (val) setFilledCount(c => c + 1);
+    }
+    if (currentIdx + 1 >= total) {
+      // Build updated brand
+      const val = nextActions[current.stage.id]?.trim() ?? "";
+      const updatedBrand: Brand = JSON.parse(JSON.stringify(brand));
+      for (const item of stageItems) {
+        const na = nextActions[item.stage.id]?.trim() ?? "";
+        if (!na) continue;
+        const proj = updatedBrand.projects.find(p => p.id === item.path.projectId);
+        if (!proj) continue;
+        const sub = proj.subProjects.find(s => s.id === item.path.subId);
+        if (!sub) continue;
+        if (item.path.channelId) {
+          const ch = sub.channels.find(c => c.id === item.path.channelId);
+          if (ch) {
+            const st = ch.stages.find(s => s.id === item.stage.id);
+            if (st) st.nextAction = na;
+          }
+        } else {
+          const st = sub.stages.find(s => s.id === item.stage.id);
+          if (st) st.nextAction = na;
+        }
+      }
+      void val; // suppress lint
+      onSave(updatedBrand);
+      setDone(true);
+    } else {
+      setCurrentIdx(i => i + 1);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="modal-bg" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="text-center py-10 px-6">
+            <div className="text-5xl mb-4">🎉</div>
+            <h2 className="font-black text-gray-900 text-2xl mb-2">הגדרה הושלמה!</h2>
+            <p className="text-gray-500 text-sm mb-6">מילאת פעולות הבאה ל-{filledCount} שלבים מתוך {total}</p>
+            <button onClick={onClose} className="btn btn-orange px-8">סגור</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const STATUS_LABELS: Record<StageStatus, string> = {
+    todo: "לא התחיל", active: "בתהליך", done: "הושלם", blocked: "תקוע",
+  };
+  const STATUS_COLORS: Record<StageStatus, { bg: string; text: string }> = {
+    todo:    { bg: "#f3f4f6", text: "#6b7280" },
+    active:  { bg: "#dbeafe", text: "#1d4ed8" },
+    done:    { bg: "#dcfce7", text: "#15803d" },
+    blocked: { bg: "#fee2e2", text: "#dc2626" },
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-black text-gray-900 text-lg">
+            {brand.emoji} השלם הגדרה — {brand.name}
+          </h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-bold transition-colors">×</button>
+        </div>
+
+        {/* Progress */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs text-gray-500 font-semibold">שלב {currentIdx + 1} מתוך {total}</span>
+            <span className="text-xs text-gray-400">{Math.round(((currentIdx) / total) * 100)}%</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-teal-500 transition-all duration-300" style={{ width: `${(currentIdx / total) * 100}%` }} />
+          </div>
+        </div>
+
+        {/* Stage info */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-4">
+          <p className="text-xs text-gray-400 mb-1">{current.subName} / {current.projectName}</p>
+          <h3 className="font-black text-gray-900 text-lg mb-2">{current.stage.name}</h3>
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{ background: STATUS_COLORS[current.stage.status].bg, color: STATUS_COLORS[current.stage.status].text }}
+          >
+            {STATUS_LABELS[current.stage.status]}
+          </span>
+        </div>
+
+        {/* Next action textarea */}
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">מה הפעולה הבאה לשלב הזה?</label>
+          <textarea
+            className="input w-full resize-none"
+            rows={3}
+            placeholder="לדוגמה: לשלוח הצעת מחיר עד יום ראשון..."
+            value={nextActions[current.stage.id] ?? ""}
+            onChange={e => setNextActions(prev => ({ ...prev, [current.stage.id]: e.target.value }))}
+            autoFocus
+          />
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center gap-2 justify-between">
+          <button onClick={() => applyAndMove(true)} className="btn btn-ghost text-sm">← דלג</button>
+          <button
+            onClick={() => applyAndMove(false)}
+            className="btn btn-orange text-sm flex-1"
+          >
+            {currentIdx + 1 >= total ? "סיום ✓" : "הבא ←"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── helpers ─────────────────────────────────────────── */
 
 const STATUS_META: Record<StageStatus, { label: string; dot: string }> = {
@@ -545,8 +926,8 @@ function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; 
 }
 
 /* ─── Brand card ──────────────────────────────────────── */
-function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
-  brand: Brand; onClick: () => void; onEdit: () => void; onDelete: () => void;
+function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
+  brand: Brand; health: BrandHealth; onClick: () => void; onEdit: () => void; onDelete: () => void; onSetup: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -582,8 +963,32 @@ function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, 
               : <span className="text-3xl mt-0.5 flex-shrink-0">{brand.emoji}</span>
             }
             <div className="min-w-0">
-              <h3 className="font-black text-gray-900 text-base leading-tight">{brand.name}</h3>
-              {brand.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{brand.description}</p>}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-black text-gray-900 text-base leading-tight">{brand.name}</h3>
+                {/* Health dot */}
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: HEALTH_COLORS[health.level] }}
+                  title={health.level === "critical" ? "דחוף" : health.level === "attention" ? "דורש תשומת לב" : health.level === "good" ? "תקין" : "ריק"}
+                />
+              </div>
+              {/* Status badges */}
+              <div className="flex gap-1 flex-wrap mt-1">
+                {health.blockedCount > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                    {health.blockedCount} תקוע
+                  </span>
+                )}
+                {health.activeCount > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>
+                    {health.activeCount} פעיל
+                  </span>
+                )}
+              </div>
+              {/* Next action preview */}
+              {health.topNextAction && (
+                <p className="text-[10px] text-gray-400 mt-0.5 truncate">→ {health.topNextAction}</p>
+              )}
             </div>
           </button>
           <div className="flex items-center gap-1 shrink-0">
@@ -605,6 +1010,17 @@ function BrandCard({ brand, onClick, onEdit, onDelete, onDragStart, onDragOver, 
           </div>
           <p className="text-xs text-gray-400">{nProjects} פרויקט{nProjects !== 1 ? "ים" : ""} · {progress}% הושלם</p>
         </button>
+
+        {/* Setup CTA — shown when stages lack next actions */}
+        {health.noNextActionCount > 0 && health.level !== "empty" && (
+          <button
+            onClick={e => { e.stopPropagation(); onSetup(); }}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border-2 border-dashed text-xs font-bold transition-all hover:opacity-80"
+            style={{ borderColor: "#f59e0b", color: "#b45309", background: "#fffbeb" }}
+          >
+            ⚡ השלם הגדרה ({health.noNextActionCount} שלבים)
+          </button>
+        )}
 
         <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
           פתח מותג ←
@@ -848,6 +1264,7 @@ export default function Dashboard() {
   const [showChannelModal, setShowChannelModal]= useState(false);
   const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
   const [showWhiteboard,   setShowWhiteboard]  = useState(false);
+  const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
   const [userEmail,        setUserEmail]       = useState("");
 
   // Drag-to-reorder brand cards
@@ -1583,6 +2000,18 @@ export default function Dashboard() {
       {showBrandModal && <BrandWizard onClose={() => setShowBrandModal(false)} onSave={handleSaveBrand} />}
       {editingBrand   && <BrandModal existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
+      {/* Brand Setup Wizard — opens when user clicks "השלם הגדרה" on a brand card */}
+      {setupBrand && (
+        <BrandSetupWizard
+          brand={setupBrand}
+          onClose={() => setSetupBrand(null)}
+          onSave={updatedBrand => {
+            handleSaveBrand(updatedBrand);
+            setSetupBrand(null);
+          }}
+        />
+      )}
+
       <div className="max-w-screen-lg mx-auto px-4 py-5 sm:py-8 space-y-6 animate-in">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -1624,29 +2053,43 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
-            {brands.map(b => (
-              <BrandCard
-                key={b.id}
-                brand={b}
-                onClick={() => setActiveBrand(b)}
-                onEdit={() => setEditingBrand(b)}
-                onDelete={() => handleDeleteBrand(b.id)}
-                onDragStart={e => handleBrandDragStart(e, b.id)}
-                onDragOver={e => handleBrandDragOver(e, b.id)}
-                onDrop={e => handleBrandDrop(e, b.id)}
-                onDragEnd={handleBrandDragEnd}
-                isDragOver={dragOverBrandId === b.id}
-              />
-            ))}
-            <button
-              onClick={() => setShowBrandModal(true)}
-              className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-              <span className="font-semibold text-gray-400 text-sm">מותג חדש</span>
-            </button>
-          </div>
+          <>
+            {/* Morning panel — priority focus */}
+            <MorningPanel
+              brands={brands}
+              userEmail={userEmail}
+              onBrandClick={b => setActiveBrand(b)}
+            />
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
+              {brands.map(b => {
+                const health = getBrandHealth(b);
+                return (
+                  <BrandCard
+                    key={b.id}
+                    brand={b}
+                    health={health}
+                    onClick={() => setActiveBrand(b)}
+                    onEdit={() => setEditingBrand(b)}
+                    onDelete={() => handleDeleteBrand(b.id)}
+                    onSetup={() => setSetupBrand(b)}
+                    onDragStart={e => handleBrandDragStart(e, b.id)}
+                    onDragOver={e => handleBrandDragOver(e, b.id)}
+                    onDrop={e => handleBrandDrop(e, b.id)}
+                    onDragEnd={handleBrandDragEnd}
+                    isDragOver={dragOverBrandId === b.id}
+                  />
+                );
+              })}
+              <button
+                onClick={() => setShowBrandModal(true)}
+                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
+                <span className="font-semibold text-gray-400 text-sm">מותג חדש</span>
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
