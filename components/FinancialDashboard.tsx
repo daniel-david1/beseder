@@ -534,12 +534,23 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               <label className="text-xs text-gray-400 mb-0.5 block">סכום (₪)</label>
               <input className={inp} type="number" value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} dir="rtl" />
             </div>
-            <div className="col-span-2">
+            <div>
               <label className="text-xs text-gray-400 mb-0.5 block">תדירות</label>
               <select className={inp} value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value as "monthly" | "yearly" })}>
                 <option value="monthly">חודשי</option>
                 <option value="yearly">שנתי</option>
               </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-0.5 block">סוג</label>
+              <div className="flex gap-1 mt-1">
+                {([{ v: "personal", label: "👤 אישי" }, { v: "business", label: "🏢 עסקי" }] as { v: "personal"|"business"; label: string }[]).map(opt => (
+                  <button key={opt.v} type="button"
+                    onClick={() => setForm({ ...form, category: opt.v })}
+                    className={`flex-1 text-xs font-semibold py-1 px-2 rounded-lg border transition-all ${(form.category ?? "personal") === opt.v ? opt.v === "personal" ? "bg-purple-100 border-purple-400 text-purple-700" : "bg-blue-100 border-blue-400 text-blue-700" : "bg-white border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                  >{opt.label}</button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -555,6 +566,11 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       <div className="flex items-center gap-3 py-3 px-1 border-b border-gray-50 group hover:bg-gray-50/50 rounded-lg transition-colors">
         <div className="flex-1 text-right font-semibold text-gray-800 text-sm">{expense.name}</div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {expense.category && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${expense.category === "business" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
+              {expense.category === "business" ? "🏢 עסקי" : "👤 אישי"}
+            </span>
+          )}
           <span className="text-sm font-bold text-teal-600">{ils(expense.amount)}/{expense.frequency === "monthly" ? "חודש" : "שנה"}</span>
           <button className="icon-btn w-8 h-8 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs opacity-100 transition-opacity" onClick={() => setEditingExpense(expense.id)}>✏️</button>
         </div>
@@ -580,11 +596,22 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
               <input className={inp} type="number" value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })} dir="rtl" />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-0.5 block">סוג</label>
+              <label className="text-xs text-gray-400 mb-0.5 block">תדירות</label>
               <select className={inp} value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value as "monthly" | "one-time" })}>
                 <option value="monthly">חודשי</option>
                 <option value="one-time">חד פעמי</option>
               </select>
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-gray-400 mb-0.5 block">סוג</label>
+              <div className="flex gap-1 mt-1">
+                {([{ v: "personal", label: "👤 אישי" }, { v: "business", label: "🏢 עסקי" }] as { v: "personal"|"business"; label: string }[]).map(opt => (
+                  <button key={opt.v} type="button"
+                    onClick={() => setForm({ ...form, category: opt.v })}
+                    className={`flex-1 text-xs font-semibold py-1 px-2 rounded-lg border transition-all ${(form.category ?? "personal") === opt.v ? opt.v === "personal" ? "bg-purple-100 border-purple-400 text-purple-700" : "bg-blue-100 border-blue-400 text-blue-700" : "bg-white border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                  >{opt.label}</button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -602,6 +629,11 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           <div className="font-semibold text-gray-800 text-sm">{income.name}</div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {income.category && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${income.category === "business" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
+              {income.category === "business" ? "🏢 עסקי" : "👤 אישי"}
+            </span>
+          )}
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${income.frequency === "monthly" ? "bg-green-50 text-green-700" : "bg-blue-50 text-blue-600"}`}>
             {income.frequency === "monthly" ? "חודשי" : "חד פעמי"}
           </span>

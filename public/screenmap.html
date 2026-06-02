@@ -24,6 +24,19 @@
       --text-primary: #f1f5f9;
       --text-secondary: #94a3b8;
       --text-muted: #475569;
+      --header-bg: rgba(10,12,18,0.94);
+    }
+    :root.light {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.06);
+      --border-bright: rgba(0,0,0,0.12);
+      --arrow: #9ca3af;
+      --arrow-label: #6b7280;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --header-bg: rgba(248,250,252,0.94);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -33,11 +46,28 @@
       min-height: 100vh;
       overflow-x: auto;
     }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-bright);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-family: 'Heebo', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { background: var(--border); color: var(--text-primary); }
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(10,12,18,0.94);
+      background: var(--header-bg);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       padding: 14px 40px;
@@ -90,11 +120,14 @@
       <div class="header-subtitle">Screen Architecture · v1.0</div>
     </div>
   </div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#0d9488"></div>מסכים ראשיים</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>מודאלים / דרוארים</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>פיננסים</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#4b5563;border-radius:50%"></div>ניווט</div>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#0d9488"></div>מסכים ראשיים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>מודאלים / דרוארים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>פיננסים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4b5563;border-radius:50%"></div>ניווט</div>
+    </div>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 כהה</button>
   </div>
 </header>
 
@@ -132,8 +165,8 @@
   </defs>
 
   <!-- ── BG ── -->
-  <rect width="1540" height="1020" fill="#0a0c12"/>
-  <rect width="1540" height="1020" fill="url(#grid)"/>
+  <rect id="svgBgRect" width="1540" height="1020" fill="#0a0c12"/>
+  <rect id="svgGridRect" width="1540" height="1020" fill="url(#grid)"/>
   <rect width="1540" height="1020" fill="url(#vignette)"/>
 
   <!-- corner accents -->
@@ -465,5 +498,31 @@
 </svg>
 </div>
 
+<script>
+  const DARK_BG = '#0a0c12';
+  const LIGHT_BG = '#f0f4f8';
+  let isLight = false;
+
+  function toggleTheme() {
+    isLight = !isLight;
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+
+    if (isLight) {
+      root.classList.add('light');
+      btn.textContent = '☀️ בהיר';
+      // update SVG bg rects
+      document.querySelectorAll('#svgBgRect').forEach(el => el.setAttribute('fill', LIGHT_BG));
+      document.querySelectorAll('#svgGridRect').forEach(el => el.setAttribute('opacity', '0.3'));
+      document.body.style.background = LIGHT_BG;
+    } else {
+      root.classList.remove('light');
+      btn.textContent = '🌙 כהה';
+      document.querySelectorAll('#svgBgRect').forEach(el => el.setAttribute('fill', DARK_BG));
+      document.querySelectorAll('#svgGridRect').forEach(el => el.setAttribute('opacity', '1'));
+      document.body.style.background = '';
+    }
+  }
+</script>
 </body>
 </html>

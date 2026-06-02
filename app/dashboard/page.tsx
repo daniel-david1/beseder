@@ -654,9 +654,6 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
 
         <div className="space-y-10 max-w-screen-xl mx-auto">
           {brand.projects.map((project, pi) => {
-            const allS  = project.subProjects.reduce((n, sp) => n + sp.stages.length + sp.channels.reduce((c, ch) => c + ch.stages.length, 0), 0);
-            const doneS = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length + sp.channels.reduce((c, ch) => c + ch.stages.filter(s => s.status === "done").length, 0), 0);
-            const projPct = allS > 0 ? Math.round((doneS / allS) * 100) : 0;
 
             return (
               <div key={project.id}>
@@ -675,15 +672,11 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                       style={{ background: project.color + "25" }}>
                       {project.emoji}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-1">
                       <div className="font-black text-white text-sm">{project.name}</div>
                       <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>
-                        {project.subProjects.length} פרויקטים · {projPct}%
+                        {project.subProjects.length} פרויקטים
                       </div>
-                    </div>
-                    {/* Progress ring placeholder */}
-                    <div className="w-20 h-1.5 rounded-full overflow-hidden mr-1" style={{ background: "#1e2130" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${projPct}%`, background: project.color }} />
                     </div>
                     <span className="text-xs opacity-40 group-hover:opacity-80 transition-opacity" style={{ color: project.color }}>←</span>
                   </button>
@@ -713,7 +706,6 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                         const subDoneS = hasChannels
                           ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0)
                           : sub.stages.filter(s => s.status === "done").length;
-                        const subPct   = subAllS > 0 ? Math.round((subDoneS / subAllS) * 100) : 0;
                         const blockedN = hasChannels
                           ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0)
                           : sub.stages.filter(s => s.status === "blocked").length;
@@ -771,14 +763,6 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
                                   {sub.stages.length > 10 && <span className="text-[9px] self-center" style={{ color: "#4b5563" }}>+{sub.stages.length - 10}</span>}
                                 </div>
                               )}
-
-                              {/* Progress bar + stats */}
-                              <div className="flex items-center gap-1.5">
-                                <div className="h-1 rounded-full overflow-hidden flex-1" style={{ background: "#1e2130" }}>
-                                  <div className="h-full rounded-full transition-all" style={{ width: `${subPct}%`, background: project.color }} />
-                                </div>
-                                <span className="text-[10px] font-bold shrink-0" style={{ color: project.color + "99" }}>{subPct}%</span>
-                              </div>
 
                               {/* Status badges */}
                               <div className="flex gap-1 mt-1.5 flex-wrap">
@@ -1103,8 +1087,8 @@ function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; 
 }
 
 /* ─── Brand card ──────────────────────────────────────── */
-function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
-  brand: Brand; health: BrandHealth; onClick: () => void; onEdit: () => void; onDelete: () => void; onSetup: () => void;
+function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
+  brand: Brand; health: BrandHealth; onClick: () => void; onEdit: () => void; onDelete: () => void; onSetup: () => void; onHide: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -1125,7 +1109,7 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
       style={{
         outline: isDragOver ? `2px solid ${brand.color}` : "none",
         outlineOffset: 2,
-        opacity: isDragOver ? 0.85 : 1,
+        opacity: isDragOver ? 0.85 : brand.hidden ? 0.45 : 1,
         transform: isDragOver ? "scale(0.98)" : undefined,
         transition: "all 0.15s ease",
       }}
@@ -1174,6 +1158,7 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onDragSt
               style={{ fontSize: 14 }}
             >⠿</span>
             <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              <button onClick={e => { e.stopPropagation(); onHide(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 flex items-center justify-center text-xs" title={brand.hidden ? "הצג" : "הסתר"}>{brand.hidden ? "👁" : "🙈"}</button>
               <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
               <button onClick={e => { e.stopPropagation(); onDelete(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
             </div>
@@ -1813,14 +1798,7 @@ export default function Dashboard() {
           </div>
 
           <div className="card px-5 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-gray-700 text-sm">התקדמות</span>
-              <span className="font-black text-xl" style={{ color: activeProject.color }}>{progress}%</span>
-            </div>
-            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
-            </div>
-            <div className="flex gap-4 mt-2.5 flex-wrap">
+            <div className="flex gap-4 flex-wrap">
               {(["todo","active","done","blocked"] as StageStatus[]).map(s => {
                 const count = sorted.filter(st => st.status === s).length;
                 if (!count) return null;
@@ -2009,15 +1987,6 @@ export default function Dashboard() {
           {/* ── STAGES MODE ── */}
           {hasStages && !hasChannels && (
             <>
-              <div className="card px-5 py-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-gray-700 text-sm">התקדמות</span>
-                  <span className="font-black text-xl" style={{ color: activeProject.color }}>{stageProgress}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${stageProgress}%`, background: activeProject.color }} />
-                </div>
-              </div>
               <div className="card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-bold text-gray-800">משימות</h2>
@@ -2097,17 +2066,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Overall progress */}
-          <div className="card px-5 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-gray-700 text-sm">התקדמות כללית</span>
-              <span className="font-black text-xl" style={{ color: activeProject.color }}>{progress}%</span>
+          {/* Projects summary */}
+          {totalStages > 0 && (
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-xs text-gray-400">{activeProject.subProjects.length} פרויקטים · {doneStages}/{totalStages} משימות הושלמו</span>
             </div>
-            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progress}%`, background: activeProject.color }} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">{activeProject.subProjects.length} פרויקטים · {doneStages}/{totalStages} משימות הושלמו</p>
-          </div>
+          )}
 
           {/* Financial overview */}
           {(() => {
@@ -2517,6 +2481,10 @@ export default function Dashboard() {
                     onClick={() => setActiveBrand(b)}
                     onEdit={() => setEditingBrand(b)}
                     onDelete={() => handleDeleteBrand(b.id)}
+                    onHide={() => {
+                      const updated = brands.map(br => br.id === b.id ? { ...br, hidden: !br.hidden } : br);
+                      syncAll(updated);
+                    }}
                     onSetup={() => setSetupBrand(b)}
                     onDragStart={e => handleBrandDragStart(e, b.id)}
                     onDragOver={e => handleBrandDragOver(e, b.id)}

@@ -6,6 +6,7 @@ export interface StageExpense {
   amount: number;
   date?: string;
   frequency?: 'monthly' | 'yearly' | 'one-time';
+  category?: 'personal' | 'business';
 }
 
 export interface Stage {
@@ -91,6 +92,7 @@ export interface Brand {
   projects: Project[];
   goals?: BrandGoal[];
   createdAt: string;
+  hidden?: boolean;
 }
 
 export interface Loan {
@@ -114,6 +116,7 @@ export interface FixedExpense {
   name: string;
   amount: number;
   frequency: 'monthly' | 'yearly';
+  category?: 'personal' | 'business';
 }
 
 export interface PropertyIncome {
@@ -146,6 +149,7 @@ export interface Income {
   name: string;
   amount: number;
   frequency: 'monthly' | 'one-time';
+  category?: 'personal' | 'business';
 }
 
 export interface FinancialData {
