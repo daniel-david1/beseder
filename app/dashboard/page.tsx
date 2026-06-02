@@ -1842,7 +1842,7 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
 
   return (
     <div
-      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move h-full"
+      className="card overflow-hidden hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move"
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -1850,25 +1850,24 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
       onDragEnd={onDragEnd}
     >
       <div className="h-1 w-full" style={{ background: project.color }} />
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        {/* Title row */}
-        <div className="flex items-start justify-between gap-1">
+      <div className="p-3">
+        {/* Title + actions row */}
+        <div className="flex items-center justify-between gap-1">
           <button onClick={onClick} className="flex items-center gap-2 flex-1 text-right min-w-0">
-            <span className="text-2xl flex-shrink-0">{project.emoji}</span>
-            <h3 className="font-black text-gray-900 text-sm leading-tight">{project.name}</h3>
+            <span className="text-xl flex-shrink-0">{project.emoji}</span>
+            <h3 className="font-black text-gray-900 text-sm leading-tight truncate">{project.name}</h3>
           </button>
           <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold">×</button>
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-6 h-6 rounded-md bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-[10px]">✏️</button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-6 h-6 rounded-md bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-xs font-bold">×</button>
           </div>
         </div>
-
-        {/* Stats row */}
-        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
-          <span className="text-[11px] text-gray-400">{project.subProjects.length} פרויקטים</span>
-          {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
-          {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blocked}</span>}
-        </button>
+        {/* Stats */}
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <span className="text-[10px] text-gray-400">{project.subProjects.length} פרויקטים</span>
+          {active  > 0 && <span className="text-[9px] font-bold px-1 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
+          {blocked > 0 && <span className="text-[9px] font-bold px-1 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blocked}</span>}
+        </div>
       </div>
     </div>
   );
@@ -2921,11 +2920,11 @@ export default function Dashboard() {
               <button onClick={() => setShowProjectModal(true)} className="btn btn-orange">+ צור מחלקה ראשונה</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" style={{ gridAutoRows: "1fr" }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {[...projects].sort((a, b) => a.order - b.order).map(p => (
                 <div
                   key={p.id}
-                  className={`h-full${dragOverProjectId === p.id ? " opacity-50" : ""}`}
+                  className={dragOverProjectId === p.id ? "opacity-50" : ""}
                   onDragOver={(e) => handleProjectDragOver(e, p.id)}
                   onDrop={(e) => handleProjectDrop(e, p.id)}
                 >
@@ -2941,27 +2940,25 @@ export default function Dashboard() {
                   />
                 </div>
               ))}
-              {/* Financial card — matches compact ProjectCard */}
+              {/* Financial card */}
               <button
                 onClick={() => setShowBrandFinancial(true)}
-                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 h-full"
+                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                 style={{ border: "1.5px solid #d1fae5" }}
               >
                 <div className="h-1 w-full" style={{ background: "#10b981" }} />
-                <div className="p-3 flex flex-col gap-2 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl flex-shrink-0">💰</span>
-                    <h3 className="font-black text-gray-900 text-sm leading-tight">ניהול פיננסי</h3>
-                  </div>
-                  <span className="text-[11px] text-gray-400 mt-auto">הלוואות, הוצאות, הכנסות</span>
+                <div className="p-3 flex items-center gap-2">
+                  <span className="text-xl flex-shrink-0">💰</span>
+                  <h3 className="font-black text-gray-900 text-sm leading-tight">ניהול פיננסי</h3>
                 </div>
               </button>
 
               <button
                 onClick={() => setShowProjectModal(true)}
-                className="card flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent h-full"
+                className="card flex flex-col items-center justify-center gap-1.5 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
+                style={{ minHeight: 64 }}
               >
-                <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-xl">+</div>
+                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-500 flex items-center justify-center text-lg">+</div>
                 <span className="font-semibold text-gray-400 text-xs">מחלקה חדשה</span>
               </button>
             </div>
