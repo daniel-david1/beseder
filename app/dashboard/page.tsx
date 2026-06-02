@@ -611,141 +611,193 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
   onClose: () => void;
   onNavigateTo: (project: Project, sub?: SubProject, channel?: Channel) => void;
 }) {
+  const totalTasks  = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.length + sp.channels.reduce((cs, c) => cs + c.stages.length, 0), 0), 0);
+  const doneTasks   = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "done").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "done").length, 0), 0), 0);
+  const activeCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "active").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "active").length, 0), 0), 0);
+  const blockedCount = brand.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(t => t.status === "blocked").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(t => t.status === "blocked").length, 0), 0), 0);
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#f0f2f5" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#0a0c12", fontFamily: "'Heebo', system-ui, sans-serif", direction: "rtl" }}>
+
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: "#1e2130", background: "#0d1018" }}>
         <div className="flex items-center gap-3">
-          {brand.logo
-            ? <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-2xl object-contain bg-gray-50 border border-gray-100" />
-            : <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-2xl" style={{ background: brand.color + "18", border: `2px solid ${brand.color}30` }}>{brand.emoji}</div>
-          }
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shrink-0"
+            style={{ background: brand.color + "25", border: `1.5px solid ${brand.color}50` }}>
+            {brand.emoji}
+          </div>
           <div>
-            <h2 className="font-black text-gray-900 text-lg leading-tight">{brand.name}</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{brand.projects.length} פרויקט{brand.projects.length !== 1 ? "ים" : ""} · תצוגת מפה</p>
+            <h2 className="font-black text-white text-base leading-tight">{brand.name}</h2>
+            <p className="text-xs mt-0.5" style={{ color: "#6b7280" }}>מבט על · {brand.projects.length} פרויקטים</p>
+          </div>
+          {/* Mini stats */}
+          <div className="flex items-center gap-2 mr-3">
+            {doneTasks > 0    && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#14532d30", color: "#4ade80", border: "1px solid #14532d" }}>✓ {doneTasks} הושלמו</span>}
+            {activeCount > 0  && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#1e3a5f30", color: "#60a5fa", border: "1px solid #1e3a5f" }}>● {activeCount} פעילות</span>}
+            {blockedCount > 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#4c0519 30", color: "#f87171", border: "1px solid #4c0519" }}>⚠ {blockedCount} תקועות</span>}
           </div>
         </div>
-        <button onClick={onClose} className="btn btn-ghost text-sm gap-1">× סגור</button>
+        <button onClick={onClose}
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+          style={{ color: "#9ca3af", background: "#1a1d28", border: "1px solid #2a2d3e" }}
+        >× סגור</button>
       </div>
 
-      {/* Scrollable canvas */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="space-y-5 max-w-screen-xl mx-auto">
-          {brand.projects.length === 0 && (
-            <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
-              <div className="text-5xl mb-3">📭</div>
-              <p className="text-gray-400 font-semibold">אין פרויקטים במותג זה עדיין</p>
-            </div>
-          )}
-          {brand.projects.map(project => {
-            const allS = project.subProjects.reduce((n, sp) => n + sp.stages.length, 0);
-            const doneS = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length, 0);
+      {/* Canvas */}
+      <div className="flex-1 overflow-auto p-6 pb-16">
+        {brand.projects.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <div className="text-5xl opacity-30">📭</div>
+            <p className="font-semibold" style={{ color: "#4b5563" }}>אין פרויקטים במותג זה עדיין</p>
+          </div>
+        )}
+
+        <div className="space-y-10 max-w-screen-xl mx-auto">
+          {brand.projects.map((project, pi) => {
+            const allS  = project.subProjects.reduce((n, sp) => n + sp.stages.length + sp.channels.reduce((c, ch) => c + ch.stages.length, 0), 0);
+            const doneS = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "done").length + sp.channels.reduce((c, ch) => c + ch.stages.filter(s => s.status === "done").length, 0), 0);
             const projPct = allS > 0 ? Math.round((doneS / allS) * 100) : 0;
 
             return (
-              <div key={project.id} className="bg-white rounded-2xl overflow-hidden shadow-sm"
-                style={{ border: `1px solid ${project.color}28` }}>
-
-                {/* Project header bar */}
-                <button
-                  onClick={() => onNavigateTo(project)}
-                  className="w-full flex items-center justify-between px-5 py-4 transition-opacity hover:opacity-90"
-                  style={{ background: project.color + "0e", borderBottom: `1px solid ${project.color}1a` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl" style={{ background: project.color + "20" }}>
+              <div key={project.id}>
+                {/* ── Project node ── */}
+                <div className="flex justify-center mb-2">
+                  <button
+                    onClick={() => onNavigateTo(project)}
+                    className="group flex items-center gap-3 px-5 py-3 rounded-2xl transition-all hover:scale-105"
+                    style={{
+                      background: "#13161f",
+                      border: `2px solid ${project.color}60`,
+                      boxShadow: `0 0 20px ${project.color}18`,
+                    }}
+                  >
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shrink-0"
+                      style={{ background: project.color + "25" }}>
                       {project.emoji}
                     </div>
                     <div className="text-right">
-                      <h3 className="font-black text-gray-900 text-base">{project.name}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{project.subProjects.length} מחלקות</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <span className="font-black text-2xl" style={{ color: project.color }}>{projPct}%</span>
-                      <div className="w-28 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${projPct}%`, background: project.color }} />
+                      <div className="font-black text-white text-sm">{project.name}</div>
+                      <div className="text-[11px] mt-0.5" style={{ color: project.color + "cc" }}>
+                        {project.subProjects.length} מחלקות · {projPct}%
                       </div>
                     </div>
-                    <span className="text-gray-300 text-lg">←</span>
-                  </div>
-                </button>
-
-                {/* Departments grid */}
-                <div className="p-4 flex gap-3 flex-wrap">
-                  {project.subProjects.map(sub => {
-                    const hasChannels = sub.channels.length > 0;
-                    const hasStages   = sub.stages.length > 0;
-                    const subPct      = hasChannels
-                      ? pct(sub.channels.flatMap(c => c.stages))
-                      : pct(sub.stages);
-                    const itemCount   = hasChannels ? sub.channels.length : sub.stages.length;
-
-                    return (
-                      <div
-                        key={sub.id}
-                        onClick={() => onNavigateTo(project, sub)}
-                        className="flex-1 rounded-xl p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5 group cursor-pointer"
-                        style={{
-                          minWidth: 130, maxWidth: 220,
-                          background: project.color + "07",
-                          border: `1.5px solid ${project.color}20`,
-                        }}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{sub.emoji}</span>
-                          <span className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{sub.name}</span>
-                        </div>
-
-                        {/* Channel chips */}
-                        {hasChannels && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {sub.channels.slice(0, 5).map(ch => (
-                              <button
-                                key={ch.id}
-                                onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
-                                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold hover:opacity-70 transition-opacity"
-                                style={{ background: project.color + "22", color: project.color }}
-                              >
-                                <span>{ch.emoji}</span>
-                                <span className="max-w-[60px] truncate">{ch.name}</span>
-                              </button>
-                            ))}
-                            {sub.channels.length > 5 && (
-                              <span className="text-[10px] text-gray-400 self-center px-1">+{sub.channels.length - 5}</span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Stage dots */}
-                        {!hasChannels && hasStages && (
-                          <div className="flex gap-0.5 mb-2 flex-wrap">
-                            {sub.stages.slice(0, 8).map(s => (
-                              <div key={s.id} className="w-1.5 h-1.5 rounded-full" style={{
-                                background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : "#d1d5db"
-                              }} />
-                            ))}
-                            {sub.stages.length > 8 && <span className="text-[9px] text-gray-400 self-center">+{sub.stages.length - 8}</span>}
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2">
-                          <div className="h-1 bg-gray-100 rounded-full overflow-hidden flex-1">
-                            <div className="h-full rounded-full" style={{ width: `${subPct}%`, background: project.color }} />
-                          </div>
-                          <span className="text-[9px] text-gray-400 font-semibold whitespace-nowrap">
-                            {itemCount} {hasChannels ? "פריטים" : "משימות"}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {project.subProjects.length === 0 && (
-                    <p className="text-sm text-gray-400 italic py-2 px-1">אין מחלקות עדיין</p>
-                  )}
+                    {/* Progress ring placeholder */}
+                    <div className="w-20 h-1.5 rounded-full overflow-hidden mr-1" style={{ background: "#1e2130" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${projPct}%`, background: project.color }} />
+                    </div>
+                    <span className="text-xs opacity-40 group-hover:opacity-80 transition-opacity" style={{ color: project.color }}>←</span>
+                  </button>
                 </div>
+
+                {/* Connector from project to subs */}
+                {project.subProjects.length > 0 && (
+                  <div className="flex justify-center mb-2">
+                    <div className="w-px h-4" style={{ background: project.color + "40" }} />
+                  </div>
+                )}
+
+                {/* ── SubProjects row ── */}
+                {project.subProjects.length > 0 && (
+                  <div className="relative">
+                    {/* Horizontal connector line */}
+                    <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ height: 1 }}>
+                      <div className="w-3/4 h-px" style={{ background: project.color + "30" }} />
+                    </div>
+
+                    <div className="flex gap-4 justify-center flex-wrap pt-4">
+                      {project.subProjects.map(sub => {
+                        const hasChannels = sub.channels.length > 0;
+                        const subAllS  = hasChannels
+                          ? sub.channels.reduce((n, c) => n + c.stages.length, 0)
+                          : sub.stages.length;
+                        const subDoneS = hasChannels
+                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0)
+                          : sub.stages.filter(s => s.status === "done").length;
+                        const subPct   = subAllS > 0 ? Math.round((subDoneS / subAllS) * 100) : 0;
+                        const blockedN = hasChannels
+                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0)
+                          : sub.stages.filter(s => s.status === "blocked").length;
+                        const activeN  = hasChannels
+                          ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0)
+                          : sub.stages.filter(s => s.status === "active").length;
+
+                        return (
+                          <div key={sub.id} className="flex flex-col items-center gap-1" style={{ minWidth: 150, maxWidth: 200 }}>
+                            {/* Vertical connector to sub */}
+                            <div className="w-px h-3" style={{ background: project.color + "35" }} />
+
+                            <button
+                              onClick={() => onNavigateTo(project, sub)}
+                              className="w-full group rounded-xl p-3 text-right transition-all hover:scale-105"
+                              style={{
+                                background: "#13161f",
+                                border: `1.5px solid ${project.color}35`,
+                                boxShadow: `0 2px 12px ${project.color}10`,
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-base">{sub.emoji}</span>
+                                <span className="font-bold text-white text-xs leading-snug">{sub.name}</span>
+                              </div>
+
+                              {/* Item chips (channels) */}
+                              {hasChannels && (
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                  {sub.channels.slice(0, 4).map(ch => (
+                                    <button
+                                      key={ch.id}
+                                      onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
+                                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold transition-opacity hover:opacity-70"
+                                      style={{ background: project.color + "20", color: project.color + "dd", border: `1px solid ${project.color}30` }}
+                                    >
+                                      <span>{ch.emoji}</span>
+                                      <span className="max-w-[48px] truncate">{ch.name}</span>
+                                    </button>
+                                  ))}
+                                  {sub.channels.length > 4 && (
+                                    <span className="text-[10px] self-center" style={{ color: "#6b7280" }}>+{sub.channels.length - 4}</span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Task dots */}
+                              {!hasChannels && sub.stages.length > 0 && (
+                                <div className="flex gap-1 mb-2 flex-wrap">
+                                  {sub.stages.slice(0, 10).map(s => (
+                                    <div key={s.id} className="w-2 h-2 rounded-full" style={{
+                                      background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : "#2a2d3e"
+                                    }} />
+                                  ))}
+                                  {sub.stages.length > 10 && <span className="text-[9px] self-center" style={{ color: "#4b5563" }}>+{sub.stages.length - 10}</span>}
+                                </div>
+                              )}
+
+                              {/* Progress bar + stats */}
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-1 rounded-full overflow-hidden flex-1" style={{ background: "#1e2130" }}>
+                                  <div className="h-full rounded-full transition-all" style={{ width: `${subPct}%`, background: project.color }} />
+                                </div>
+                                <span className="text-[10px] font-bold shrink-0" style={{ color: project.color + "99" }}>{subPct}%</span>
+                              </div>
+
+                              {/* Status badges */}
+                              <div className="flex gap-1 mt-1.5 flex-wrap">
+                                {activeN > 0  && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "#1e3a5f", color: "#60a5fa" }}>● {activeN}</span>}
+                                {blockedN > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "#4c0519", color: "#f87171" }}>⚠ {blockedN}</span>}
+                                {subAllS === 0 && <span className="text-[9px]" style={{ color: "#374151" }}>ריק</span>}
+                              </div>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider between projects */}
+                {pi < brand.projects.length - 1 && (
+                  <div className="mt-8 h-px mx-auto w-1/2" style={{ background: "#1e2130" }} />
+                )}
               </div>
             );
           })}

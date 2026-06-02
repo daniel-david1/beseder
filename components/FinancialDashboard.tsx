@@ -152,12 +152,26 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
   };
 
   /* KPIs */
-  const totalRemaining       = data.loans.reduce((s, l) => s + loanRemaining(l), 0);
-  const totalMonthly         = data.loans.reduce((s, l) => s + (l.paidMonths < l.totalMonths ? l.monthlyPayment : 0), 0);
-  const totalPropertyValue   = data.properties.reduce((s, p) => s + p.purchasePrice, 0);
-  const totalMonthlyIncome   = (data.incomes ?? []).filter(i => i.frequency === "monthly").reduce((s, i) => s + i.amount, 0);
-  const totalOnetimeIncome   = (data.incomes ?? []).filter(i => i.frequency === "one-time").reduce((s, i) => s + i.amount, 0);
-  const totalExpensesMonthly = data.expenses.filter(e => e.frequency === "monthly").reduce((s, e) => s + e.amount, 0);
+  const totalRemaining          = data.loans.reduce((s, l) => s + loanRemaining(l), 0);
+  const totalMonthly            = data.loans.reduce((s, l) => s + (l.paidMonths < l.totalMonths ? l.monthlyPayment : 0), 0);
+  const totalPropertyValue      = data.properties.reduce((s, p) => s + p.purchasePrice, 0);
+  const totalMonthlyIncome      = (data.incomes ?? []).filter(i => i.frequency === "monthly").reduce((s, i) => s + i.amount, 0);
+  const totalOnetimeIncome      = (data.incomes ?? []).filter(i => i.frequency === "one-time").reduce((s, i) => s + i.amount, 0);
+  const totalExpensesMonthly    = data.expenses.filter(e => e.frequency === "monthly").reduce((s, e) => s + e.amount, 0);
+
+  /* Extended KPIs */
+  const totalPropMonthlyIncome  = data.properties.reduce((s, p) => s + p.incomes.reduce((ps, i) => ps + i.amount, 0), 0);
+  const totalLiabilityMonthly   = data.properties.reduce((s, p) => s + p.liabilities.reduce((ls, l) => ls + l.monthlyPayment, 0), 0);
+  const totalPropExpMonthly     = data.properties.reduce((s, p) => s + p.expenses.filter(e => e.frequency === "monthly").reduce((es, e) => es + e.amount, 0), 0);
+  const totalLiabilityRemaining = data.properties.reduce((s, p) => s + p.liabilities.reduce((ls, l) => {
+    const pm = l.paidMonths ?? (l.monthlyPayment > 0 ? Math.round(l.paidSoFar / l.monthlyPayment) : 0);
+    return ls + loanRemainingBalance(l.totalDebt, l.annualRate ?? 0, l.monthlyPayment, pm);
+  }, 0), 0);
+
+  const allMonthlyIncome  = totalMonthlyIncome + totalPropMonthlyIncome;
+  const allMonthlyOut     = totalMonthly + totalExpensesMonthly + totalLiabilityMonthly + totalPropExpMonthly;
+  const netMonthlyCash    = allMonthlyIncome - allMonthlyOut;
+  const totalDebtAll      = totalRemaining + totalLiabilityRemaining;
 
   const toggle = (s: "loans" | "expenses" | "incomes" | "properties") =>
     setOpenSection(prev => prev === s ? null : s);
@@ -864,21 +878,40 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
       {/* KPI row */}
       <div className="max-w-3xl mx-auto px-4 pt-5 pb-2">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-          <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#dc2626" }}>{ils(totalRemaining)}</div>
-            <div className="text-xs text-gray-400 mt-1">נותר לשלם</div>
+          {/* Income */}
+          <div className="card px-4 py-3 shadow-sm border border-green-100 bg-green-50/40">
+            <div className="text-xl font-black" style={{ color: "#16a34a" }}>{ils(allMonthlyIncome)}</div>
+            <div className="text-xs text-gray-500 mt-1 font-medium">הכנסה חודשית</div>
+            {totalPropMonthlyIncome > 0 && (
+              <div className="text-[10px] text-gray-400 mt-0.5">כולל ₪{Math.round(totalPropMonthlyIncome).toLocaleString("he-IL")} מנכסים</div>
+            )}
           </div>
-          <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#ea580c" }}>{ils(totalMonthly)}</div>
-            <div className="text-xs text-gray-400 mt-1">תשלום חודשי</div>
+          {/* All outflows */}
+          <div className="card px-4 py-3 shadow-sm border border-orange-100 bg-orange-50/40">
+            <div className="text-xl font-black" style={{ color: "#ea580c" }}>{ils(allMonthlyOut)}</div>
+            <div className="text-xs text-gray-500 mt-1 font-medium">החזר חודשי כולל</div>
+            <div className="text-[10px] text-gray-400 mt-0.5">
+              {totalMonthly > 0 && `הלוואות ₪${Math.round(totalMonthly).toLocaleString("he-IL")}`}
+              {totalExpensesMonthly > 0 && ` · הוצ׳ ₪${Math.round(totalExpensesMonthly).toLocaleString("he-IL")}`}
+            </div>
           </div>
-          <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#16a34a" }}>{ils(totalMonthlyIncome)}</div>
-            <div className="text-xs text-gray-400 mt-1">הכנסה חודשית</div>
+          {/* Net cash */}
+          <div className={`card px-4 py-3 shadow-sm border ${netMonthlyCash >= 0 ? "border-teal-100 bg-teal-50/40" : "border-red-100 bg-red-50/40"}`}>
+            <div className="text-xl font-black" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
+              {netMonthlyCash >= 0 ? "+" : ""}{ils(netMonthlyCash)}
+            </div>
+            <div className="text-xs text-gray-500 mt-1 font-medium">תזרים נטו</div>
+            <div className="text-[10px] mt-0.5" style={{ color: netMonthlyCash >= 0 ? "#0d9488" : "#dc2626" }}>
+              {netMonthlyCash >= 0 ? "✓ חיובי" : "⚠ גירעון"}
+            </div>
           </div>
+          {/* Total debt */}
           <div className="card px-4 py-3 shadow-sm border border-gray-100">
-            <div className="text-xl font-black" style={{ color: "#6366f1" }}>{ils(totalPropertyValue)}</div>
-            <div className="text-xs text-gray-400 mt-1">שווי נכסים</div>
+            <div className="text-xl font-black" style={{ color: "#6366f1" }}>{ils(totalDebtAll)}</div>
+            <div className="text-xs text-gray-500 mt-1 font-medium">יתרת חוב</div>
+            {totalLiabilityRemaining > 0 && (
+              <div className="text-[10px] text-gray-400 mt-0.5">כולל ₪{Math.round(totalLiabilityRemaining).toLocaleString("he-IL")} נכסים</div>
+            )}
           </div>
         </div>
 
