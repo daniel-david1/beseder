@@ -91,24 +91,37 @@ interface BgTheme {
 }
 
 const BG_THEMES: BgTheme[] = [
-  { id: "default",   label: "ברירת מחדל",  preview: "#f8fafc",  bgColor: "#f8fafc" },
-  { id: "warm",      label: "קרם",          preview: "#fef9f0",  bgColor: "#fef9f0" },
-  { id: "mint",      label: "מנטה",         preview: "#f0fdf4",  bgColor: "#f0fdf4" },
-  { id: "lavender",  label: "לבנדר",        preview: "#faf5ff",  bgColor: "#faf5ff" },
-  { id: "sky",       label: "שמיים",        preview: "#f0f9ff",  bgColor: "#f0f9ff" },
-  { id: "rose",      label: "ורוד",         preview: "#fff1f2",  bgColor: "#fff1f2" },
-  { id: "peach",     label: "אפרסק",        preview: "#fff7ed",  bgColor: "#fff7ed" },
-  { id: "slate",     label: "אפור כחלחל",   preview: "#f1f5f9",  bgColor: "#f1f5f9" },
-  { id: "charcoal",  label: "פחם",          preview: "#1e2130",  bgColor: "#1e2130" },
-  { id: "dark-navy", label: "כחול לילה",    preview: "#0f172a",  bgColor: "#0f172a" },
-  { id: "dark-green",label: "ירוק כהה",     preview: "#052e16",  bgColor: "#052e16" },
-  { id: "dark-wine", label: "יין",          preview: "#3b0764",  bgColor: "#3b0764" },
-  { id: "sunrise",   label: "זריחה",        preview: "linear-gradient(135deg,#fff7ed,#fef3c7)",         bgColor: "#fff7ed", bgImage: "linear-gradient(135deg,#fff7ed 0%,#fef3c7 60%,#fefce8 100%)" },
-  { id: "ocean",     label: "אוקיינוס",     preview: "linear-gradient(135deg,#f0f9ff,#e0f2fe)",         bgColor: "#f0f9ff", bgImage: "linear-gradient(160deg,#f0f9ff 0%,#e0f2fe 45%,#ecfdf5 100%)" },
-  { id: "dusk",      label: "שקיעה",        preview: "linear-gradient(135deg,#312e81,#4c1d95)",         bgColor: "#1e1b4b", bgImage: "linear-gradient(160deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%)" },
-  { id: "forest",    label: "יער",          preview: "linear-gradient(135deg,#14532d,#166534)",         bgColor: "#052e16", bgImage: "linear-gradient(160deg,#052e16 0%,#14532d 60%,#166534 100%)" },
-  { id: "dots",      label: "נקודות",       preview: "#f1f5f9",  bgColor: "#f1f5f9", bgImage: "radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px)", bgSize: "24px 24px" },
-  { id: "grid",      label: "גריד",         preview: "#f8fafc",  bgColor: "#f8fafc", bgImage: "linear-gradient(rgba(0,0,0,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.055) 1px,transparent 1px)", bgSize: "22px 22px" },
+  // ── בסיסי ──
+  { id: "default",        label: "ברירת מחדל",   preview: "#f8fafc",  bgColor: "#f8fafc" },
+  { id: "warm",           label: "קרם",           preview: "#fef9f0",  bgColor: "#fef9f0" },
+  { id: "mint",           label: "מנטה",          preview: "#f0fdf4",  bgColor: "#f0fdf4" },
+  { id: "lavender",       label: "לבנדר",         preview: "#faf5ff",  bgColor: "#faf5ff" },
+  { id: "sky",            label: "שמיים",         preview: "#f0f9ff",  bgColor: "#f0f9ff" },
+  { id: "rose",           label: "ורוד",          preview: "#fff1f2",  bgColor: "#fff1f2" },
+  { id: "peach",          label: "אפרסק",         preview: "#fff7ed",  bgColor: "#fff7ed" },
+  { id: "slate",          label: "אבן",           preview: "#f1f5f9",  bgColor: "#f1f5f9" },
+  // ── כהה ──
+  { id: "charcoal",       label: "פחם",           preview: "#1e2130",  bgColor: "#1e2130" },
+  { id: "dark-navy",      label: "לילה",          preview: "#0f172a",  bgColor: "#0f172a" },
+  { id: "dark-green",     label: "יער לילי",      preview: "#052e16",  bgColor: "#052e16" },
+  { id: "dark-wine",      label: "יין",           preview: "#3b0764",  bgColor: "#3b0764" },
+  // ── גרדיאנטים ──
+  { id: "sunrise",        label: "זריחה",         preview: "linear-gradient(135deg,#fff7ed,#fef3c7)", bgColor: "#fff7ed", bgImage: "linear-gradient(135deg,#fff7ed 0%,#fef3c7 60%,#fefce8 100%)" },
+  { id: "ocean-light",    label: "אוקיינוס",      preview: "linear-gradient(135deg,#f0f9ff,#e0f2fe)", bgColor: "#f0f9ff", bgImage: "linear-gradient(160deg,#f0f9ff 0%,#e0f2fe 45%,#ecfdf5 100%)" },
+  { id: "dusk",           label: "שקיעה",         preview: "linear-gradient(135deg,#312e81,#4c1d95)", bgColor: "#1e1b4b", bgImage: "linear-gradient(160deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%)" },
+  { id: "cherry",         label: "פריחה",         preview: "linear-gradient(135deg,#fce4ec,#f48fb1)", bgColor: "#fce4ec", bgImage: "linear-gradient(135deg,#fce4ec 0%,#f8bbd0 45%,#f48fb1 100%)" },
+  // ── נוף / טבע ──
+  { id: "deep-sea",       label: "עמק הים",       preview: "linear-gradient(180deg,#006064,#00acc1)", bgColor: "#004d40", bgImage: "radial-gradient(ellipse at 50% -10%,#00acc1 0%,#00838f 35%,#006064 65%,#004d40 100%)" },
+  { id: "sunset-coast",   label: "שקיעת חוף",    preview: "linear-gradient(180deg,#ff8f00,#ad1457)", bgColor: "#1a237e", bgImage: "linear-gradient(180deg,#ff8f00 0%,#e64a19 25%,#ad1457 55%,#4a148c 80%,#1a237e 100%)" },
+  { id: "northern-lights",label: "זוהר צפוני",   preview: "linear-gradient(135deg,#004d40,#283593)", bgColor: "#004d40", bgImage: "linear-gradient(135deg,#004d40 0%,#00695c 28%,#1565c0 55%,#4527a0 80%,#004d40 100%)" },
+  { id: "mountain-dawn",  label: "הרי שחר",      preview: "linear-gradient(180deg,#1a237e,#c5cae9)", bgColor: "#1a237e", bgImage: "linear-gradient(180deg,#1a237e 0%,#283593 20%,#5c6bc0 55%,#c5cae9 82%,#eceff1 100%)" },
+  { id: "desert-dusk",    label: "מדבר שקיעה",   preview: "linear-gradient(180deg,#bf360c,#ffd54f)", bgColor: "#bf360c", bgImage: "linear-gradient(180deg,#bf360c 0%,#e65100 28%,#f57c00 58%,#ffd54f 85%,#fff8e1 100%)" },
+  { id: "rainy-city",     label: "עיר גשומה",    preview: "linear-gradient(180deg,#263238,#546e7a)", bgColor: "#1c2833", bgImage: "linear-gradient(180deg,#1c2833 0%,#263238 40%,#37474f 70%,#546e7a 100%)" },
+  { id: "galaxy",         label: "גלקסיה",       preview: "linear-gradient(135deg,#0a0a2e,#7c4dff40)", bgColor: "#0a0a2e", bgImage: "radial-gradient(ellipse at 20% 30%,#3f51b540 0%,transparent 50%),radial-gradient(ellipse at 80% 70%,#7c4dff30 0%,transparent 50%),linear-gradient(135deg,#0a0a2e 0%,#16213e 100%)" },
+  // ── דוגמאות ──
+  { id: "dots",           label: "נקודות",       preview: "#f1f5f9",  bgColor: "#f1f5f9", bgImage: "radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px)", bgSize: "24px 24px" },
+  { id: "grid",           label: "גריד",         preview: "#f8fafc",  bgColor: "#f8fafc", bgImage: "linear-gradient(rgba(0,0,0,0.055) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.055) 1px,transparent 1px)", bgSize: "22px 22px" },
+  { id: "dots-dark",      label: "נקודות כהות",  preview: "#1e2130",  bgColor: "#1e2130", bgImage: "radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px)", bgSize: "24px 24px" },
 ];
 
 function applyBgTheme(theme: BgTheme) {
@@ -1282,15 +1295,15 @@ function GoalsPanel({ goals, color, onChange }: {
 /* ─── Top Nav ─────────────────────────────────────────── */
 function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () => void }) {
   const router = useRouter();
-  const [open, setOpen]               = useState(false);
-  const [loggingOut, setLoggingOut]   = useState(false);
-  const [showBgPicker, setShowBgPicker] = useState(false);
-  const [bgThemeId, setBgThemeId]     = useState<string>(() => {
+  const [showSettings, setShowSettings] = useState(false);
+  const [loggingOut, setLoggingOut]     = useState(false);
+  const [bgThemeId, setBgThemeId]       = useState<string>(() => {
     if (typeof window !== "undefined") return localStorage.getItem(BG_THEME_KEY) ?? "default";
     return "default";
   });
-  const ref    = useRef<HTMLDivElement>(null);
-  const bgRef  = useRef<HTMLDivElement>(null);
+  const [notifEmail, setNotifEmail]     = useState(true);
+  const [notifPush, setNotifPush]       = useState(false);
+  const [settingsTab, setSettingsTab]   = useState<"appearance"|"account"|"billing"|"support">("appearance");
 
   // Apply saved theme on mount
   useEffect(() => {
@@ -1299,26 +1312,18 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close user dropdown on outside click
+  // Lock body scroll when drawer is open
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  // Close bg picker on outside click
-  useEffect(() => {
-    if (!showBgPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (bgRef.current && !bgRef.current.contains(e.target as Node)) setShowBgPicker(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showBgPicker]);
+    if (showSettings) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [showSettings]);
 
   const initials = userEmail ? userEmail.split("@")[0].slice(0, 2).toUpperCase() : "?";
+  const firstName = userEmail ? userEmail.split("@")[0] : "משתמש";
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -1334,157 +1339,365 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
 
   const currentTheme = BG_THEMES.find(t => t.id === bgThemeId) ?? BG_THEMES[0];
 
-  return (
-    <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
-      <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
+  const TABS = [
+    { id: "appearance", label: "🎨 מראה"   },
+    { id: "account",    label: "⚙️ חשבון"  },
+    { id: "billing",    label: "💎 פרימיום" },
+    { id: "support",    label: "❓ תמיכה"  },
+  ] as const;
 
-        {/* User menu — right side in RTL */}
-        <div className="relative" ref={ref}>
+  return (
+    <>
+      <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
+        <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
+
+          {/* Avatar → opens settings drawer — right side in RTL */}
           <button
-            onClick={() => setOpen(v => !v)}
+            onClick={() => setShowSettings(true)}
             className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+            title="הגדרות חשבון"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-2 ring-white group-hover:ring-orange-200 transition-all">
               {initials}
             </div>
-            <svg
-              className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-            >
+            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
-          {open && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl shadow-gray-200/60 overflow-hidden"
-              style={{ animation: "fadeSlideDown 0.15s ease-out" }}
-            >
-              <div className="px-4 py-3.5 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
-                    {initials}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-900 truncate">{userEmail}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">חשבון אישי</p>
-                  </div>
+          {/* Center: finance button */}
+          <div className="flex items-center gap-2">
+            {onFinance && (
+              <button onClick={onFinance}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-colors"
+              >
+                <span>💰</span>
+                <span className="hidden sm:inline">פיננסי</span>
+              </button>
+            )}
+            {/* Mini theme swatch — just a visual indicator, no action */}
+            <div
+              className="w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform"
+              style={{ background: currentTheme.preview }}
+              title={`רקע: ${currentTheme.label}`}
+              onClick={() => { setShowSettings(true); setSettingsTab("appearance"); }}
+            />
+          </div>
+
+          {/* Logo — left side in RTL */}
+          <div dir="ltr">
+            <img src="/beseder_primary_2x.png" alt="beseder" className="block" style={{ height: 40, width: "auto", maxWidth: 140 }} />
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Settings Drawer ────────────────────────────────── */}
+      {showSettings && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+            onClick={() => setShowSettings(false)}
+            style={{ animation: "fadeIn 0.2s ease-out" }}
+          />
+
+          {/* Drawer panel — slides in from right (RTL = left side visually) */}
+          <div
+            className="fixed top-0 right-0 h-full bg-white z-50 flex flex-col overflow-hidden"
+            style={{
+              width: "min(400px, 100vw)",
+              boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
+              animation: "slideInRight 0.28s cubic-bezier(0.22,1,0.36,1)",
+            }}
+          >
+            {/* ── Drawer header ── */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors text-lg"
+                aria-label="סגור"
+              >
+                ×
+              </button>
+              <h2 className="font-black text-gray-900 text-base">הגדרות</h2>
+            </div>
+
+            {/* ── Profile card ── */}
+            <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-white text-base font-bold shadow-md flex-shrink-0">
+                  {initials}
                 </div>
-              </div>
-              <div className="p-1.5">
-                <button
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                >
-                  <span className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-base flex-shrink-0">
-                    {loggingOut ? "⏳" : "👋"}
-                  </span>
-                  {loggingOut ? "מתנתק..." : "התנתק"}
-                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-gray-900 truncate">{firstName}</p>
+                  <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 text-[11px] font-bold border border-orange-100 flex-shrink-0">
+                  FREE
+                </span>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Center: finance + bg-picker buttons */}
-        <div className="flex items-center gap-2">
-          {onFinance && (
-            <button onClick={onFinance}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 transition-colors"
-            >
-              <span>💰</span>
-              <span className="hidden sm:inline">פיננסי</span>
-            </button>
-          )}
-
-          {/* 🎨 Background theme button */}
-          <div className="relative" ref={bgRef}>
-            <button
-              onClick={() => setShowBgPicker(v => !v)}
-              title="שנה רקע"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors"
-              style={{ borderColor: showBgPicker ? "#f97316" : undefined, color: showBgPicker ? "#f97316" : undefined }}
-            >
-              {/* Mini swatch of current theme */}
-              <span className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0 inline-block"
-                style={{ background: currentTheme.preview }} />
-              <span className="hidden sm:inline">רקע</span>
-            </button>
-
-            {/* ── Theme picker panel — fixed + centered so it never overflows on mobile ── */}
-            {showBgPicker && (
-              <>
-                {/* Backdrop */}
-                <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setShowBgPicker(false)} />
-                <div
-                  className="rounded-2xl bg-white border border-gray-100 shadow-2xl overflow-hidden"
+            {/* ── Tab bar ── */}
+            <div className="flex border-b border-gray-100 flex-shrink-0 overflow-x-auto">
+              {TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSettingsTab(tab.id)}
+                  className="flex-1 min-w-fit px-3 py-3 text-xs font-semibold transition-colors whitespace-nowrap"
                   style={{
-                    position: "fixed",
-                    top: 64,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    zIndex: 9999,
-                    width: "min(340px, calc(100vw - 16px))",
-                    maxHeight: "calc(100vh - 80px)",
-                    overflowY: "auto",
-                    animation: "fadeSlideDown 0.15s ease-out",
+                    color: settingsTab === tab.id ? "#f97316" : "#6b7280",
+                    borderBottom: settingsTab === tab.id ? "2px solid #f97316" : "2px solid transparent",
+                    background: "transparent",
                   }}
-                  onClick={e => e.stopPropagation()}
                 >
-                  {/* Header */}
-                  <div className="px-4 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
-                    <h3 className="font-black text-gray-900 text-sm">🎨 בחר רקע</h3>
-                    <button onClick={() => setShowBgPicker(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">×</button>
-                  </div>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                  {/* Theme swatches */}
-                  <div className="p-4">
-                    {/* Solid colors */}
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">צבעים אחידים</p>
-                    <div className="grid grid-cols-4 gap-2 mb-4">
+            {/* ── Tab content ── */}
+            <div className="flex-1 overflow-y-auto">
+
+              {/* ── 🎨 Appearance ── */}
+              {settingsTab === "appearance" && (
+                <div className="p-5 space-y-5">
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">צבעים אחידים</p>
+                    <div className="grid grid-cols-4 gap-2">
                       {BG_THEMES.filter(t => !t.bgImage).map(theme => (
                         <button key={theme.id} onClick={() => handlePickTheme(theme)} title={theme.label}
                           className="flex flex-col items-center gap-1 group">
-                          <div className="w-full h-10 rounded-xl transition-transform group-hover:scale-105"
+                          <div className="w-full h-12 rounded-xl transition-all group-hover:scale-105 group-hover:shadow-md"
                             style={{
                               background: theme.preview,
                               border: bgThemeId === theme.id ? "2.5px solid #f97316" : "2px solid rgba(0,0,0,0.08)",
-                              boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                              boxShadow: bgThemeId === theme.id ? "0 0 0 3px #f9731630" : undefined,
                             }} />
                           <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Gradients */}
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">גרדיאנטים</p>
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">גרדיאנטים ונוף</p>
                     <div className="grid grid-cols-4 gap-2">
                       {BG_THEMES.filter(t => !!t.bgImage).map(theme => (
                         <button key={theme.id} onClick={() => handlePickTheme(theme)} title={theme.label}
                           className="flex flex-col items-center gap-1 group">
-                          <div className="w-full h-10 rounded-xl transition-transform group-hover:scale-105"
+                          <div className="w-full h-12 rounded-xl transition-all group-hover:scale-105 group-hover:shadow-md"
                             style={{
                               background: theme.preview,
                               border: bgThemeId === theme.id ? "2.5px solid #f97316" : "2px solid rgba(0,0,0,0.08)",
-                              boxShadow: bgThemeId === theme.id ? "0 0 0 2px #f9731640" : undefined,
+                              boxShadow: bgThemeId === theme.id ? "0 0 0 3px #f9731630" : undefined,
                             }} />
                           <span className="text-[9px] font-semibold text-gray-400 truncate w-full text-center">{theme.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* Logo — left side in RTL */}
-        <div dir="ltr">
-          <img src="/beseder_primary_2x.png" alt="beseder" className="block" style={{ height: 40, width: 'auto', maxWidth: 140 }} />
-        </div>
-      </div>
-    </nav>
+                  <div className="p-3 rounded-xl bg-gray-50 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex-shrink-0"
+                      style={{ background: currentTheme.preview, border: "1.5px solid rgba(0,0,0,0.08)" }} />
+                    <div>
+                      <p className="text-xs font-bold text-gray-700">נבחר: {currentTheme.label}</p>
+                      <p className="text-[10px] text-gray-400">הרקע נשמר אוטומטית</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ⚙️ Account ── */}
+              {settingsTab === "account" && (
+                <div className="p-5 space-y-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">כתובת מייל</label>
+                    <div className="input text-sm text-gray-500 bg-gray-50 cursor-default select-all">
+                      {userEmail}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">שם תצוגה</label>
+                    <input
+                      className="input text-sm"
+                      placeholder={firstName}
+                      defaultValue={firstName}
+                      onChange={() => {/* future: save display name */}}
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">בקרוב — שמירת שם תצוגה</p>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">התראות</p>
+                    <div className="space-y-3">
+                      {[
+                        { label: "עדכונים במייל",        sub: "סיכום שבועי ותזכורות", val: notifEmail, set: setNotifEmail },
+                        { label: "התראות Push",           sub: "על מכשיר זה (בקרוב)",  val: notifPush,  set: setNotifPush  },
+                      ].map(item => (
+                        <div key={item.label} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700">{item.label}</p>
+                            <p className="text-[11px] text-gray-400">{item.sub}</p>
+                          </div>
+                          <button
+                            onClick={() => item.set(v => !v)}
+                            className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+                            style={{ background: item.val ? "#f97316" : "#d1d5db" }}
+                          >
+                            <span
+                              className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
+                              style={{ right: item.val ? "0.125rem" : "auto", left: item.val ? "auto" : "0.125rem" }}
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">אבטחה</p>
+                    <button className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-right">
+                      <span className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-base shadow-sm flex-shrink-0">🔑</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-700">שנה סיסמה</p>
+                        <p className="text-[11px] text-gray-400">לינק ישלח למייל שלך</p>
+                      </div>
+                      <span className="text-gray-300 text-lg">←</span>
+                    </button>
+                    <button className="mt-2 w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-right">
+                      <span className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-base shadow-sm flex-shrink-0">📱</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-700">אימות דו-שלבי</p>
+                        <p className="text-[11px] text-gray-400">בקרוב</p>
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-300 bg-gray-200 px-2 py-0.5 rounded-full">Soon</span>
+                    </button>
+                  </div>
+
+                  <div className="border-t border-red-50 pt-4">
+                    <button
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-red-50 hover:bg-red-100 transition-colors text-right disabled:opacity-50"
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-base shadow-sm flex-shrink-0">
+                        {loggingOut ? "⏳" : "👋"}
+                      </span>
+                      <p className="text-sm font-bold text-red-600">{loggingOut ? "מתנתק..." : "התנתק מהחשבון"}</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── 💎 Billing ── */}
+              {settingsTab === "billing" && (
+                <div className="p-5 space-y-4">
+                  {/* Current plan */}
+                  <div className="rounded-2xl border-2 border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">תוכנית נוכחית</span>
+                      <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-bold">FREE</span>
+                    </div>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      {["עד 3 מותגים","מעקב שלבים בסיסי","שמירה בענן","גישה מהמובייל"].map(f => (
+                        <li key={f} className="flex items-center gap-2"><span className="text-green-500 text-base">✓</span>{f}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Pro plan CTA */}
+                  <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg,#1e2130 0%,#312e81 100%)" }}>
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">💎</span>
+                        <h3 className="font-black text-white text-base">Beseder Pro</h3>
+                        <span className="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black">HOT</span>
+                      </div>
+                      <p className="text-blue-200 text-xs mb-4">כל מה שצריך כדי לצמוח מהר</p>
+                      <ul className="space-y-2 mb-5">
+                        {[
+                          "מותגים ופרויקטים ללא הגבלה",
+                          "לוח בקרה פיננסי מלא",
+                          "ייצוא CSV ו-PDF",
+                          "AI insights — תובנות אוטומטיות",
+                          "שיתוף צוות (עד 5 חברים)",
+                          "עדיפות בתמיכה",
+                        ].map(f => (
+                          <li key={f} className="flex items-center gap-2 text-xs text-white/90">
+                            <span className="text-orange-400 text-sm">✦</span>{f}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex items-baseline gap-1.5 mb-4">
+                        <span className="text-3xl font-black text-white">₪79</span>
+                        <span className="text-blue-200 text-sm">/ חודש</span>
+                      </div>
+                      <button
+                        className="w-full py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        style={{ background: "linear-gradient(135deg,#f97316,#ea580c)", color: "white", boxShadow: "0 4px 20px rgba(249,115,22,0.4)" }}
+                        onClick={() => alert("בקרוב! נשלח לך מייל כשהתוכנית מוכנה 🚀")}
+                      >
+                        שדרג ל-Pro →
+                      </button>
+                      <p className="text-center text-[10px] text-blue-200/60 mt-2">ביטול בכל עת · ללא התחייבות</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-orange-50 border border-orange-100 text-center">
+                    <p className="text-xs font-semibold text-orange-700">🎁 הטבה לחשבונות מוקדמים</p>
+                    <p className="text-[11px] text-orange-500 mt-0.5">נרשמת מוקדם — תקבל 3 חודשים ראשונים במחיר מיוחד</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ❓ Support ── */}
+              {settingsTab === "support" && (
+                <div className="p-5 space-y-3">
+                  {[
+                    { icon: "📖", title: "מדריך שימוש",       sub: "כיצד להשתמש ב-Beseder",       action: () => window.open("mailto:support@getbeseder.com?subject=מדריך", "_blank") },
+                    { icon: "💬", title: "צור קשר",            sub: "support@getbeseder.com",       action: () => window.open("mailto:support@getbeseder.com", "_blank") },
+                    { icon: "🐛", title: "דווח על באג",        sub: "עזור לנו להשתפר",             action: () => window.open("mailto:support@getbeseder.com?subject=באג ב-Beseder", "_blank") },
+                    { icon: "💡", title: "הצע פיצ'ר",          sub: "יש לך רעיון? נשמח לשמוע",     action: () => window.open("mailto:support@getbeseder.com?subject=פיצ'ר חדש", "_blank") },
+                    { icon: "⭐", title: "דרג אותנו",          sub: "עוזר לנו לצמוח",              action: () => alert("תודה! בקרוב נשיק דף ביקורות 🙏") },
+                  ].map(item => (
+                    <button
+                      key={item.title}
+                      onClick={item.action}
+                      className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all text-right"
+                    >
+                      <span className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800">{item.title}</p>
+                        <p className="text-[11px] text-gray-400 truncate">{item.sub}</p>
+                      </div>
+                      <span className="text-gray-300 text-base">←</span>
+                    </button>
+                  ))}
+
+                  <div className="pt-4 text-center">
+                    <p className="text-[11px] text-gray-400">גרסה 1.0.0 · Beseder CRM</p>
+                    <p className="text-[10px] text-gray-300 mt-0.5">© 2025 Beseder. כל הזכויות שמורות.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Drawer footer ── */}
+            <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0 bg-gray-50/80">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+              >
+                סגור
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
