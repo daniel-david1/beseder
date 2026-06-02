@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData, DailyTask } from "@/lib/types";
-import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData, saveDailyTasks, loadDailyTasksFromCloud } from "@/lib/storage";
+import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData, DailyTask, MonthlySnapshot } from "@/lib/types";
+import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData, saveDailyTasks, loadDailyTasksFromCloud, saveMonthlySnapshot, loadMonthlySnapshot, loadAllMonthlySnapshots, loadMonthlySnapshotsFromCloud } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -1292,6 +1292,334 @@ function GoalsPanel({ goals, color, onChange }: {
   );
 }
 
+/* ─── Monthly Memory ─────────────────────────────────── */
+function MonthlyMemorySection({ brands }: { brands: Brand[] }) {
+  const [snapshots, setSnapshots] = useState<MonthlySnapshot[]>([]);
+  const [showModal, setShowModal]   = useState(false);
+  const [editingMonth, setEditingMonth] = useState<string | null>(null);
+  const [collapsed, setCollapsed]   = useState(true);
+
+  const currentYM = new Date().toISOString().slice(0, 7); // "2025-12"
+  const prevYM = (() => {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1);
+    return d.toISOString().slice(0, 7);
+  })();
+
+  // Load from localStorage first, then cloud
+  useEffect(() => {
+    setSnapshots(loadAllMonthlySnapshots());
+    loadMonthlySnapshotsFromCloud().then(cloud => {
+      if (!cloud || cloud.length === 0) return;
+      // Merge cloud into localStorage
+      cloud.forEach(s => {
+        if (!loadMonthlySnapshot(s.yearMonth)) {
+          localStorage.setItem(`MONTHLY_SNAPSHOT_${s.yearMonth}`, JSON.stringify(s));
+        }
+      });
+      setSnapshots(loadAllMonthlySnapshots());
+    }).catch(() => {});
+  }, []);
+
+  const hasPrevMonth = snapshots.some(s => s.yearMonth === prevYM);
+  const showNewMonthBanner = !hasPrevMonth;
+
+  const hebrewMonth = (ym: string) => {
+    const [y, m] = ym.split("-");
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+  };
+
+  const moodEmoji = (m: number) => ["😰","😕","😐","😊","🔥"][m - 1];
+
+  const handleSave = (snap: MonthlySnapshot) => {
+    saveMonthlySnapshot(snap);
+    setSnapshots(loadAllMonthlySnapshots());
+    setShowModal(false);
+    setEditingMonth(null);
+  };
+
+  return (
+    <>
+      {/* ── New month reminder banner ── */}
+      {showNewMonthBanner && snapshots.length === 0 && (
+        <div
+          className="card px-4 py-3 flex items-center justify-between gap-3 cursor-pointer"
+          style={{ background: "linear-gradient(135deg,#fff7ed,#fef3c7)", border: "1.5px solid #fed7aa" }}
+          onClick={() => { setEditingMonth(prevYM); setShowModal(true); }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📅</span>
+            <div>
+              <p className="font-black text-orange-800 text-sm">סגור את {hebrewMonth(prevYM)}</p>
+              <p className="text-xs text-orange-600">שמור סיכום חודשי לפני שתתחיל חודש חדש</p>
+            </div>
+          </div>
+          <button className="btn btn-orange text-xs px-3 py-1.5 flex-shrink-0">סגור חודש ←</button>
+        </div>
+      )}
+
+      {/* ── Monthly archive card ── */}
+      <div className="card overflow-hidden">
+        <div
+          className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+          onClick={() => setCollapsed(v => !v)}
+          style={{ borderBottom: collapsed ? "none" : "1px solid #f3f4f6" }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📅</span>
+            <div>
+              <h3 className="font-black text-gray-900 text-sm">זיכרון חודשי</h3>
+              <p className="text-[10px] text-gray-400">{snapshots.length} חודשים נשמרו</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={e => { e.stopPropagation(); setEditingMonth(prevYM); setShowModal(true); }}
+              className="btn btn-orange text-xs px-3 py-1.5"
+            >+ סגור חודש</button>
+            <span className="text-gray-400 text-sm">{collapsed ? "▼" : "▲"}</span>
+          </div>
+        </div>
+
+        {!collapsed && (
+          <div className="p-4">
+            {snapshots.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-3xl mb-2">📭</p>
+                <p className="text-sm text-gray-400">אין חודשים שמורים עדיין</p>
+                <button
+                  onClick={() => { setEditingMonth(prevYM); setShowModal(true); }}
+                  className="btn btn-orange text-sm mt-4"
+                >סגור את {hebrewMonth(prevYM)} עכשיו</button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {snapshots.map(snap => (
+                  <button
+                    key={snap.yearMonth}
+                    onClick={() => { setEditingMonth(snap.yearMonth); setShowModal(true); }}
+                    className="w-full text-right p-3 rounded-xl bg-gray-50 hover:bg-orange-50 border border-transparent hover:border-orange-100 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-lg">{moodEmoji(snap.mood)}</span>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-800 text-xs">{hebrewMonth(snap.yearMonth)}</p>
+                          <p className="text-[10px] text-gray-400">{snap.tasksDone}/{snap.tasksTotal} משימות · ₪{snap.revenue.toLocaleString("he-IL")} הכנסות</p>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 text-right">
+                        {snap.mainAchievement && (
+                          <p className="text-xs text-gray-500 truncate">🏆 {snap.mainAchievement}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Monthly snapshot modal ── */}
+      {showModal && editingMonth && (
+        <MonthlySnapshotModal
+          yearMonth={editingMonth}
+          brands={brands}
+          existing={snapshots.find(s => s.yearMonth === editingMonth) ?? null}
+          onSave={handleSave}
+          onClose={() => { setShowModal(false); setEditingMonth(null); }}
+        />
+      )}
+    </>
+  );
+}
+
+function MonthlySnapshotModal({ yearMonth, brands, existing, onSave, onClose }: {
+  yearMonth: string;
+  brands: Brand[];
+  existing: MonthlySnapshot | null;
+  onSave: (snap: MonthlySnapshot) => void;
+  onClose: () => void;
+}) {
+  const hebrewMonth = new Date(yearMonth + "-01").toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+
+  // Auto-count tasks from localStorage for the given month
+  const autoTaskStats = (() => {
+    let total = 0, done = 0;
+    if (typeof window !== "undefined") {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`DAILY_TASKS_${yearMonth}`)) {
+          try {
+            const tasks = JSON.parse(localStorage.getItem(key) ?? "[]") as { status: string }[];
+            total += tasks.length;
+            done += tasks.filter(t => t.status === "done").length;
+          } catch { /* skip */ }
+        }
+      }
+    }
+    return { total, done };
+  })();
+
+  // Auto-count stages per brand
+  const brandStats = brands.filter(b => b.emoji !== "💰").map(b => {
+    let stagesCompleted = 0, stagesTotal = 0;
+    b.projects.forEach(p => p.subProjects.forEach(sp => {
+      stagesTotal += sp.stages.length;
+      stagesCompleted += sp.stages.filter(s => s.status === "done").length;
+    }));
+    return { brandId: b.id, brandName: b.name, brandEmoji: b.emoji, stagesCompleted, stagesTotal };
+  });
+
+  const [revenue, setRevenue]       = useState(existing?.revenue ?? 0);
+  const [expenses, setExpenses]     = useState(existing?.expenses ?? 0);
+  const [highlights, setHighlights] = useState(existing?.highlights ?? "");
+  const [challenges, setChallenges] = useState(existing?.challenges ?? "");
+  const [achievement, setAchievement] = useState(existing?.mainAchievement ?? "");
+  const [nextFocus, setNextFocus]   = useState(existing?.nextMonthFocus ?? "");
+  const [mood, setMood]             = useState<1|2|3|4|5>(existing?.mood ?? 3);
+
+  const handleSubmit = () => {
+    const snap: MonthlySnapshot = {
+      id: existing?.id ?? Math.random().toString(36).slice(2),
+      yearMonth,
+      savedAt: new Date().toISOString(),
+      tasksTotal: autoTaskStats.total,
+      tasksDone: autoTaskStats.done,
+      stagesCompleted: brandStats.reduce((s, b) => s + b.stagesCompleted, 0),
+      stagesTotal: brandStats.reduce((s, b) => s + b.stagesTotal, 0),
+      brandData: brandStats,
+      revenue,
+      expenses,
+      highlights,
+      challenges,
+      mainAchievement: achievement,
+      nextMonthFocus: nextFocus,
+      mood,
+    };
+    onSave(snap);
+  };
+
+  const moodOptions: { v: 1|2|3|4|5; emoji: string; label: string }[] = [
+    { v: 1, emoji: "😰", label: "קשה" },
+    { v: 2, emoji: "😕", label: "סביר" },
+    { v: 3, emoji: "😐", label: "בסדר" },
+    { v: 4, emoji: "😊", label: "טוב" },
+    { v: 5, emoji: "🔥", label: "מעולה" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl flex flex-col"
+        style={{ maxHeight: "92vh", zIndex: 51 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+          <h2 className="font-black text-gray-900 text-base">📅 {hebrewMonth}</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold transition-colors">×</button>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+
+          {/* Auto stats */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "משימות הושלמו", value: `${autoTaskStats.done}/${autoTaskStats.total}`, icon: "✅" },
+              { label: "שלבים הושלמו",  value: `${brandStats.reduce((s,b)=>s+b.stagesCompleted,0)}/${brandStats.reduce((s,b)=>s+b.stagesTotal,0)}`, icon: "📋" },
+              { label: "רווח נטו",       value: `₪${(revenue - expenses).toLocaleString("he-IL")}`, icon: revenue >= expenses ? "💚" : "🔴" },
+            ].map(stat => (
+              <div key={stat.label} className="p-2.5 rounded-xl bg-gray-50 text-center">
+                <p className="text-base mb-0.5">{stat.icon}</p>
+                <p className="font-black text-gray-900 text-sm">{stat.value}</p>
+                <p className="text-[9px] text-gray-400 leading-tight">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Financial */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">💚 הכנסות החודש (₪)</label>
+              <input type="number" className="input text-sm" value={revenue || ""} onChange={e => setRevenue(Number(e.target.value))} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">💸 הוצאות החודש (₪)</label>
+              <input type="number" className="input text-sm" value={expenses || ""} onChange={e => setExpenses(Number(e.target.value))} placeholder="0" />
+            </div>
+          </div>
+
+          {/* Brand breakdown */}
+          {brandStats.filter(b => b.stagesTotal > 0).length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">התקדמות לפי מותג</p>
+              <div className="space-y-1.5">
+                {brandStats.filter(b => b.stagesTotal > 0).map(b => (
+                  <div key={b.brandId} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                    <span className="text-base">{b.brandEmoji}</span>
+                    <span className="text-xs font-semibold text-gray-700 flex-1 truncate">{b.brandName}</span>
+                    <span className="text-xs font-bold text-gray-500">{b.stagesCompleted}/{b.stagesTotal}</span>
+                    <div className="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                      <div className="h-full rounded-full bg-orange-400" style={{ width: b.stagesTotal > 0 ? `${Math.round(b.stagesCompleted/b.stagesTotal*100)}%` : "0%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mood */}
+          <div>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">איך היה החודש?</p>
+            <div className="flex gap-2 justify-between">
+              {moodOptions.map(o => (
+                <button
+                  key={o.v}
+                  onClick={() => setMood(o.v)}
+                  className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl transition-all"
+                  style={{ background: mood === o.v ? "#fff7ed" : "#f9fafb", border: `2px solid ${mood === o.v ? "#f97316" : "transparent"}` }}
+                >
+                  <span className="text-xl">{o.emoji}</span>
+                  <span className="text-[9px] font-bold text-gray-500">{o.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Text fields */}
+          {[
+            { label: "🏆 ההישג הגדול של החודש", val: achievement, set: setAchievement, ph: "מה הייתה ההצלחה הכי גדולה?" },
+            { label: "✨ מה עבד הכי טוב",        val: highlights,  set: setHighlights,  ph: "מה הניב הכי הרבה תוצאות?" },
+            { label: "⚠️ מה היה קשה",            val: challenges,  set: setChallenges,  ph: "מה עיכב אותך?" },
+            { label: "🎯 פוקוס לחודש הבא",       val: nextFocus,   set: setNextFocus,   ph: "דבר אחד שאתה מתחייב אליו" },
+          ].map(field => (
+            <div key={field.label}>
+              <label className="text-xs font-bold text-gray-600 mb-1.5 block">{field.label}</label>
+              <textarea
+                className="input text-sm w-full resize-none"
+                rows={2}
+                placeholder={field.ph}
+                value={field.val}
+                onChange={e => field.set(e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+          <button onClick={handleSubmit} className="btn btn-orange w-full py-3 text-sm font-black">
+            💾 שמור סיכום {hebrewMonth}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Top Nav ─────────────────────────────────────────── */
 function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () => void }) {
   const router = useRouter();
@@ -1412,6 +1740,7 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
           >
             {/* ── Drawer header ── */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <h2 className="font-black text-gray-900 text-base">הגדרות</h2>
               <button
                 onClick={() => setShowSettings(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors text-lg"
@@ -1419,7 +1748,6 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
               >
                 ×
               </button>
-              <h2 className="font-black text-gray-900 text-base">הגדרות</h2>
             </div>
 
             {/* ── Profile card ── */}
@@ -3083,6 +3411,8 @@ export default function Dashboard() {
               userEmail={userEmail}
               onBrandClick={b => setActiveBrand(b)}
             />
+
+            <MonthlyMemorySection brands={brands} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {brands.filter(b => b.emoji !== "💰").map(b => {

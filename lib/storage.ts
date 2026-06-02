@@ -220,3 +220,61 @@ export async function loadDailyTasksFromCloud(dateStr: string): Promise<DailyTas
     return dailyTasks[dateStr];
   } catch { return null; }
 }
+
+/* ─── Monthly Snapshots ───────────────────────────────── */
+
+function monthKey(yearMonth: string) { return `MONTHLY_SNAPSHOT_${yearMonth}`; }
+
+export function saveMonthlySnapshot(snapshot: import("./types").MonthlySnapshot): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(monthKey(snapshot.yearMonth), JSON.stringify(snapshot));
+  (async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: existing } = await supabase.from("user_data").select("financial").eq("user_id", user.id).single();
+      const currentFin = (existing?.financial as Record<string, unknown>) ?? {};
+      const currentSnapshots = (currentFin.monthly_snapshots as Record<string, unknown>) ?? {};
+      const updatedSnapshots = { ...currentSnapshots, [snapshot.yearMonth]: snapshot };
+      await supabase.from("user_data").upsert(
+        { user_id: user.id, financial: { ...currentFin, monthly_snapshots: updatedSnapshots }, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+    } catch { /* silent */ }
+  })();
+}
+
+export function loadMonthlySnapshot(yearMonth: string): import("./types").MonthlySnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(monthKey(yearMonth));
+    if (!raw) return null;
+    return JSON.parse(raw) as import("./types").MonthlySnapshot;
+  } catch { return null; }
+}
+
+export function loadAllMonthlySnapshots(): import("./types").MonthlySnapshot[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const snapshots: import("./types").MonthlySnapshot[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("MONTHLY_SNAPSHOT_")) {
+        const raw = localStorage.getItem(key);
+        if (raw) snapshots.push(JSON.parse(raw) as import("./types").MonthlySnapshot);
+      }
+    }
+    return snapshots.sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
+  } catch { return []; }
+}
+
+export async function loadMonthlySnapshotsFromCloud(): Promise<import("./types").MonthlySnapshot[] | null> {
+  try {
+    const { data, error } = await supabase.from("user_data").select("financial").single();
+    if (error || !data || !data.financial) return null;
+    const fin = data.financial as Record<string, unknown>;
+    const snapshots = fin.monthly_snapshots as Record<string, import("./types").MonthlySnapshot> | undefined;
+    if (!snapshots) return null;
+    return Object.values(snapshots).sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
+  } catch { return null; }
+}

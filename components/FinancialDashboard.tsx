@@ -1087,12 +1087,12 @@ export default function FinancialDashboard({ brandId, brandName, onBack }: Props
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-              <button onClick={() => setShowCashflowBreakdown(false)}
-                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-lg transition-colors">×</button>
               <div className="text-right">
                 <h2 className="font-black text-gray-900 text-base">פירוט תזרים חודשי</h2>
                 <p className="text-xs text-gray-400 mt-0.5">מאיפה מגיע הכסף ולאן הוא הולך</p>
               </div>
+              <button onClick={() => setShowCashflowBreakdown(false)}
+                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-lg transition-colors">×</button>
             </div>
 
             {/* Content */}

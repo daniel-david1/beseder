@@ -166,3 +166,30 @@ export interface DailyTask {
   status: 'todo' | 'in-progress' | 'done';
   createdDate: string;
 }
+
+export interface MonthlySnapshot {
+  id: string;
+  yearMonth: string;           // "2025-12"
+  savedAt: string;             // ISO timestamp
+  // Auto-captured
+  tasksTotal: number;
+  tasksDone: number;
+  stagesCompleted: number;     // across all brands
+  stagesTotal: number;
+  brandData: {
+    brandId: string;
+    brandName: string;
+    brandEmoji: string;
+    stagesCompleted: number;
+    stagesTotal: number;
+  }[];
+  // Manual financial fields
+  revenue: number;
+  expenses: number;
+  // Manual reflection
+  highlights: string;          // מה עבד הכי טוב
+  challenges: string;          // מה היה קשה
+  mainAchievement: string;     // ההישג הגדול
+  nextMonthFocus: string;      // פוקוס לחודש הבא
+  mood: 1 | 2 | 3 | 4 | 5;
+}
