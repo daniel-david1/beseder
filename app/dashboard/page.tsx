@@ -1412,7 +1412,8 @@ export default function Dashboard() {
   const [editingSub,       setEditingSub]      = useState<SubProject | null>(null);
   const [showChannelModal, setShowChannelModal]= useState(false);
   const [editingChannel,   setEditingChannel]  = useState<Channel | null>(null);
-  const [showWhiteboard,   setShowWhiteboard]  = useState(false);
+  const [showWhiteboard,       setShowWhiteboard]       = useState(false);
+  const [showBrandFinancial,   setShowBrandFinancial]   = useState(false);
   const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
   const [userEmail,        setUserEmail]       = useState("");
 
@@ -2122,6 +2123,17 @@ export default function Dashboard() {
     );
   }
 
+  /* ══ BRAND FINANCIAL PANEL ══ */
+  if (showBrandFinancial && activeBrand) {
+    return (
+      <FinancialDashboard
+        brandId={activeBrand.id}
+        brandName={activeBrand.name}
+        onBack={() => setShowBrandFinancial(false)}
+      />
+    );
+  }
+
   /* ══ WHITEBOARD overlay ══ */
   if (showWhiteboard && activeBrand) {
     return (
@@ -2165,9 +2177,10 @@ export default function Dashboard() {
         {/* Context header */}
         <div className="sticky top-0 z-30 border-b" style={{ background: `${activeBrand.color}10`, borderColor: `${activeBrand.color}25` }}>
           <div className="max-w-screen-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <BackButton label="המותגים שלי" onClick={() => setActiveBrand(null)} />
+            <BackButton label="המותגים שלי" onClick={() => { setActiveBrand(null); setShowBrandFinancial(false); }} />
             <div className="flex gap-1.5 sm:gap-2">
               <button onClick={() => setShowWhiteboard(true)} className="hidden sm:inline-flex btn btn-ghost text-sm">🗺️ מפה</button>
+              <button onClick={() => setShowBrandFinancial(true)} className="btn btn-ghost text-sm px-2.5 sm:px-4">💰<span className="hidden sm:inline"> פיננסי</span></button>
               <button onClick={() => setEditingBrand(activeBrand)} className="btn btn-ghost text-sm px-2.5 sm:px-4">✏️ <span className="hidden sm:inline">ערוך מותג</span></button>
               <button onClick={() => setShowProjectModal(true)} className="btn btn-orange text-sm px-3 sm:px-4">+ <span className="hidden sm:inline">פרויקט חדש</span><span className="sm:hidden">פרויקט</span></button>
             </div>
@@ -2281,6 +2294,27 @@ export default function Dashboard() {
                   />
                 </div>
               ))}
+              {/* Financial card */}
+              <button
+                onClick={() => setShowBrandFinancial(true)}
+                className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                style={{ border: "2px solid #d1fae5" }}
+              >
+                <div className="h-1.5 w-full" style={{ background: "#10b981" }} />
+                <div className="p-5 flex flex-col gap-3 flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: "#f0fdf4" }}>💰</div>
+                    <div>
+                      <h3 className="font-black text-gray-900 text-base leading-tight">ניהול פיננסי</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">הלוואות, הוצאות, הכנסות, נכסים</p>
+                    </div>
+                  </div>
+                  <div className="btn w-full justify-center text-sm mt-auto" style={{ borderColor: "#10b98140", color: "#10b981", border: "1.5px solid #10b98140", borderRadius: 12, padding: "6px 0" }}>
+                    פתח פאנל ←
+                  </div>
+                </div>
+              </button>
+
               <button
                 onClick={() => setShowProjectModal(true)}
                 className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
