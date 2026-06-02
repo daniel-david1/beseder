@@ -3165,9 +3165,14 @@ export default function Dashboard() {
                 aria-label="חזרה"
               >→</button>
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm"
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-sm overflow-hidden"
                 style={{ background: activeBrand.color + "22", border: `1.5px solid ${activeBrand.color}40` }}
-              >{activeBrand.emoji}</div>
+              >
+                {activeBrand.logo
+                  ? <img src={activeBrand.logo} alt={activeBrand.name} className="w-full h-full object-contain" />
+                  : activeBrand.emoji
+                }
+              </div>
               <div className="min-w-0">
                 <p className="font-black text-gray-900 text-sm leading-tight truncate">{activeBrand.name}</p>
                 {activeBrand.description && (

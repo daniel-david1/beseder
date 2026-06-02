@@ -167,6 +167,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
   const [name, setName]           = useState("");
   const [emoji, setEmoji]         = useState("🚀");
   const [color, setColor]         = useState("#f97316");
+  const [logo,  setLogo]          = useState<string | undefined>(undefined);
 
   /* type + template state */
   const [bizType,    setBizType]  = useState<BizType | null>(null);
@@ -233,6 +234,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
       name: name.trim() || "מותג חדש",
       emoji,
       color,
+      logo,
       description: "",
       projects,
       createdAt: new Date().toISOString(),
@@ -243,6 +245,8 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
   };
 
   /* ── step: basics ─────────────────────────────────────── */
+  const wizardFileRef = useRef<HTMLInputElement>(null);
+
   if (step === "basics") {
     return (
       <WizardShell onClose={onClose} stepNum={stepNum} stepTotal={stepTotal} title="מותג חדש">
@@ -258,16 +262,62 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
             />
           </div>
 
+          {/* Logo / Emoji */}
           <div>
-            <label>אייקון</label>
-            <div className="grid grid-cols-10 gap-1 mt-1">
-              {EMOJIS.map(e => (
-                <button key={e} onClick={() => setEmoji(e)}
-                  className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
-                >{e}</button>
-              ))}
+            <label>לוגו / אייקון</label>
+            <div className="flex items-center gap-3 mt-2 p-3 rounded-2xl bg-gray-50">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                style={{ background: color + "20", border: `2px solid ${color}40` }}
+              >
+                {logo
+                  ? <img src={logo} alt="logo" className="w-full h-full object-contain" />
+                  : <span className="text-2xl">{emoji}</span>
+                }
+              </div>
+              <div className="flex flex-col gap-1.5 flex-1">
+                <button
+                  type="button"
+                  onClick={() => wizardFileRef.current?.click()}
+                  className="btn btn-ghost text-sm flex items-center gap-2"
+                >
+                  📤 העלה לוגו
+                </button>
+                {logo && (
+                  <button type="button" onClick={() => setLogo(undefined)} className="text-xs text-red-400 hover:text-red-600 text-right">
+                    × הסר תמונה
+                  </button>
+                )}
+              </div>
+              <input
+                ref={wizardFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) { alert("קובץ גדול מדי"); return; }
+                  try { setLogo(await resizeImageToBase64(file, 256)); } catch { alert("שגיאה בטעינת התמונה"); }
+                  e.target.value = "";
+                }}
+              />
             </div>
+
+            {!logo && (
+              <div className="mt-2">
+                <p className="text-[11px] text-gray-400 mb-1.5">או בחר אמוג'י:</p>
+                <div className="grid grid-cols-10 gap-1">
+                  {EMOJIS.map(e => (
+                    <button key={e} onClick={() => setEmoji(e)}
+                      className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
+                    >{e}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
           <div>
             <label>צבע מותג</label>
             <div className="flex gap-2 mt-1">
@@ -611,6 +661,110 @@ function EditableInput({ value, onChange, onDone }: {
   );
 }
 
+/* ─── Logo uploader helper ─────────────────────────────────── */
+function resizeImageToBase64(file: File, maxPx = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width  * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = reject;
+      img.src = ev.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function LogoUploader({ logo, emoji, color, onLogoChange }: {
+  logo: string | undefined;
+  emoji: string;
+  color: string;
+  onLogoChange: (dataUrl: string | undefined) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("קובץ גדול מדי (מקסימום 5MB)"); return; }
+    try {
+      const dataUrl = await resizeImageToBase64(file, 256);
+      onLogoChange(dataUrl);
+    } catch { alert("שגיאה בטעינת התמונה"); }
+    e.target.value = "";
+  };
+
+  return (
+    <div>
+      <label>לוגו / אייקון מותג</label>
+      <div className="flex items-center gap-3 mt-2">
+        {/* Preview */}
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm"
+          style={{ background: color + "20", border: `2px solid ${color}40` }}
+        >
+          {logo
+            ? <img src={logo} alt="logo" className="w-full h-full object-contain" />
+            : <span className="text-3xl">{emoji}</span>
+          }
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 flex-1">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="btn btn-ghost text-sm flex items-center gap-2 justify-center"
+          >
+            📤 העלה תמונה
+          </button>
+          {logo && (
+            <button
+              type="button"
+              onClick={() => onLogoChange(undefined)}
+              className="text-xs text-red-400 hover:text-red-600 transition-colors"
+            >
+              × הסר תמונה (חזור לאמוג'י)
+            </button>
+          )}
+          <p className="text-[10px] text-gray-400 text-center">PNG, JPG, WEBP · עד 5MB</p>
+        </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFile}
+        />
+      </div>
+
+      {/* Emoji grid — only show when no logo */}
+      {!logo && (
+        <div className="mt-3">
+          <p className="text-[11px] text-gray-400 mb-1.5">או בחר אמוג'י:</p>
+          <div className="grid grid-cols-10 gap-1">
+            {EMOJIS.map(e => (
+              <button key={e} onClick={() => {}}
+                className="text-xl p-1.5 rounded-lg hover:bg-gray-100 transition-all"
+              >{e}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Simple edit form (for editing existing brands) ─────── */
 function SimpleEditForm({ existing, onClose, onSave }: {
   existing: Brand; onClose: () => void; onSave: (b: Brand) => void;
@@ -618,6 +772,19 @@ function SimpleEditForm({ existing, onClose, onSave }: {
   const [name,  setName]  = useState(existing.name);
   const [emoji, setEmoji] = useState(existing.emoji);
   const [color, setColor] = useState(existing.color);
+  const [logo,  setLogo]  = useState<string | undefined>(existing.logo);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("קובץ גדול מדי (מקסימום 5MB)"); return; }
+    try {
+      const dataUrl = await resizeImageToBase64(file, 256);
+      setLogo(dataUrl);
+    } catch { alert("שגיאה בטעינת התמונה"); }
+    e.target.value = "";
+  };
 
   return (
     <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -626,22 +793,76 @@ function SimpleEditForm({ existing, onClose, onSave }: {
           <h2 className="text-lg font-black text-gray-900">ערוך מותג</h2>
           <button onClick={onClose} className="icon-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm">✕</button>
         </div>
+
         <div className="px-6 py-5 space-y-5">
+          {/* Logo / Emoji picker */}
           <div>
-            <label>אייקון</label>
-            <div className="grid grid-cols-10 gap-1 mt-1">
-              {EMOJIS.map(e => (
-                <button key={e} onClick={() => setEmoji(e)}
-                  className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
-                >{e}</button>
-              ))}
+            <label>לוגו / אייקון</label>
+
+            {/* Preview + upload row */}
+            <div className="flex items-center gap-3 mt-2 p-3 rounded-2xl bg-gray-50">
+              {/* Current logo/emoji preview */}
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm"
+                style={{ background: color + "20", border: `2px solid ${color}40` }}
+              >
+                {logo
+                  ? <img src={logo} alt="logo" className="w-full h-full object-contain" />
+                  : <span className="text-3xl">{emoji}</span>
+                }
+              </div>
+
+              <div className="flex flex-col gap-1.5 flex-1">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="btn btn-ghost text-sm flex items-center gap-2"
+                >
+                  📤 העלה לוגו / תמונה
+                </button>
+                {logo ? (
+                  <button
+                    type="button"
+                    onClick={() => setLogo(undefined)}
+                    className="text-xs text-red-400 hover:text-red-600 transition-colors text-right"
+                  >
+                    × הסר תמונה
+                  </button>
+                ) : (
+                  <p className="text-[10px] text-gray-400">PNG, JPG, WEBP · עד 5MB</p>
+                )}
+              </div>
             </div>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFile}
+            />
+
+            {/* Emoji grid — only when no logo uploaded */}
+            {!logo && (
+              <div className="mt-2">
+                <p className="text-[11px] text-gray-400 mb-1.5">או בחר אמוג'י:</p>
+                <div className="grid grid-cols-10 gap-1">
+                  {EMOJIS.map(e => (
+                    <button key={e} onClick={() => setEmoji(e)}
+                      className={`text-xl p-1.5 rounded-lg transition-all ${emoji === e ? "bg-teal-100 ring-2 ring-teal-400" : "hover:bg-gray-100"}`}
+                    >{e}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
           <div>
             <label>שם המותג *</label>
             <input className="input text-base font-semibold" value={name} autoFocus
               onChange={e => setName(e.target.value)} placeholder="שם המותג..." />
           </div>
+
           <div>
             <label>צבע מותג</label>
             <div className="flex gap-2 mt-1">
@@ -653,9 +874,14 @@ function SimpleEditForm({ existing, onClose, onSave }: {
             </div>
           </div>
         </div>
+
         <div className="px-6 py-4 border-t border-gray-100 flex gap-2 sticky bottom-0 bg-white rounded-b-2xl" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
-          <button onClick={() => { onSave({ ...existing, name: name.trim(), emoji, color }); onClose(); }}
-            disabled={!name.trim()} className="btn btn-orange flex-1" style={{ opacity: name.trim() ? 1 : 0.5 }}>
+          <button
+            onClick={() => { onSave({ ...existing, name: name.trim(), emoji, color, logo }); onClose(); }}
+            disabled={!name.trim()}
+            className="btn btn-orange flex-1"
+            style={{ opacity: name.trim() ? 1 : 0.5 }}
+          >
             שמור שינויים
           </button>
           <button onClick={onClose} className="btn btn-ghost">ביטול</button>
