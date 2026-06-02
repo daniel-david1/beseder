@@ -87,7 +87,8 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [goal, setGoal]           = useState("");
-  const [saved, setSaved]         = useState(false);
+  const [savedGoal, setSavedGoal] = useState("");   // the confirmed/displayed goal
+  const [editing, setEditing]     = useState(false); // editing mode
   const firstName = userEmail.split("@")[0] ?? "שלום";
   const todayStr  = new Date().toISOString().slice(0, 10);
   const hebrewDate = new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
@@ -97,15 +98,27 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
       const raw = localStorage.getItem(DAILY_GOAL_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as { date: string; goal: string };
-        if (parsed.date === todayStr) setGoal(parsed.goal);
+        if (parsed.date === todayStr && parsed.goal) {
+          setGoal(parsed.goal);
+          setSavedGoal(parsed.goal);
+        }
       }
     } catch { /* ignore */ }
   }, [todayStr]);
 
   const handleSave = () => {
-    localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify({ date: todayStr, goal }));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    const trimmed = goal.trim();
+    if (!trimmed) return;
+    localStorage.setItem(DAILY_GOAL_KEY, JSON.stringify({ date: todayStr, goal: trimmed }));
+    setSavedGoal(trimmed);
+    setEditing(false);
+  };
+
+  const handleClear = () => {
+    localStorage.removeItem(DAILY_GOAL_KEY);
+    setGoal("");
+    setSavedGoal("");
+    setEditing(false);
   };
 
   // Filter out financial dashboards (emoji 💰), sort by urgency
@@ -140,22 +153,59 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
         <div className="px-5 py-4 space-y-5">
           {/* Daily Goal */}
           <div>
-            <p className="text-xs font-semibold text-gray-500 mb-2">🎯 מה המטרה שלך היום?</p>
-            <div className="flex gap-2">
-              <input
-                className="input flex-1 text-sm"
-                placeholder="לדוגמה: לסגור עסקה עם לקוח חדש..."
-                value={goal}
-                onChange={e => setGoal(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
-              />
-              <button
-                onClick={handleSave}
-                className="btn btn-orange text-sm px-4 shrink-0"
-              >
-                {saved ? "✓ נשמר" : "שמור"}
-              </button>
-            </div>
+            <p className="text-xs font-semibold text-gray-500 mb-2">🎯 המטרה שלך היום</p>
+
+            {/* Saved state — show goal as pill */}
+            {savedGoal && !editing ? (
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "#f0fdf4", border: "1.5px solid #86efac" }}>
+                <span className="text-lg">✅</span>
+                <p className="flex-1 text-sm font-semibold text-green-800 leading-snug">{savedGoal}</p>
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={e => { e.stopPropagation(); setEditing(true); }}
+                    className="text-xs px-2 py-1 rounded-lg font-semibold text-green-700 hover:bg-green-100 transition-colors"
+                  >
+                    ✏️ ערוך
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); handleClear(); }}
+                    className="text-xs px-2 py-1 rounded-lg font-semibold text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Input state */
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1 text-sm"
+                  placeholder="לדוגמה: לסגור עסקה עם לקוח חדש..."
+                  value={goal}
+                  onChange={e => setGoal(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") handleSave();
+                    if (e.key === "Escape" && savedGoal) { setEditing(false); setGoal(savedGoal); }
+                  }}
+                  autoFocus={editing}
+                />
+                <button
+                  onClick={handleSave}
+                  disabled={!goal.trim()}
+                  className="btn btn-orange text-sm px-4 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  שמור ✓
+                </button>
+                {editing && (
+                  <button
+                    onClick={() => { setEditing(false); setGoal(savedGoal); }}
+                    className="btn btn-ghost text-sm px-3 shrink-0"
+                  >
+                    ביטול
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Priority brands */}
