@@ -17,6 +17,7 @@ import BrandFinancialSummary from "@/components/BrandFinancialSummary";
 import { HebrewDateInput } from "@/components/HebrewDateInput";
 import WhiteboardBuilder from "@/components/WhiteboardBuilder";
 import TeamAccessModal from "@/components/TeamAccessModal";
+import SocialContentGenerator from "@/components/SocialContentGenerator";
 
 /* ─── Brand health ────────────────────────────────────── */
 interface BrandHealth {
@@ -2565,6 +2566,7 @@ export default function Dashboard() {
   const [showLoansManager,     setShowLoansManager]     = useState(false);
   const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
   const [showWBBuilder,    setShowWBBuilder]   = useState(false);
+  const [showSocialGen,    setShowSocialGen]   = useState(false);
   const [userEmail,        setUserEmail]       = useState("");
   const [teamAccessBrand,  setTeamAccessBrand] = useState<Brand | null>(null);
 
@@ -3605,6 +3607,12 @@ export default function Dashboard() {
           onBrandUpdate={(updatedBrand) => handleSaveBrand(updatedBrand)}
         />
       )}
+      {showSocialGen && (
+        <SocialContentGenerator
+          brands={brands.filter(b => b.emoji !== "💰")}
+          onClose={() => setShowSocialGen(false)}
+        />
+      )}
       {teamAccessBrand && (
         <TeamAccessModal brand={teamAccessBrand} onClose={() => setTeamAccessBrand(null)} />
       )}
@@ -3624,6 +3632,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowWBBuilder(true)} className="btn btn-ghost text-sm flex items-center gap-2">🗺️ בנה מפה</button>
+            <button onClick={() => setShowSocialGen(true)} className="btn btn-ghost text-sm flex items-center gap-2">🎨 תוכן לרשתות</button>
             <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
           </div>
         </div>
