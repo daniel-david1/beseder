@@ -1625,13 +1625,10 @@ export default function WhiteboardBuilder({
               </div>
               <input
                 style={{ ...inputSt, fontSize: 12, padding: "6px 10px" }}
-                placeholder="פעולה הבאה..."
-                value={stage.nextAction ?? ""}
-                onChange={e => patchStage(targetSubId, stage.id, { nextAction: e.target.value }, channelId)}
+                placeholder="תיאור / הערות..."
+                value={stage.notes ?? ""}
+                onChange={e => patchStage(targetSubId, stage.id, { notes: e.target.value }, channelId)}
               />
-              {stage.notes && (
-                <p style={{ color: textSec, fontSize: 11, margin: 0, lineHeight: 1.5 }}>{stage.notes}</p>
-              )}
             </div>
           );
         };
@@ -1659,12 +1656,6 @@ export default function WhiteboardBuilder({
                 placeholder="תיאור / הערות (אופציונלי)..."
                 value={addingStage.notes}
                 onChange={e => setAddingStage({ ...addingStage, notes: e.target.value })}
-              />
-              <input
-                style={{ ...inputSt, fontSize: 12, padding: "6px 10px" }}
-                placeholder="פעולה הבאה..."
-                value={addingStage.nextAction}
-                onChange={e => setAddingStage({ ...addingStage, nextAction: e.target.value })}
               />
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <span style={{ color: textSec, fontSize: 12, marginRight: 2 }}>סטטוס:</span>
