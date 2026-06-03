@@ -621,6 +621,7 @@ export default function WhiteboardBuilder({
   const [showThemePicker, setShowThemePicker] = useState(false);
   const th = WB_THEMES.find(t => t.id === themeId) ?? WB_THEMES[0];
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [addingStage, setAddingStage] = useState<{ name: string; notes: string; status: Stage["status"]; nextAction: string } | null>(null);
 
   const applyTheme = (id: string) => {
     setThemeId(id);
@@ -966,10 +967,32 @@ export default function WhiteboardBuilder({
       ? brandFinancials(brands.find(b => b.id === node.existingId) ?? { projects: [], name: "", emoji: "", color: "", id: "", description: "", createdAt: "", goals: [] })
       : null;
 
+    const openModal = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (node.type === "brand" || !node.existingId) return;
+      // Find parent brand
+      let cur: WBNode | undefined = node;
+      let brandId = "";
+      while (cur) {
+        const parentNode = nodes.find(n => n.id === cur!.parentId);
+        if (!parentNode && cur.type === "brand") { brandId = cur.existingId ?? ""; break; }
+        if (parentNode?.type === "brand") { brandId = parentNode.existingId ?? ""; break; }
+        cur = parentNode;
+      }
+      if (node.type === "project") {
+        setEditTarget({ brandId, projectId: node.existingId });
+      } else {
+        const projNode = nodes.find(n => n.id === node.parentId);
+        setEditTarget({ brandId, projectId: projNode?.existingId ?? "", subId: node.existingId });
+      }
+      setAddingStage(null);
+    };
+
     return (
       <div
         key={node.id}
         data-node="true"
+        onClick={node.type !== "brand" && node.existingId ? openModal : undefined}
         style={{
           position: "absolute",
           left: node.x,
@@ -978,7 +1001,7 @@ export default function WhiteboardBuilder({
           minHeight: NODE_H,
           borderRadius: radius,
           padding: "12px 14px",
-          cursor: "default",
+          cursor: node.type !== "brand" && node.existingId ? "pointer" : "default",
           userSelect: "none",
           direction: "rtl",
           transition: "box-shadow 0.2s, border-color 0.2s",
@@ -987,46 +1010,6 @@ export default function WhiteboardBuilder({
         onMouseEnter={() => setHoveredId(node.id)}
         onMouseLeave={() => setHoveredId(null)}
       >
-        {/* Open-editor button (project + sub only) */}
-        {isHovered && node.type !== "brand" && node.existingId && (
-          <button
-            data-node="true"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Find brand that owns this node
-              const parentBrandNode = nodes.find(n => {
-                if (n.type === "brand" && !n.parentId) {
-                  // Walk from this node up to see if it reaches n
-                  let cur: WBNode | undefined = node;
-                  while (cur) {
-                    if (cur.parentId === n.id || cur.id === n.id) return true;
-                    cur = nodes.find(x => x.id === cur!.parentId);
-                  }
-                }
-                return false;
-              });
-              const brandId = parentBrandNode?.existingId ?? "";
-              if (node.type === "project" && node.existingId) {
-                setEditTarget({ brandId, projectId: node.existingId });
-              } else if (node.type === "subproject" && node.existingId) {
-                // find parent project node
-                const projNode = nodes.find(n => n.id === node.parentId);
-                setEditTarget({ brandId, projectId: projNode?.existingId ?? "", subId: node.existingId });
-              }
-            }}
-            style={{
-              position: "absolute", bottom: -10, right: -10,
-              width: 26, height: 26, borderRadius: "50%",
-              background: node.color, color: "white",
-              fontSize: 13, fontWeight: 700, border: "none",
-              cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center",
-              zIndex: 10, boxShadow: `0 2px 10px ${node.color}80`,
-            }}
-            title="ערוך תוכן"
-          >✎</button>
-        )}
-
         {/* Delete button */}
         {isHovered && (
           <button
@@ -1119,7 +1102,7 @@ export default function WhiteboardBuilder({
               />
             ) : (
               <p
-                onClick={() => startEdit(node)}
+                onClick={(e) => { e.stopPropagation(); startEdit(node); }}
                 style={{
                   color: th.labelColor,
                   fontWeight: node.type === "brand" ? 900 : 700,
@@ -1128,7 +1111,7 @@ export default function WhiteboardBuilder({
                   whiteSpace: "nowrap", overflow: "hidden",
                   textOverflow: "ellipsis", margin: 0,
                 }}
-                title="לחץ לעריכה"
+                title="לחץ פעמיים לעריכת שם"
               >
                 {node.label}
               </p>
@@ -1276,6 +1259,12 @@ export default function WhiteboardBuilder({
         direction: "rtl", fontFamily: "'Heebo', system-ui, sans-serif",
       }}
     >
+      <style>{`
+        @keyframes modalPop {
+          from { opacity: 0; transform: scale(0.93) translateY(12px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
+      `}</style>
       {/* ── Toolbar ── */}
       <div
         style={{
@@ -1538,14 +1527,36 @@ export default function WhiteboardBuilder({
         >כווץ הכל ▶</button>
       </div>
 
-      {/* ── Node editor panel ── */}
+      {/* ── Node task modal ── */}
       {editTarget && (() => {
         const brand   = brands.find(b => b.id === editTarget.brandId);
         const project = brand?.projects.find(p => p.id === editTarget.projectId);
         const sub     = editTarget.subId ? project?.subProjects.find(s => s.id === editTarget.subId) : null;
         if (!brand || !project) return null;
 
-        /* Update a single stage inside this brand, then call onBrandUpdate */
+        const accent  = project.color || "#f97316";
+        const isDarkTheme = th.id !== "minimal" && th.id !== "cream" && th.id !== "sky" && th.id !== "pink" && th.id !== "mint";
+        const modalBg = isDarkTheme ? "#1a1d2e" : "#ffffff";
+        const cardBg  = isDarkTheme ? "#22253a" : "#f8f8fb";
+        const border  = isDarkTheme ? "#2e3150" : "#e8e8f0";
+        const textPrim = isDarkTheme ? "#f0f0f8" : "#1a1a2e";
+        const textSec  = isDarkTheme ? "#8890b0" : "#7878a0";
+
+        const inputSt: React.CSSProperties = {
+          background: isDarkTheme ? "#2a2d45" : "#f0f0f8",
+          border: `1.5px solid ${border}`,
+          color: textPrim,
+          borderRadius: 10,
+          padding: "8px 12px",
+          fontSize: 13,
+          width: "100%",
+          outline: "none",
+          direction: "rtl",
+          fontFamily: "'Heebo', system-ui, sans-serif",
+          boxSizing: "border-box",
+        };
+
+        /* Patch a stage field */
         const patchStage = (subId: string, stageId: string, changes: Partial<Stage>, channelId?: string) => {
           const updated: Brand = JSON.parse(JSON.stringify(brand));
           const updProj = updated.projects.find(p => p.id === project.id)!;
@@ -1561,137 +1572,303 @@ export default function WhiteboardBuilder({
           onBrandUpdate?.(updated);
         };
 
-        const panelBg   = th.toolbarBg;
-        const border    = th.toolbarBorder;
-        const textPrim  = th.labelColor;
-        const textSec   = th.btnText;
-        const inputSt   = { background: th.inputBg, border: `1px solid ${border}`, color: textPrim, borderRadius: 8, padding: "5px 9px", fontSize: 12, width: "100%", outline: "none", direction: "rtl" as const };
+        /* Add a brand-new stage */
+        const commitAddStage = (subId: string, channelId?: string) => {
+          if (!addingStage || !addingStage.name.trim()) return;
+          const updated: Brand = JSON.parse(JSON.stringify(brand));
+          const updProj = updated.projects.find(p => p.id === project.id)!;
+          const updSub  = updProj.subProjects.find(s => s.id === subId)!;
+          const newStage: Stage = {
+            id: uuidv4(),
+            name: addingStage.name.trim(),
+            step: String((updSub.stages.length + 1)),
+            goal: "",
+            status: addingStage.status,
+            notes: addingStage.notes,
+            nextAction: addingStage.nextAction,
+            order: updSub.stages.length,
+          };
+          if (channelId) {
+            const ch = updSub.channels.find(c => c.id === channelId);
+            if (ch) ch.stages.push(newStage);
+          } else {
+            updSub.stages.push(newStage);
+          }
+          onBrandUpdate?.(updated);
+          setAddingStage(null);
+        };
 
-        const renderStageList = (stages: Stage[], targetSubId: string, channelId?: string, channelColor?: string) => (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {stages.map(stage => {
-              const sm = STATUS_META[stage.status];
-              return (
-                <div key={stage.id} style={{ background: th.collapseIdleBg, borderRadius: 10, padding: "8px 10px", border: `1px solid ${border}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+        /* Stage row */
+        const renderStageRow = (stage: Stage, targetSubId: string, channelId?: string) => {
+          const sm = STATUS_META[stage.status];
+          return (
+            <div key={stage.id} style={{
+              background: cardBg, borderRadius: 12,
+              border: `1.5px solid ${border}`,
+              padding: "10px 14px",
+              display: "flex", flexDirection: "column", gap: 6,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  onClick={() => {
+                    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(stage.status) + 1) % 4];
+                    patchStage(targetSubId, stage.id, { status: next }, channelId);
+                  }}
+                  style={{
+                    background: sm.bg, color: sm.text,
+                    border: "none", borderRadius: 7,
+                    padding: "3px 10px", fontSize: 11, fontWeight: 700,
+                    cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap",
+                  }}
+                >{sm.label}</button>
+                <span style={{ color: textPrim, fontSize: 13, fontWeight: 700, flex: 1, textAlign: "right" }}>{stage.name}</span>
+              </div>
+              <input
+                style={{ ...inputSt, fontSize: 12, padding: "6px 10px" }}
+                placeholder="פעולה הבאה..."
+                value={stage.nextAction ?? ""}
+                onChange={e => patchStage(targetSubId, stage.id, { nextAction: e.target.value }, channelId)}
+              />
+              {stage.notes && (
+                <p style={{ color: textSec, fontSize: 11, margin: 0, lineHeight: 1.5 }}>{stage.notes}</p>
+              )}
+            </div>
+          );
+        };
+
+        /* "Add stage" inline form */
+        const renderAddForm = (subId: string, channelId?: string) => (
+          addingStage ? (
+            <div style={{
+              background: cardBg, borderRadius: 14,
+              border: `2px solid ${accent}55`,
+              padding: "14px 16px",
+              display: "flex", flexDirection: "column", gap: 10,
+              marginTop: 4,
+            }}>
+              <input
+                autoFocus
+                style={inputSt}
+                placeholder="שם המשימה..."
+                value={addingStage.name}
+                onChange={e => setAddingStage({ ...addingStage, name: e.target.value })}
+                onKeyDown={e => { if (e.key === "Enter") commitAddStage(subId, channelId); if (e.key === "Escape") setAddingStage(null); }}
+              />
+              <textarea
+                style={{ ...inputSt, resize: "none", minHeight: 56, lineHeight: 1.5 } as React.CSSProperties}
+                placeholder="תיאור / הערות (אופציונלי)..."
+                value={addingStage.notes}
+                onChange={e => setAddingStage({ ...addingStage, notes: e.target.value })}
+              />
+              <input
+                style={{ ...inputSt, fontSize: 12, padding: "6px 10px" }}
+                placeholder="פעולה הבאה..."
+                value={addingStage.nextAction}
+                onChange={e => setAddingStage({ ...addingStage, nextAction: e.target.value })}
+              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <span style={{ color: textSec, fontSize: 12, marginRight: 2 }}>סטטוס:</span>
+                {STATUS_CYCLE.map(s => {
+                  const sm = STATUS_META[s];
+                  return (
                     <button
-                      onClick={() => {
-                        const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(stage.status) + 1) % 4];
-                        patchStage(targetSubId, stage.id, { status: next }, channelId);
+                      key={s}
+                      onClick={() => setAddingStage({ ...addingStage, status: s })}
+                      style={{
+                        background: addingStage.status === s ? sm.bg : "transparent",
+                        color: addingStage.status === s ? sm.text : textSec,
+                        border: `1.5px solid ${addingStage.status === s ? sm.text + "66" : border}`,
+                        borderRadius: 7, padding: "3px 9px",
+                        fontSize: 11, fontWeight: 700, cursor: "pointer",
                       }}
-                      style={{ background: sm.bg, color: sm.text, border: "none", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
                     >{sm.label}</button>
-                    <span style={{ color: textPrim, fontSize: 12, fontWeight: 700, flex: 1, textAlign: "right" }}>{stage.name}</span>
-                  </div>
-                  <input
-                    style={inputSt}
-                    placeholder="פעולה הבאה..."
-                    value={stage.nextAction ?? ""}
-                    onChange={e => patchStage(targetSubId, stage.id, { nextAction: e.target.value }, channelId)}
-                  />
-                  {stage.notes && (
-                    <p style={{ color: textSec, fontSize: 10, margin: "4px 0 0", lineHeight: 1.4 }}>{stage.notes}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-start" }}>
+                <button
+                  onClick={() => commitAddStage(subId, channelId)}
+                  style={{
+                    background: accent, color: "white",
+                    border: "none", borderRadius: 10,
+                    padding: "8px 20px", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >הוסף</button>
+                <button
+                  onClick={() => setAddingStage(null)}
+                  style={{
+                    background: "transparent", color: textSec,
+                    border: `1px solid ${border}`, borderRadius: 10,
+                    padding: "8px 16px", fontSize: 13, cursor: "pointer",
+                  }}
+                >ביטול</button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingStage({ name: "", notes: "", status: "todo", nextAction: "" })}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                background: "transparent",
+                border: `2px dashed ${accent}55`,
+                color: accent, borderRadius: 12,
+                padding: "10px", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", width: "100%", marginTop: 4,
+                transition: "border-color 0.15s, background 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = accent + "11"; (e.currentTarget as HTMLButtonElement).style.borderColor = accent + "99"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = accent + "55"; }}
+            >+ הוסף משימה</button>
+          )
         );
 
         return (
+          /* Backdrop */
           <div
-            data-node="true"
+            onClick={() => { setEditTarget(null); setAddingStage(null); }}
             style={{
-              position: "fixed", top: 0, left: 0, bottom: 0, width: 390,
-              zIndex: 80, display: "flex", flexDirection: "column",
-              background: panelBg, borderRight: `1px solid ${border}`,
-              backdropFilter: "blur(16px)",
-              boxShadow: "4px 0 32px rgba(0,0,0,0.4)",
-              fontFamily: "'Heebo', system-ui, sans-serif",
-              direction: "rtl",
-              animation: "slideInFromLeft 0.2s ease",
+              position: "fixed", inset: 0, zIndex: 80,
+              background: "rgba(0,0,0,0.55)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              backdropFilter: "blur(3px)",
             }}
           >
-            {/* Panel header */}
-            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                <button
-                  onClick={() => sub ? setEditTarget({ ...editTarget, subId: undefined }) : setEditTarget(null)}
-                  style={{ background: th.btnBg, border: `1px solid ${border}`, color: th.btnText, borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
-                >← חזור</button>
-                <button
-                  onClick={() => setEditTarget(null)}
-                  style={{ background: "transparent", border: "none", color: th.btnText, fontSize: 14, cursor: "pointer", marginRight: "auto" }}
-                >×</button>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 22 }}>{sub ? sub.emoji : project.emoji}</span>
-                <div>
-                  <p style={{ color: textPrim, fontWeight: 900, fontSize: 15, margin: 0 }}>{sub ? sub.name : project.name}</p>
-                  <p style={{ color: textSec, fontSize: 10, margin: "2px 0 0" }}>
+            {/* Modal card */}
+            <div
+              data-node="true"
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: modalBg,
+                borderRadius: 20,
+                width: 500,
+                maxWidth: "94vw",
+                maxHeight: "82vh",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0 32px 100px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)",
+                border: `1px solid ${border}`,
+                fontFamily: "'Heebo', system-ui, sans-serif",
+                direction: "rtl",
+                overflow: "hidden",
+                animation: "modalPop 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                padding: "18px 20px 14px",
+                borderBottom: `1px solid ${border}`,
+                display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
+              }}>
+                {sub && (
+                  <button
+                    onClick={() => { setEditTarget({ ...editTarget, subId: undefined }); setAddingStage(null); }}
+                    style={{
+                      background: cardBg, border: `1px solid ${border}`,
+                      color: textSec, borderRadius: 8,
+                      padding: "5px 12px", fontSize: 12,
+                      cursor: "pointer", flexShrink: 0,
+                    }}
+                  >← חזור</button>
+                )}
+                <span style={{ fontSize: 26, flexShrink: 0 }}>{sub ? sub.emoji : project.emoji}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ color: textPrim, fontWeight: 900, fontSize: 16, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {sub ? sub.name : project.name}
+                  </p>
+                  <p style={{ color: textSec, fontSize: 11, margin: "2px 0 0" }}>
                     {sub
                       ? `${sub.stages.length + sub.channels.reduce((n,c) => n + c.stages.length, 0)} משימות`
-                      : `${project.subProjects.length} פרויקטים`
+                      : `${project.subProjects.length} פרויקטים — לחץ להכנסה`
                     }
                   </p>
                 </div>
+                <button
+                  onClick={() => { setEditTarget(null); setAddingStage(null); }}
+                  style={{
+                    background: "transparent", border: "none",
+                    color: textSec, fontSize: 20,
+                    cursor: "pointer", lineHeight: 1,
+                    width: 32, height: 32, borderRadius: 8,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >×</button>
               </div>
-            </div>
 
-            {/* Panel body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
-              {sub ? (
-                /* ── Sub level: show stages ── */
-                sub.channels.length > 0 ? (
-                  sub.channels.map(ch => (
-                    <div key={ch.id}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                        <span style={{ fontSize: 14 }}>{ch.emoji}</span>
-                        <span style={{ color: textSec, fontSize: 11, fontWeight: 700 }}>{ch.name}</span>
-                        <span style={{ color: textSec, fontSize: 10 }}>· {ch.stages.length} משימות</span>
-                      </div>
-                      {renderStageList(ch.stages, sub.id, ch.id, project.color)}
-                    </div>
-                  ))
+              {/* Body */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+                {sub ? (
+                  /* ── Sub level: stage list + add ── */
+                  <>
+                    {sub.channels.length > 0 ? (
+                      sub.channels.map(ch => (
+                        <div key={ch.id} style={{ marginBottom: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                            <span style={{ fontSize: 15 }}>{ch.emoji}</span>
+                            <span style={{ color: textSec, fontSize: 12, fontWeight: 700 }}>{ch.name}</span>
+                            <span style={{ color: textSec + "88", fontSize: 10 }}>· {ch.stages.length} משימות</span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {ch.stages.map(st => renderStageRow(st, sub.id, ch.id))}
+                          </div>
+                          {renderAddForm(sub.id, ch.id)}
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {sub.stages.map(st => renderStageRow(st, sub.id))}
+                        </div>
+                        {renderAddForm(sub.id)}
+                      </>
+                    )}
+                  </>
                 ) : (
-                  renderStageList(sub.stages, sub.id, undefined, project.color)
-                )
-              ) : (
-                /* ── Project level: show subs list ── */
-                project.subProjects.map(s => {
-                  const totalStages = s.stages.length + s.channels.reduce((n,c) => n + c.stages.length, 0);
-                  const doneN   = s.stages.filter(st => st.status === "done").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "done").length, 0);
-                  const activeN = s.stages.filter(st => st.status === "active").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "active").length, 0);
-                  const blockedN = s.stages.filter(st => st.status === "blocked").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "blocked").length, 0);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => setEditTarget({ ...editTarget, subId: s.id })}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        background: th.collapseIdleBg, borderRadius: 12,
-                        border: `1px solid ${border}`, padding: "10px 12px",
-                        cursor: "pointer", textAlign: "right", width: "100%",
-                        transition: "opacity 0.1s",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                    >
-                      <span style={{ fontSize: 18, flexShrink: 0 }}>{s.emoji}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: textPrim, fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</p>
-                        <p style={{ color: textSec, fontSize: 10, margin: "2px 0 0" }}>{totalStages} משימות</p>
-                      </div>
-                      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                        {doneN > 0    && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#14532d44", color: "#4ade80" }}>✓{doneN}</span>}
-                        {activeN > 0  && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#1e3a5f55", color: "#60a5fa" }}>●{activeN}</span>}
-                        {blockedN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#4c051944", color: "#f87171" }}>⚠{blockedN}</span>}
-                      </div>
-                      <span style={{ color: textSec, fontSize: 14 }}>←</span>
-                    </button>
-                  );
-                })
-              )}
+                  /* ── Project level: sub list ── */
+                  project.subProjects.map(s => {
+                    const totalSt = s.stages.length + s.channels.reduce((n,c) => n + c.stages.length, 0);
+                    const doneN   = s.stages.filter(st => st.status === "done").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "done").length, 0);
+                    const activeN = s.stages.filter(st => st.status === "active").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "active").length, 0);
+                    const blockedN = s.stages.filter(st => st.status === "blocked").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "blocked").length, 0);
+                    const pct = totalSt > 0 ? Math.round((doneN / totalSt) * 100) : 0;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => { setEditTarget({ ...editTarget, subId: s.id }); setAddingStage(null); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 12,
+                          background: cardBg, borderRadius: 14,
+                          border: `1.5px solid ${border}`,
+                          padding: "12px 16px",
+                          cursor: "pointer", textAlign: "right", width: "100%",
+                          transition: "border-color 0.15s, background 0.15s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = accent + "77"; (e.currentTarget as HTMLButtonElement).style.background = isDarkTheme ? "#2a2d45" : "#f0f0fa"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = border; (e.currentTarget as HTMLButtonElement).style.background = cardBg; }}
+                      >
+                        <span style={{ fontSize: 20, flexShrink: 0 }}>{s.emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+                          <p style={{ color: textPrim, fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
+                            <div style={{ flex: 1, height: 4, background: isDarkTheme ? "#2e3150" : "#e0e0f0", borderRadius: 4, overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: accent, borderRadius: 4, transition: "width 0.3s" }} />
+                            </div>
+                            <span style={{ color: textSec, fontSize: 10, flexShrink: 0 }}>{pct}%</span>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                          {doneN > 0    && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "#14532d33", color: "#4ade80" }}>✓{doneN}</span>}
+                          {activeN > 0  && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "#1e3a5f33", color: "#60a5fa" }}>●{activeN}</span>}
+                          {blockedN > 0 && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "#4c051933", color: "#f87171" }}>⚠{blockedN}</span>}
+                          {totalSt === 0 && <span style={{ fontSize: 10, color: textSec }}>אין משימות</span>}
+                        </div>
+                        <span style={{ color: accent + "88", fontSize: 16, flexShrink: 0 }}>←</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         );
