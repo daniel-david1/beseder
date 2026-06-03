@@ -661,6 +661,430 @@ function BreadcrumbSidebar({ items, color }: { items: BreadcrumbItem[]; color: s
   );
 }
 
+/* ─── Brand Diagram Canvas ─────────────────────────────── */
+const BD_BRAND_W = 300, BD_BRAND_H = 86;
+const BD_PROJ_W = 230, BD_PROJ_H = 78;
+const BD_SUB_W = 188, BD_SUB_H = 108;
+const BD_PROJ_DY = 280, BD_SUB_DY = 240;
+const BD_PROJ_GAP = 320, BD_SUB_GAP = 260;
+
+interface BDNode {
+  id: string;
+  type: "brand" | "project" | "sub";
+  projectId?: string; // for subs, which project they belong to
+  data: Brand | Project | SubProject;
+  project?: Project; // for sub nodes, parent project
+  x: number;
+  y: number;
+}
+
+function layoutBDNodes(brand: Brand, collapsedProjects: Set<string>): BDNode[] {
+  const out: BDNode[] = [];
+
+  // Brand node at center
+  const brandNode: BDNode = {
+    id: "brand",
+    type: "brand",
+    data: brand,
+    x: 0, y: 0,
+  };
+  out.push(brandNode);
+
+  const projects = brand.projects;
+  if (!projects.length) return out;
+
+  // Calculate total width for projects
+  let totalProjW = 0;
+  for (const proj of projects) {
+    const subs = proj.subProjects;
+    const isCollapsed = collapsedProjects.has(proj.id);
+    if (isCollapsed || subs.length === 0) {
+      totalProjW += BD_PROJ_W;
+    } else {
+      const subSpan = subs.length * BD_SUB_W + (subs.length - 1) * (BD_SUB_GAP - BD_SUB_W);
+      totalProjW += Math.max(BD_PROJ_W, subSpan);
+    }
+  }
+  totalProjW += (projects.length - 1) * (BD_PROJ_GAP - BD_PROJ_W);
+
+  let px = -(totalProjW / 2) + BD_PROJ_W / 2;
+
+  for (const proj of projects) {
+    const subs = proj.subProjects;
+    const isCollapsed = collapsedProjects.has(proj.id);
+    const projX = px;
+
+    // Place subs if not collapsed
+    if (!isCollapsed && subs.length > 0) {
+      const totalSubW = subs.length * BD_SUB_W + (subs.length - 1) * (BD_SUB_GAP - BD_SUB_W);
+      let sx = projX - totalSubW / 2 + BD_SUB_W / 2;
+      for (const sub of subs) {
+        out.push({
+          id: `sub-${sub.id}`,
+          type: "sub",
+          projectId: proj.id,
+          data: sub,
+          project: proj,
+          x: sx, y: BD_PROJ_DY + BD_SUB_DY,
+        });
+        sx += BD_SUB_GAP;
+      }
+
+      // Advance px
+      const subSpan = subs.length * BD_SUB_W + (subs.length - 1) * (BD_SUB_GAP - BD_SUB_W);
+      px += Math.max(BD_PROJ_GAP, subSpan + 40);
+    } else {
+      px += BD_PROJ_GAP;
+    }
+
+    out.push({
+      id: `proj-${proj.id}`,
+      type: "project",
+      data: proj,
+      x: projX, y: BD_PROJ_DY,
+    });
+  }
+
+  return out;
+}
+
+function BrandDiagramCanvas({ brand, isDark, t, onNavigateTo }: {
+  brand: Brand;
+  isDark: boolean;
+  t: {
+    bg: string; hdr: string; border: string; nodeBg: string; text: string;
+    textSec: string; textMuted: string; taskDotTodo: string; emptyText: string;
+    activeBadge: { bg: string; text: string }; blockedBadge: { bg: string; text: string };
+    statsDone: { bg: string; text: string; border: string };
+    statsActive: { bg: string; text: string; border: string };
+    statsBlocked: { bg: string; text: string; border: string };
+    btnBg: string; btnBorder: string; btnText: string;
+    divider: string;
+  };
+  onNavigateTo: (project: Project, sub?: SubProject, channel?: Channel) => void;
+}) {
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(() => {
+    const s = new Set<string>();
+    for (const p of brand.projects) s.add(p.id);
+    return s;
+  });
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const isPanning = useRef(false);
+  const panStart = useRef({ x: 0, y: 0 });
+  const offsetAtStart = useRef({ x: 0, y: 0 });
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOffset({ x: window.innerWidth / 2, y: 80 });
+    }
+  }, []);
+
+  const nodes = layoutBDNodes(brand, collapsedProjects);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale(s => Math.min(3, Math.max(0.25, s * delta)));
+  };
+
+  const handleBgMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("[data-bdnode]")) return;
+    isPanning.current = true;
+    panStart.current = { x: e.clientX, y: e.clientY };
+    offsetAtStart.current = { ...offset };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning.current) return;
+    setOffset({
+      x: offsetAtStart.current.x + (e.clientX - panStart.current.x),
+      y: offsetAtStart.current.y + (e.clientY - panStart.current.y),
+    });
+  };
+
+  const handleMouseUp = () => { isPanning.current = false; };
+
+  const toggleProject = (projId: string) => {
+    setCollapsedProjects(prev => {
+      const next = new Set(prev);
+      if (next.has(projId)) next.delete(projId);
+      else next.add(projId);
+      return next;
+    });
+  };
+
+  // SVG bounds
+  const xs = nodes.map(n => n.x);
+  const ys = nodes.map(n => n.y);
+  const minX = Math.min(...xs) - 300;
+  const minY = Math.min(...ys) - 120;
+  const maxX = Math.max(...xs) + 400;
+  const maxY = Math.max(...ys) + 280;
+  const svgW = maxX - minX;
+  const svgH = maxY - minY;
+
+  // Connections
+  function renderBDConnections() {
+    const lines: React.ReactElement[] = [];
+    const brandNode = nodes.find(n => n.type === "brand");
+    if (!brandNode) return lines;
+
+    const projNodes = nodes.filter(n => n.type === "project");
+    for (const pn of projNodes) {
+      // brand → project
+      const x1 = brandNode.x + BD_BRAND_W / 2;
+      const y1 = brandNode.y + BD_BRAND_H;
+      const x2 = pn.x + BD_PROJ_W / 2;
+      const y2 = pn.y;
+      const midY1 = (y1 + y2) / 2;
+      lines.push(
+        <path key={`b-${pn.id}`}
+          d={`M ${x1} ${y1} C ${x1} ${midY1}, ${x2} ${midY1}, ${x2} ${y2}`}
+          fill="none" stroke={brand.color + (isDark ? "55" : "60")} strokeWidth="2"
+        />
+      );
+
+      // project → subs
+      const projId = (pn.data as Project).id;
+      const subNodes = nodes.filter(n => n.type === "sub" && n.projectId === projId);
+      for (const sn of subNodes) {
+        const sx1 = pn.x + BD_PROJ_W / 2;
+        const sy1 = pn.y + BD_PROJ_H;
+        const sx2 = sn.x + BD_SUB_W / 2;
+        const sy2 = sn.y;
+        const smidY = (sy1 + sy2) / 2;
+        lines.push(
+          <path key={`p-${sn.id}`}
+            d={`M ${sx1} ${sy1} C ${sx1} ${smidY}, ${sx2} ${smidY}, ${sx2} ${sy2}`}
+            fill="none" stroke={brand.color + (isDark ? "40" : "45")} strokeWidth="1.5"
+            strokeDasharray="4 3"
+          />
+        );
+      }
+    }
+    return lines;
+  }
+
+  if (brand.projects.length === 0) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, background: t.bg }}>
+        <div style={{ fontSize: 48, opacity: 0.25 }}>📭</div>
+        <p style={{ color: t.emptyText, fontWeight: 600, fontSize: 14 }}>אין מחלקות במותג זה עדיין</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ flex: 1, position: "relative", overflow: "hidden", background: t.bg,
+      backgroundImage: isDark ? "radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px)" : "radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px)",
+      backgroundSize: "28px 28px" }}>
+
+      {/* Ambient glows */}
+      <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: 320, background: `radial-gradient(circle at top right, ${brand.color}${isDark ? "0d" : "06"}, transparent 70%)`, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, width: 260, height: 260, background: `radial-gradient(circle at bottom left, ${isDark ? "rgba(99,102,241,0.07)" : "rgba(99,102,241,0.03)"}, transparent 70%)`, pointerEvents: "none" }} />
+
+      {/* Pan/zoom canvas */}
+      <div
+        style={{ position: "absolute", inset: 0, cursor: isPanning.current ? "grabbing" : "grab" }}
+        onWheel={handleWheel}
+        onMouseDown={handleBgMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        <div style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: "0 0", position: "absolute", top: 0, left: 0 }}>
+          {/* SVG connections */}
+          <svg style={{ position: "absolute", left: minX, top: minY, pointerEvents: "none", overflow: "visible" }}
+            width={svgW} height={svgH} viewBox={`${minX} ${minY} ${svgW} ${svgH}`}>
+            {renderBDConnections()}
+          </svg>
+
+          {/* Nodes */}
+          {nodes.map(node => {
+            const isHov = hoveredId === node.id;
+
+            if (node.type === "brand") {
+              const b = node.data as Brand;
+              const totalTasks = b.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.length + sp.channels.reduce((cs, c) => cs + c.stages.length, 0), 0), 0);
+              const doneTasks = b.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "done").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "done").length, 0), 0), 0);
+              const activeN = b.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "active").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "active").length, 0), 0), 0);
+              const blockedN = b.projects.reduce((s, p) => s + p.subProjects.reduce((ss, sp) => ss + sp.stages.filter(st => st.status === "blocked").length + sp.channels.reduce((cs, c) => cs + c.stages.filter(st => st.status === "blocked").length, 0), 0), 0);
+
+              return (
+                <div key={node.id} data-bdnode="true"
+                  style={{
+                    position: "absolute", left: node.x, top: node.y,
+                    width: BD_BRAND_W, minHeight: BD_BRAND_H,
+                    borderRadius: 20, padding: "12px 18px",
+                    background: isDark ? `linear-gradient(135deg, ${brand.color}1a 0%, #13161f 100%)` : `linear-gradient(135deg, ${brand.color}10 0%, #ffffff 100%)`,
+                    border: `1.5px solid ${brand.color}55`,
+                    boxShadow: isDark ? `0 0 56px ${brand.color}20, 0 12px 48px rgba(0,0,0,0.7)` : `0 0 28px ${brand.color}15, 0 6px 28px rgba(0,0,0,0.1)`,
+                    display: "flex", alignItems: "center", gap: 12, direction: "rtl",
+                  }}>
+                  <div style={{ width: 50, height: 50, borderRadius: 14, background: brand.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, boxShadow: `0 4px 20px ${brand.color}65` }}>{b.emoji}</div>
+                  <div style={{ flex: 1, textAlign: "right" }}>
+                    <div style={{ color: t.text, fontWeight: 900, fontSize: 17, lineHeight: 1.15 }}>{b.name}</div>
+                    <div style={{ color: t.textMuted, fontSize: 11, marginTop: 3 }}>{b.projects.length} מחלקות · {totalTasks} משימות</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    {doneTasks > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsDone.bg, color: t.statsDone.text, border: `1px solid ${t.statsDone.border}` }}>✓ {doneTasks}</span>}
+                    {activeN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsActive.bg, color: t.statsActive.text, border: `1px solid ${t.statsActive.border}` }}>● {activeN}</span>}
+                    {blockedN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsBlocked.bg, color: t.statsBlocked.text, border: `1px solid ${t.statsBlocked.border}` }}>⚠ {blockedN}</span>}
+                  </div>
+                </div>
+              );
+            }
+
+            if (node.type === "project") {
+              const proj = node.data as Project;
+              const isCol = collapsedProjects.has(proj.id);
+              return (
+                <div key={node.id} data-bdnode="true"
+                  style={{ position: "absolute", left: node.x, top: node.y, width: BD_PROJ_W, minHeight: BD_PROJ_H }}
+                  onMouseEnter={() => setHoveredId(node.id)}
+                  onMouseLeave={() => setHoveredId(null)}>
+                  {/* Collapse toggle */}
+                  {proj.subProjects.length > 0 && (
+                    <button data-bdnode="true"
+                      onClick={e => { e.stopPropagation(); toggleProject(proj.id); }}
+                      style={{
+                        position: "absolute", top: -10, right: -10, zIndex: 10,
+                        width: 24, height: 24, borderRadius: "50%",
+                        background: isCol ? brand.color : (isDark ? "#1e2130" : "#f3f4f6"),
+                        color: isCol ? "white" : brand.color,
+                        fontSize: 11, fontWeight: 700,
+                        border: `2px solid ${brand.color}66`,
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "background 0.15s",
+                      }}
+                      title={isCol ? "הרחב" : "כווץ"}
+                    >{isCol ? "▶" : "▼"}</button>
+                  )}
+                  <button data-bdnode="true"
+                    onClick={() => onNavigateTo(proj)}
+                    style={{
+                      width: "100%", minHeight: BD_PROJ_H, borderRadius: 16, padding: "12px 16px",
+                      background: isDark ? `linear-gradient(135deg, ${brand.color}1a 0%, #13161f 100%)` : `linear-gradient(135deg, ${brand.color}09 0%, #ffffff 100%)`,
+                      border: `1.5px solid ${brand.color}50`,
+                      boxShadow: isHov
+                        ? isDark ? `0 0 36px ${brand.color}30, 0 8px 40px rgba(0,0,0,0.65)` : `0 0 24px ${brand.color}18, 0 4px 18px rgba(0,0,0,0.12)`
+                        : isDark ? `0 0 20px ${brand.color}14, 0 4px 16px rgba(0,0,0,0.45)` : `0 0 12px ${brand.color}0a, 0 2px 10px rgba(0,0,0,0.07)`,
+                      display: "flex", alignItems: "center", gap: 12,
+                      cursor: "pointer", direction: "rtl",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                      transform: isHov ? "scale(1.03)" : "scale(1)",
+                      textAlign: "right",
+                    }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: brand.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0, boxShadow: `0 4px 16px ${brand.color}55` }}>{proj.emoji}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: t.text, fontWeight: 900, fontSize: 14, lineHeight: 1.2 }}>{proj.name}</div>
+                      <div style={{ color: brand.color + "bb", fontSize: 11, marginTop: 2 }}>{proj.subProjects.length} פרויקטים</div>
+                    </div>
+                    <span style={{ color: brand.color + "70", fontSize: 18 }}>←</span>
+                  </button>
+                </div>
+              );
+            }
+
+            if (node.type === "sub") {
+              const sub = node.data as SubProject;
+              const proj = node.project!;
+              const hasChannels = sub.channels.length > 0;
+              const subAllS = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.length, 0) : sub.stages.length;
+              const doneN = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0) : sub.stages.filter(s => s.status === "done").length;
+              const actN = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0) : sub.stages.filter(s => s.status === "active").length;
+              const blkN = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0) : sub.stages.filter(s => s.status === "blocked").length;
+
+              return (
+                <div key={node.id} data-bdnode="true"
+                  style={{ position: "absolute", left: node.x, top: node.y, width: BD_SUB_W }}
+                  onMouseEnter={() => setHoveredId(node.id)}
+                  onMouseLeave={() => setHoveredId(null)}>
+                  <button data-bdnode="true"
+                    onClick={() => onNavigateTo(proj, sub)}
+                    style={{
+                      width: "100%", minHeight: BD_SUB_H, borderRadius: 14, padding: "10px 12px",
+                      background: isDark ? `linear-gradient(135deg, ${brand.color}12 0%, #13161f 100%)` : `linear-gradient(135deg, ${brand.color}06 0%, #ffffff 100%)`,
+                      border: `1px solid ${brand.color}38`,
+                      boxShadow: isHov
+                        ? isDark ? `0 0 24px ${brand.color}22, 0 4px 20px rgba(0,0,0,0.6)` : `0 0 16px ${brand.color}14, 0 2px 12px rgba(0,0,0,0.1)`
+                        : isDark ? `0 2px 14px ${brand.color}10, 0 4px 18px rgba(0,0,0,0.5)` : `0 1px 8px rgba(0,0,0,0.07)`,
+                      display: "flex", flexDirection: "column", gap: 7,
+                      cursor: "pointer", direction: "rtl", textAlign: "right",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                      transform: isHov ? "scale(1.04) translateY(-2px)" : "scale(1)",
+                    }}>
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 9, background: isDark ? brand.color + "28" : brand.color + "16", border: `1px solid ${brand.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{sub.emoji}</div>
+                      <span style={{ color: t.text, fontWeight: 800, fontSize: 12, lineHeight: 1.3, flex: 1 }}>{sub.name}</span>
+                    </div>
+
+                    {/* Channel pills */}
+                    {hasChannels && sub.channels.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                        {sub.channels.slice(0, 3).map(ch => (
+                          <button key={ch.id} data-bdnode="true"
+                            onClick={e => { e.stopPropagation(); onNavigateTo(proj, sub, ch); }}
+                            style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 6px", borderRadius: 7, background: brand.color + "1e", border: `1px solid ${brand.color}30`, color: brand.color, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                            <span>{ch.emoji}</span>
+                            <span style={{ maxWidth: 44, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.name}</span>
+                          </button>
+                        ))}
+                        {sub.channels.length > 3 && <span style={{ fontSize: 10, color: t.textMuted, alignSelf: "center" }}>+{sub.channels.length - 3}</span>}
+                      </div>
+                    )}
+
+                    {/* Task dots */}
+                    {!hasChannels && sub.stages.length > 0 && (
+                      <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                        {sub.stages.slice(0, 10).map(s => (
+                          <div key={s.id} style={{ width: 7, height: 7, borderRadius: "50%", background: s.status === "done" ? brand.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : t.taskDotTodo }} />
+                        ))}
+                        {sub.stages.length > 10 && <span style={{ fontSize: 9, color: t.emptyText }}>+{sub.stages.length - 10}</span>}
+                      </div>
+                    )}
+
+                    {/* Status badges */}
+                    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                      {doneN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.statsDone.bg, color: t.statsDone.text }}>✓ {doneN}</span>}
+                      {actN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.activeBadge.bg, color: t.activeBadge.text }}>● {actN}</span>}
+                      {blkN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.blockedBadge.bg, color: t.blockedBadge.text }}>⚠ {blkN}</span>}
+                      {subAllS === 0 && <span style={{ fontSize: 9, color: t.emptyText }}>ריק</span>}
+                    </div>
+                  </button>
+                </div>
+              );
+            }
+
+            return null;
+          })}
+        </div>
+      </div>
+
+      {/* Zoom controls */}
+      <div style={{ position: "absolute", bottom: 16, right: 16, zIndex: 20, display: "flex", flexDirection: "column", gap: 5 }}>
+        <button onClick={() => setScale(s => Math.min(3, s * 1.15))}
+          style={{ width: 34, height: 34, borderRadius: 9, background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+        <button onClick={() => setScale(1)}
+          style={{ width: 34, height: 34, borderRadius: 9, background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: 10, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{Math.round(scale * 100)}%</button>
+        <button onClick={() => setScale(s => Math.max(0.25, s * 0.85))}
+          style={{ width: 34, height: 34, borderRadius: 9, background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+      </div>
+
+      {/* Expand/collapse all */}
+      <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 20, display: "flex", gap: 8 }}>
+        <button onClick={() => setCollapsedProjects(new Set())}
+          style={{ background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, borderRadius: 10, padding: "7px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>הרחב הכל ▼</button>
+        <button onClick={() => setCollapsedProjects(new Set(brand.projects.map(p => p.id)))}
+          style={{ background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, borderRadius: 10, padding: "7px 14px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>כווץ הכל ▶</button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Brand whiteboard ─────────────────────────────────── */
 function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
   brand: Brand;
@@ -869,245 +1293,7 @@ function BrandWhiteboard({ brand, onClose, onNavigateTo }: {
 
       {/* ══ DIAGRAM VIEW ══ */}
       {viewMode === 'diagram' && (
-        <div className="flex-1 overflow-auto" style={{
-          background: t.bg,
-          backgroundImage: isDark
-            ? "radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px)"
-            : "radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-          position: "relative",
-        }}>
-          {/* Ambient corner glows */}
-          <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: 320, background: `radial-gradient(circle at top right, ${brand.color}${isDark ? "0d" : "06"}, transparent 70%)`, pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, width: 260, height: 260, background: `radial-gradient(circle at bottom left, ${isDark ? "rgba(99,102,241,0.07)" : "rgba(99,102,241,0.03)"}, transparent 70%)`, pointerEvents: "none" }} />
-
-          {/* Section label */}
-          <div style={{ textAlign: "center", paddingTop: 20, paddingBottom: 6 }}>
-            <span style={{ letterSpacing: "0.18em", fontSize: 10, fontWeight: 700, color: t.textMuted, opacity: 0.65 }}>מבנה המותג · BRAND STRUCTURE</span>
-          </div>
-          {/* Accent line */}
-          <div style={{ height: 1, background: `linear-gradient(to left, transparent, ${brand.color}35, transparent)`, maxWidth: 380, margin: "0 auto 0" }} />
-
-          {brand.projects.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 280, gap: 12 }}>
-              <div style={{ fontSize: 48, opacity: 0.25 }}>📭</div>
-              <p style={{ color: t.emptyText, fontWeight: 600, fontSize: 14 }}>אין מחלקות במותג זה עדיין</p>
-            </div>
-          ) : (
-            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px 80px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-
-              {/* ── Brand root node ── */}
-              <div style={{
-                background: isDark
-                  ? `linear-gradient(135deg, ${brand.color}1a 0%, #13161f 100%)`
-                  : `linear-gradient(135deg, ${brand.color}10 0%, #ffffff 100%)`,
-                border: `1.5px solid ${brand.color}55`,
-                boxShadow: isDark
-                  ? `0 0 56px ${brand.color}20, 0 12px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)`
-                  : `0 0 28px ${brand.color}15, 0 6px 28px rgba(0,0,0,0.1)`,
-                borderRadius: 20,
-                padding: "12px 18px",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                width: "min(340px, calc(100vw - 48px))",
-              }}>
-                <div style={{
-                  width: 50, height: 50, borderRadius: 14,
-                  background: brand.color,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 24, flexShrink: 0,
-                  boxShadow: `0 4px 20px ${brand.color}65`,
-                }}>{brand.emoji}</div>
-                <div style={{ textAlign: "right", flex: 1 }}>
-                  <div style={{ color: t.text, fontWeight: 900, fontSize: 17, lineHeight: 1.15 }}>{brand.name}</div>
-                  <div style={{ color: t.textMuted, fontSize: 11, marginTop: 3 }}>
-                    {brand.projects.length} מחלקות · {totalTasks} משימות
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  {doneTasks   > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsDone.bg,    color: t.statsDone.text,    border: `1px solid ${t.statsDone.border}` }}>✓ {doneTasks}</span>}
-                  {activeCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsActive.bg,  color: t.statsActive.text,  border: `1px solid ${t.statsActive.border}` }}>● {activeCount}</span>}
-                  {blockedCount> 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 8, background: t.statsBlocked.bg, color: t.statsBlocked.text, border: `1px solid ${t.statsBlocked.border}` }}>⚠ {blockedCount}</span>}
-                </div>
-              </div>
-
-              {/* Connector brand → first project */}
-              <div style={{ width: 2, height: 36, background: isDark ? `linear-gradient(to bottom, ${brand.color}55, ${brand.color}18)` : `linear-gradient(to bottom, ${brand.color}40, ${brand.color}10)` }} />
-
-              {/* ── Projects ── */}
-              {brand.projects.map((project, pi) => {
-                const nSubs = project.subProjects.length;
-                return (
-                  <div key={project.id} style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-
-                    {/* Project node */}
-                    <button
-                      onClick={() => onNavigateTo(project)}
-                      style={{
-                        background: isDark
-                          ? `linear-gradient(135deg, ${project.color}1a 0%, #13161f 100%)`
-                          : `linear-gradient(135deg, ${project.color}09 0%, #ffffff 100%)`,
-                        border: `1.5px solid ${project.color}50`,
-                        boxShadow: isDark
-                          ? `0 0 36px ${project.color}22, 0 8px 40px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05)`
-                          : `0 0 18px ${project.color}12, 0 4px 18px rgba(0,0,0,0.08)`,
-                        borderRadius: 16,
-                        padding: "12px 20px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        cursor: "pointer",
-                        transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                        minWidth: "min(240px, 70vw)",
-                      }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-                    >
-                      <div style={{
-                        width: 44, height: 44, borderRadius: 12,
-                        background: project.color,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 20, flexShrink: 0,
-                        boxShadow: `0 4px 16px ${project.color}55`,
-                      }}>{project.emoji}</div>
-                      <div style={{ textAlign: "right", flex: 1 }}>
-                        <div style={{ color: t.text, fontWeight: 900, fontSize: 15, lineHeight: 1.2 }}>{project.name}</div>
-                        <div style={{ color: project.color + "bb", fontSize: 11, marginTop: 2 }}>{nSubs} פרויקטים</div>
-                      </div>
-                      <span style={{ color: project.color + "70", fontSize: 18 }}>←</span>
-                    </button>
-
-                    {/* ── SubProjects ── */}
-                    {nSubs > 0 && (
-                      <>
-                        {/* Vertical drop */}
-                        <div style={{ width: 2, height: 22, background: `linear-gradient(to bottom, ${project.color}50, ${project.color}22)` }} />
-
-                        {/* Horizontal connector bar (spanning sub-row) */}
-                        {nSubs > 1 && (
-                          <div style={{
-                            height: 2,
-                            width: `min(${nSubs * 188}px, 92%)`,
-                            background: `linear-gradient(to left, transparent, ${project.color}35, transparent)`,
-                            borderRadius: 2,
-                            marginBottom: 0,
-                          }} />
-                        )}
-
-                        {/* Sub-row */}
-                        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", paddingTop: nSubs > 1 ? 0 : 0, width: "100%" }}>
-                          {project.subProjects.map(sub => {
-                            const hasChannels = sub.channels.length > 0;
-                            const subAllS  = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.length, 0) : sub.stages.length;
-                            const blockedN = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "blocked").length, 0) : sub.stages.filter(s => s.status === "blocked").length;
-                            const activeN  = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "active").length, 0) : sub.stages.filter(s => s.status === "active").length;
-                            const doneN    = hasChannels ? sub.channels.reduce((n, c) => n + c.stages.filter(s => s.status === "done").length, 0) : sub.stages.filter(s => s.status === "done").length;
-                            return (
-                              <div key={sub.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                {/* tick from horizontal bar */}
-                                <div style={{ width: 2, height: 16, background: `${project.color}30` }} />
-                                {/* Arrowhead */}
-                                <div style={{ width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: `5px solid ${project.color}40`, marginBottom: 2 }} />
-                                <button
-                                  onClick={() => onNavigateTo(project, sub)}
-                                  style={{
-                                    background: isDark
-                                      ? `linear-gradient(135deg, ${project.color}12 0%, #13161f 100%)`
-                                      : `linear-gradient(135deg, ${project.color}06 0%, #ffffff 100%)`,
-                                    border: `1px solid ${project.color}38`,
-                                    boxShadow: isDark
-                                      ? `0 2px 18px ${project.color}14, 0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)`
-                                      : `0 2px 10px ${project.color}0e, 0 2px 12px rgba(0,0,0,0.07)`,
-                                    borderRadius: 14,
-                                    padding: "10px 12px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 8,
-                                    cursor: "pointer",
-                                    transition: "transform 0.15s ease",
-                                    width: "clamp(130px, 40vw, 172px)",
-                                    textAlign: "right",
-                                  }}
-                                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05) translateY(-2px)"; }}
-                                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1) translateY(0)"; }}
-                                >
-                                  {/* Sub header */}
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <div style={{
-                                      width: 32, height: 32, borderRadius: 9,
-                                      background: isDark ? project.color + "28" : project.color + "16",
-                                      border: `1px solid ${project.color}40`,
-                                      display: "flex", alignItems: "center", justifyContent: "center",
-                                      fontSize: 16, flexShrink: 0,
-                                    }}>{sub.emoji}</div>
-                                    <span style={{ color: t.text, fontWeight: 800, fontSize: 12, lineHeight: 1.3 }}>{sub.name}</span>
-                                  </div>
-
-                                  {/* Channels */}
-                                  {hasChannels && sub.channels.length > 0 && (
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                                      {sub.channels.slice(0, 3).map(ch => (
-                                        <button key={ch.id}
-                                          onClick={e => { e.stopPropagation(); onNavigateTo(project, sub, ch); }}
-                                          style={{
-                                            display: "flex", alignItems: "center", gap: 3,
-                                            padding: "2px 6px", borderRadius: 7,
-                                            background: project.color + "1e",
-                                            border: `1px solid ${project.color}30`,
-                                            color: project.color,
-                                            fontSize: 10, fontWeight: 600,
-                                          }}>
-                                          <span>{ch.emoji}</span>
-                                          <span style={{ maxWidth: 44, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.name}</span>
-                                        </button>
-                                      ))}
-                                      {sub.channels.length > 3 && <span style={{ fontSize: 10, color: t.textMuted, alignSelf: "center" }}>+{sub.channels.length - 3}</span>}
-                                    </div>
-                                  )}
-
-                                  {/* Task dots */}
-                                  {!hasChannels && sub.stages.length > 0 && (
-                                    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                                      {sub.stages.slice(0, 12).map(s => (
-                                        <div key={s.id} style={{
-                                          width: 7, height: 7, borderRadius: "50%",
-                                          background: s.status === "done" ? project.color : s.status === "active" ? "#3b82f6" : s.status === "blocked" ? "#ef4444" : t.taskDotTodo,
-                                        }} />
-                                      ))}
-                                      {sub.stages.length > 12 && <span style={{ fontSize: 9, color: t.emptyText }}>+{sub.stages.length - 12}</span>}
-                                    </div>
-                                  )}
-
-                                  {/* Status badges */}
-                                  <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                                    {doneN    > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.statsDone.bg,    color: t.statsDone.text }}>✓ {doneN}</span>}
-                                    {activeN  > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.activeBadge.bg,  color: t.activeBadge.text }}>● {activeN}</span>}
-                                    {blockedN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1.5px 5px", borderRadius: 6, background: t.blockedBadge.bg, color: t.blockedBadge.text }}>⚠ {blockedN}</span>}
-                                    {subAllS === 0 && <span style={{ fontSize: 9, color: t.emptyText }}>ריק</span>}
-                                  </div>
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Separator between projects */}
-                    {pi < brand.projects.length - 1 && (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0, width: "100%", margin: "28px 0 0" }}>
-                        <div style={{ width: 2, height: 18, background: isDark ? `${brand.color}22` : `${brand.color}18` }} />
-                        <div style={{ width: "45%", height: 1, background: isDark ? "rgba(255,255,255,0.045)" : "rgba(0,0,0,0.065)", borderRadius: 1 }} />
-                        <div style={{ width: 2, height: 18, background: isDark ? `${brand.color}22` : `${brand.color}18` }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <BrandDiagramCanvas brand={brand} isDark={isDark} t={t} onNavigateTo={onNavigateTo} />
       )}
     </div>
   );

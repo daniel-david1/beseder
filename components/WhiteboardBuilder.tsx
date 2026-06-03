@@ -284,6 +284,31 @@ function getVisibleNodeIds(nodes: WBNode[], collapsed: Set<string>): Set<string>
   return visible;
 }
 
+/* ─── Brand financials helper ────────────────────────────── */
+function brandFinancials(brand: Brand): { income: number; expenses: number } {
+  let income = 0, expenses = 0;
+  for (const proj of brand.projects) {
+    for (const sub of proj.subProjects) {
+      expenses += (sub.expenses ?? []).reduce((s, e) => s + e.amount, 0);
+      for (const st of sub.stages) expenses += (st.expenses ?? []).reduce((a, e) => a + e.amount, 0);
+      for (const ch of (sub.channels ?? [])) {
+        expenses += (ch.expenses ?? []).reduce((a, e) => a + e.amount, 0);
+        for (const st of ch.stages) expenses += (st.expenses ?? []).reduce((a, e) => a + e.amount, 0);
+        income += (ch.incomes ?? []).reduce((a, e) => a + e.amount, 0);
+      }
+      income += (sub.incomes ?? []).reduce((s, e) => s + e.amount, 0);
+      expenses += (sub.commitments ?? []).reduce((s, c) => {
+        const paid = (c.payments ?? []).filter((p: { paid: boolean }) => p.paid).length;
+        if (paid >= c.totalPayments && c.totalPayments > 0) return s;
+        if (c.frequency === 'monthly') return s + c.amountPerPayment;
+        if (c.frequency === 'weekly') return s + c.amountPerPayment * 4;
+        return s;
+      }, 0);
+    }
+  }
+  return { income, expenses };
+}
+
 /* ─── Main component ─────────────────────────────────────── */
 export default function WhiteboardBuilder({
   brands,
@@ -295,6 +320,48 @@ export default function WhiteboardBuilder({
   onClose: () => void;
 }) {
   const rawNodes = useMemo(() => brandsToNodes(brands), []);
+  const [isDark, setIsDark] = useState(true);
+
+  const th = isDark ? {
+    canvasBg: "#0d0f18",
+    dotColor: "rgba(255,255,255,0.025)",
+    toolbarBg: "rgba(13,15,24,0.94)",
+    toolbarBorder: "#1a1d2c",
+    btnBg: "#181b28", btnBorder: "#252838", btnText: "#9ca3af",
+    titleColor: "#e2e8f0", subtitleColor: "#4b5563",
+    nodeBrandBg: (c: string) => `linear-gradient(135deg, ${c}30 0%, #1a1d2a 100%)`,
+    nodeBrandBorder: (c: string) => c + "55",
+    nodeProjectBg: (c: string) => `linear-gradient(135deg, ${c}20 0%, #151821 100%)`,
+    nodeSubBg: (c: string) => `linear-gradient(135deg, ${c}15 0%, #131620 100%)`,
+    labelColor: "#f1f5f9",
+    zoomBtnBg: "#181b28", zoomBtnBorder: "#252838",
+    collapseIdleBg: "#1e2130",
+    emojiPickerBg: "#1a1d2a", emojiPickerBorder: "#2a2d3e",
+    emojiPickerHover: "rgba(255,255,255,0.1)",
+    inputBg: "rgba(255,255,255,0.08)", inputColor: "#fff",
+    addChildBg: "rgba(15,17,23,0.9)",
+    deleteBtnBg: "#ef4444",
+  } : {
+    canvasBg: "#f1f5f9",
+    dotColor: "rgba(0,0,0,0.055)",
+    toolbarBg: "rgba(255,255,255,0.97)",
+    toolbarBorder: "#e5e7eb",
+    btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
+    titleColor: "#111827", subtitleColor: "#9ca3af",
+    nodeBrandBg: (c: string) => `linear-gradient(135deg, ${c}18 0%, #ffffff 100%)`,
+    nodeBrandBorder: (c: string) => c + "50",
+    nodeProjectBg: (c: string) => `linear-gradient(135deg, ${c}12 0%, #f9fafb 100%)`,
+    nodeSubBg: (c: string) => `linear-gradient(135deg, ${c}0e 0%, #f9fafb 100%)`,
+    labelColor: "#111827",
+    zoomBtnBg: "#f3f4f6", zoomBtnBorder: "#d1d5db",
+    collapseIdleBg: "#f3f4f6",
+    emojiPickerBg: "#ffffff", emojiPickerBorder: "#e5e7eb",
+    emojiPickerHover: "rgba(0,0,0,0.06)",
+    inputBg: "rgba(0,0,0,0.06)", inputColor: "#111827",
+    addChildBg: "rgba(245,247,250,0.95)",
+    deleteBtnBg: "#ef4444",
+  };
+
   // Projects collapsed by default, brands open
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
     const s = new Set<string>();
@@ -570,22 +637,22 @@ export default function WhiteboardBuilder({
     const bgStyle =
       node.type === "brand"
         ? {
-            background: `linear-gradient(135deg, ${node.color}30 0%, #1a1d2a 100%)`,
-            border: `2px solid ${node.color}55`,
+            background: th.nodeBrandBg(node.color),
+            border: `2px solid ${th.nodeBrandBorder(node.color)}`,
             boxShadow: isHovered
               ? `0 0 60px ${node.color}30, 0 12px 40px rgba(0,0,0,0.7), inset 0 1px 0 ${node.color}22`
               : `0 0 40px ${node.color}18, 0 8px 32px rgba(0,0,0,0.55)`,
           }
         : node.type === "project"
         ? {
-            background: `linear-gradient(135deg, ${node.color}20 0%, #151821 100%)`,
+            background: th.nodeProjectBg(node.color),
             border: `1.5px solid ${node.color}40`,
             boxShadow: isHovered
               ? `0 0 32px ${node.color}25, 0 6px 24px rgba(0,0,0,0.6)`
               : `0 0 20px ${node.color}12, 0 4px 16px rgba(0,0,0,0.45)`,
           }
         : {
-            background: `linear-gradient(135deg, ${node.color}15 0%, #131620 100%)`,
+            background: th.nodeSubBg(node.color),
             border: `1px solid ${node.color}30`,
             boxShadow: isHovered
               ? `0 0 20px ${node.color}20, 0 4px 12px rgba(0,0,0,0.5)`
@@ -596,6 +663,11 @@ export default function WhiteboardBuilder({
     const emojiSize = node.type === "brand" ? 24 : node.type === "project" ? 20 : 16;
     const emojiBoxSize = node.type === "brand" ? 46 : node.type === "project" ? 38 : 32;
     const labelSize = node.type === "brand" ? 15 : node.type === "project" ? 13 : 12;
+
+    // Financial data for brand nodes
+    const fin = node.type === "brand" && node.existingId
+      ? brandFinancials(brands.find(b => b.id === node.existingId) ?? { projects: [], name: "", emoji: "", color: "", id: "", description: "", createdAt: "", goals: [] })
+      : null;
 
     return (
       <div
@@ -626,7 +698,7 @@ export default function WhiteboardBuilder({
             style={{
               position: "absolute", top: -10, left: -10,
               width: 24, height: 24, borderRadius: "50%",
-              background: "#ef4444", color: "white",
+              background: th.deleteBtnBg, color: "white",
               fontSize: 15, fontWeight: 700, border: "none",
               cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center",
@@ -637,7 +709,7 @@ export default function WhiteboardBuilder({
           >×</button>
         )}
 
-        {/* Collapse toggle — appears top-left of node */}
+        {/* Collapse toggle — appears top-right of node */}
         {canCollapse && (
           <button
             data-node="true"
@@ -645,7 +717,7 @@ export default function WhiteboardBuilder({
             style={{
               position: "absolute", top: -10, right: -10,
               width: 24, height: 24, borderRadius: "50%",
-              background: isCollapsed ? node.color : "#1e2130",
+              background: isCollapsed ? node.color : th.collapseIdleBg,
               color: isCollapsed ? "white" : node.color,
               fontSize: 11, fontWeight: 700,
               border: `2px solid ${node.color}66`,
@@ -700,9 +772,9 @@ export default function WhiteboardBuilder({
                 }}
                 onBlur={commitEdit}
                 style={{
-                  background: "rgba(255,255,255,0.08)",
+                  background: th.inputBg,
                   border: `1.5px solid ${node.color}77`,
-                  borderRadius: 8, color: "#fff",
+                  borderRadius: 8, color: th.inputColor,
                   fontSize: labelSize, fontWeight: 700,
                   padding: "4px 8px", width: "100%",
                   outline: "none", direction: "rtl",
@@ -712,7 +784,7 @@ export default function WhiteboardBuilder({
               <p
                 onClick={() => startEdit(node)}
                 style={{
-                  color: "#f1f5f9",
+                  color: th.labelColor,
                   fontWeight: node.type === "brand" ? 900 : 700,
                   fontSize: labelSize,
                   lineHeight: 1.3, cursor: "text",
@@ -742,6 +814,29 @@ export default function WhiteboardBuilder({
           </div>
         </div>
 
+        {/* Financial data row (brand only) */}
+        {fin && (fin.income > 0 || fin.expenses > 0) && (
+          <div
+            data-node="true"
+            style={{
+              display: "flex", gap: 8, marginTop: 8,
+              paddingTop: 7, borderTop: `1px solid ${node.color}22`,
+              flexWrap: "wrap",
+            }}
+          >
+            {fin.income > 0 && (
+              <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>
+                💰 ₪{fin.income.toLocaleString("he-IL")}
+              </span>
+            )}
+            {fin.expenses > 0 && (
+              <span style={{ fontSize: 10, color: "#f87171", fontWeight: 600 }}>
+                ↓ ₪{fin.expenses.toLocaleString("he-IL")}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Color picker (brand only, on hover) */}
         {node.type === "brand" && isHovered && (
           <div
@@ -756,7 +851,7 @@ export default function WhiteboardBuilder({
                 style={{
                   width: 18, height: 18, borderRadius: "50%",
                   background: c,
-                  border: node.color === c ? "2.5px solid white" : "1.5px solid rgba(255,255,255,0.15)",
+                  border: node.color === c ? "2.5px solid white" : `1.5px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`,
                   cursor: "pointer", padding: 0,
                   boxShadow: node.color === c ? `0 0 8px ${c}` : "none",
                   transition: "transform 0.1s",
@@ -774,8 +869,8 @@ export default function WhiteboardBuilder({
             data-node="true"
             style={{
               position: "absolute", top: "100%", right: 0, marginTop: 6,
-              background: "#1a1d2a",
-              border: "1px solid #2a2d3e",
+              background: th.emojiPickerBg,
+              border: `1px solid ${th.emojiPickerBorder}`,
               borderRadius: 14, padding: 10,
               display: "grid", gridTemplateColumns: "repeat(5, 1fr)",
               gap: 4, zIndex: 50,
@@ -794,7 +889,7 @@ export default function WhiteboardBuilder({
                   borderRadius: 8, padding: "3px 5px",
                   lineHeight: 1.4, transition: "background 0.1s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                onMouseEnter={e => (e.currentTarget.style.background = th.emojiPickerHover)}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 {em}
@@ -815,7 +910,7 @@ export default function WhiteboardBuilder({
               transform: "translateX(-50%)",
               width: 32, height: 32, borderRadius: "50%",
               border: `2px dashed ${node.color}77`,
-              background: "rgba(15,17,23,0.9)",
+              background: th.addChildBg,
               color: node.color, fontSize: 20, fontWeight: 700,
               cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center",
@@ -827,7 +922,7 @@ export default function WhiteboardBuilder({
               (e.currentTarget as HTMLButtonElement).style.background = node.color + "22";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(15,17,23,0.9)";
+              (e.currentTarget as HTMLButtonElement).style.background = th.addChildBg;
             }}
             title={node.type === "brand" ? "הוסף מחלקה" : "הוסף פרויקט"}
           >+</button>
@@ -840,7 +935,7 @@ export default function WhiteboardBuilder({
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 60,
-        background: "#0d0f18", overflow: "hidden",
+        background: th.canvasBg, overflow: "hidden",
         direction: "rtl", fontFamily: "'Heebo', system-ui, sans-serif",
       }}
     >
@@ -850,27 +945,42 @@ export default function WhiteboardBuilder({
           position: "absolute", top: 0, width: "100%", zIndex: 10,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "12px 20px",
-          background: "rgba(13,15,24,0.94)",
+          background: th.toolbarBg,
           backdropFilter: "blur(14px)",
-          borderBottom: "1px solid #1a1d2c",
+          borderBottom: `1px solid ${th.toolbarBorder}`,
         }}
       >
-        <button
-          onClick={onClose}
-          style={{
-            background: "#181b28", border: "1px solid #252838",
-            color: "#9ca3af", borderRadius: 10,
-            padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          × סגור
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: th.btnBg, border: `1px solid ${th.btnBorder}`,
+              color: th.btnText, borderRadius: 10,
+              padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            × סגור
+          </button>
+
+          {/* Dark/light toggle */}
+          <button
+            onClick={() => setIsDark(d => !d)}
+            style={{
+              background: th.btnBg, border: `1px solid ${th.btnBorder}`,
+              color: th.btnText, borderRadius: 10,
+              padding: "7px 12px", fontSize: 14, cursor: "pointer",
+            }}
+            title={isDark ? "מצב בהיר" : "מצב כהה"}
+          >
+            {isDark ? "☀️" : "🌙"}
+          </button>
+        </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-          <span style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, letterSpacing: "0.05em" }}>
+          <span style={{ color: th.titleColor, fontSize: 14, fontWeight: 700, letterSpacing: "0.05em" }}>
             🗺️ מפת המותגים
           </span>
-          <span style={{ color: "#4b5563", fontSize: 11 }}>
+          <span style={{ color: th.subtitleColor, fontSize: 11 }}>
             לחץ ▶/▼ לכיווץ/הרחבה · גרור לניווט · scroll לזום
           </span>
         </div>
@@ -894,7 +1004,7 @@ export default function WhiteboardBuilder({
         style={{
           position: "absolute", inset: 0,
           cursor: isPanning.current ? "grabbing" : "grab",
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)",
+          backgroundImage: `radial-gradient(circle, ${th.dotColor} 1px, transparent 1px)`,
           backgroundSize: "32px 32px",
         }}
         onWheel={handleWheel}
@@ -954,8 +1064,8 @@ export default function WhiteboardBuilder({
           onClick={() => setScale(s => Math.min(2, s * 1.15))}
           style={{
             width: 36, height: 36, borderRadius: 10,
-            background: "#181b28", border: "1px solid #252838",
-            color: "#9ca3af", fontSize: 18, cursor: "pointer",
+            background: th.zoomBtnBg, border: `1px solid ${th.zoomBtnBorder}`,
+            color: th.btnText, fontSize: 18, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >+</button>
@@ -963,8 +1073,8 @@ export default function WhiteboardBuilder({
           onClick={() => setScale(1)}
           style={{
             width: 36, height: 36, borderRadius: 10,
-            background: "#181b28", border: "1px solid #252838",
-            color: "#6b7280", fontSize: 10, cursor: "pointer",
+            background: th.zoomBtnBg, border: `1px solid ${th.zoomBtnBorder}`,
+            color: th.btnText, fontSize: 10, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 700,
           }}
@@ -973,8 +1083,8 @@ export default function WhiteboardBuilder({
           onClick={() => setScale(s => Math.max(0.3, s * 0.85))}
           style={{
             width: 36, height: 36, borderRadius: 10,
-            background: "#181b28", border: "1px solid #252838",
-            color: "#9ca3af", fontSize: 18, cursor: "pointer",
+            background: th.zoomBtnBg, border: `1px solid ${th.zoomBtnBorder}`,
+            color: th.btnText, fontSize: 18, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >−</button>
@@ -989,20 +1099,20 @@ export default function WhiteboardBuilder({
         <button
           onClick={() => setCollapsed(new Set())}
           style={{
-            background: "#181b28", border: "1px solid #252838",
-            color: "#9ca3af", borderRadius: 12,
+            background: th.btnBg, border: `1px solid ${th.btnBorder}`,
+            color: th.btnText, borderRadius: 12,
             padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer",
           }}
         >הרחב הכל ▼</button>
         <button
           onClick={addBrand}
           style={{
-            background: "linear-gradient(135deg, #1e2130, #252838)",
-            border: "1.5px dashed #3b4256",
-            color: "#9ca3af", borderRadius: 20,
+            background: isDark ? "linear-gradient(135deg, #1e2130, #252838)" : "linear-gradient(135deg, #f3f4f6, #e5e7eb)",
+            border: `1.5px dashed ${isDark ? "#3b4256" : "#d1d5db"}`,
+            color: th.btnText, borderRadius: 20,
             padding: "9px 22px", fontSize: 13, fontWeight: 600,
             cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
-            boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
             transition: "border-color 0.15s, color 0.15s",
           }}
           onMouseEnter={e => {
@@ -1010,8 +1120,8 @@ export default function WhiteboardBuilder({
             (e.currentTarget as HTMLButtonElement).style.color = "#f97316";
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "#3b4256";
-            (e.currentTarget as HTMLButtonElement).style.color = "#9ca3af";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = isDark ? "#3b4256" : "#d1d5db";
+            (e.currentTarget as HTMLButtonElement).style.color = th.btnText;
           }}
         >+ מותג חדש</button>
         <button
@@ -1020,8 +1130,8 @@ export default function WhiteboardBuilder({
             setCollapsed(projIds);
           }}
           style={{
-            background: "#181b28", border: "1px solid #252838",
-            color: "#9ca3af", borderRadius: 12,
+            background: th.btnBg, border: `1px solid ${th.btnBorder}`,
+            color: th.btnText, borderRadius: 12,
             padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer",
           }}
         >כווץ הכל ▶</button>
