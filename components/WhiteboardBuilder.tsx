@@ -314,6 +314,251 @@ function getVisibleNodeIds(nodes: WBNode[], collapsed: Set<string>): Set<string>
   return visible;
 }
 
+/* ─── Canvas themes ──────────────────────────────────────── */
+const WB_THEME_KEY = "beseder_wb_theme_v2";
+
+interface WBTheme {
+  id: string;
+  label: string;
+  preview: string;          // CSS for the swatch dot
+  canvasBg: string;         // canvas background
+  canvasBgImg?: string;     // optional background-image for patterns/gradients
+  canvasBgSize?: string;
+  dotColor: string;         // dot-grid color (if no bgImg)
+  toolbarBg: string;
+  toolbarBorder: string;
+  btnBg: string; btnBorder: string; btnText: string;
+  titleColor: string; subtitleColor: string;
+  nodeBrandBg: (c: string) => string;
+  nodeBrandBorder: (c: string) => string;
+  nodeProjectBg: (c: string) => string;
+  nodeSubBg: (c: string) => string;
+  labelColor: string;
+  zoomBtnBg: string; zoomBtnBorder: string;
+  collapseIdleBg: string;
+  emojiPickerBg: string; emojiPickerBorder: string; emojiPickerHover: string;
+  inputBg: string; inputColor: string;
+  addChildBg: string; deleteBtnBg: string;
+}
+
+const WB_THEMES: WBTheme[] = [
+  /* ── כהים ── */
+  {
+    id: "noir", label: "שחור", preview: "#0d0f18",
+    canvasBg: "#0d0f18", dotColor: "rgba(255,255,255,0.025)",
+    toolbarBg: "rgba(13,15,24,0.96)", toolbarBorder: "#1a1d2c",
+    btnBg: "#181b28", btnBorder: "#252838", btnText: "#9ca3af",
+    titleColor: "#e2e8f0", subtitleColor: "#4b5563",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}30 0%,#1a1d2a 100%)`,
+    nodeBrandBorder: c => c + "55",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}20 0%,#151821 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}15 0%,#131620 100%)`,
+    labelColor: "#f1f5f9",
+    zoomBtnBg: "#181b28", zoomBtnBorder: "#252838",
+    collapseIdleBg: "#1e2130",
+    emojiPickerBg: "#1a1d2a", emojiPickerBorder: "#2a2d3e", emojiPickerHover: "rgba(255,255,255,0.1)",
+    inputBg: "rgba(255,255,255,0.08)", inputColor: "#fff",
+    addChildBg: "rgba(15,17,23,0.9)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "midnight", label: "חצות", preview: "#070b1a",
+    canvasBg: "#070b1a", dotColor: "rgba(255,255,255,0.02)",
+    toolbarBg: "rgba(7,11,26,0.96)", toolbarBorder: "#141930",
+    btnBg: "#0f1428", btnBorder: "#1e2440", btnText: "#8b9ab5",
+    titleColor: "#c8d6f0", subtitleColor: "#3d4e70",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}28 0%,#0d1530 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}1e 0%,#0b1228 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}16 0%,#090f22 100%)`,
+    labelColor: "#dde6f8",
+    zoomBtnBg: "#0f1428", zoomBtnBorder: "#1e2440",
+    collapseIdleBg: "#141930",
+    emojiPickerBg: "#0f1428", emojiPickerBorder: "#1e2440", emojiPickerHover: "rgba(255,255,255,0.08)",
+    inputBg: "rgba(255,255,255,0.07)", inputColor: "#dde6f8",
+    addChildBg: "rgba(7,11,26,0.9)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "forest", label: "יער", preview: "#071510",
+    canvasBg: "#071510", dotColor: "rgba(255,255,255,0.02)",
+    toolbarBg: "rgba(7,21,16,0.96)", toolbarBorder: "#122b1e",
+    btnBg: "#0d2018", btnBorder: "#1a3828", btnText: "#6ba587",
+    titleColor: "#c8f0dc", subtitleColor: "#2d5440",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}28 0%,#0d2018 100%)`,
+    nodeBrandBorder: c => c + "55",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}1e 0%,#091a12 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}16 0%,#071510 100%)`,
+    labelColor: "#e0f5ea",
+    zoomBtnBg: "#0d2018", zoomBtnBorder: "#1a3828",
+    collapseIdleBg: "#122b1e",
+    emojiPickerBg: "#0d2018", emojiPickerBorder: "#1a3828", emojiPickerHover: "rgba(255,255,255,0.08)",
+    inputBg: "rgba(255,255,255,0.07)", inputColor: "#e0f5ea",
+    addChildBg: "rgba(7,21,16,0.9)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "wine", label: "יין", preview: "#160a1e",
+    canvasBg: "#160a1e", dotColor: "rgba(255,255,255,0.02)",
+    toolbarBg: "rgba(22,10,30,0.96)", toolbarBorder: "#2a1538",
+    btnBg: "#200e2c", btnBorder: "#38204a", btnText: "#a080c0",
+    titleColor: "#f0d0ff", subtitleColor: "#5a3870",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}28 0%,#1e0c2a 100%)`,
+    nodeBrandBorder: c => c + "55",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}1e 0%,#180a24 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}16 0%,#130820 100%)`,
+    labelColor: "#f2e0ff",
+    zoomBtnBg: "#200e2c", zoomBtnBorder: "#38204a",
+    collapseIdleBg: "#2a1538",
+    emojiPickerBg: "#200e2c", emojiPickerBorder: "#38204a", emojiPickerHover: "rgba(255,255,255,0.08)",
+    inputBg: "rgba(255,255,255,0.07)", inputColor: "#f2e0ff",
+    addChildBg: "rgba(22,10,30,0.9)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "galaxy", label: "גלקסיה", preview: "linear-gradient(135deg,#0a0a2e,#3a0a5e)",
+    canvasBg: "#0a0a2e",
+    canvasBgImg: "radial-gradient(ellipse at 20% 30%,#3f51b530 0%,transparent 50%),radial-gradient(ellipse at 80% 70%,#7c4dff25 0%,transparent 50%),radial-gradient(circle,rgba(255,255,255,0.018) 1px,transparent 1px)",
+    canvasBgSize: "auto,auto,32px 32px",
+    dotColor: "transparent",
+    toolbarBg: "rgba(10,10,46,0.96)", toolbarBorder: "#1a1850",
+    btnBg: "#14123a", btnBorder: "#28265a", btnText: "#9090e0",
+    titleColor: "#d8d0ff", subtitleColor: "#44408a",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}28 0%,#16144a 100%)`,
+    nodeBrandBorder: c => c + "55",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}1e 0%,#10103c 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}16 0%,#0c0c30 100%)`,
+    labelColor: "#ece8ff",
+    zoomBtnBg: "#14123a", zoomBtnBorder: "#28265a",
+    collapseIdleBg: "#1a1850",
+    emojiPickerBg: "#14123a", emojiPickerBorder: "#28265a", emojiPickerHover: "rgba(255,255,255,0.08)",
+    inputBg: "rgba(255,255,255,0.07)", inputColor: "#ece8ff",
+    addChildBg: "rgba(10,10,46,0.9)", deleteBtnBg: "#ef4444",
+  },
+  /* ── בהירים ── */
+  {
+    id: "minimal", label: "מינימל", preview: "#f1f5f9",
+    canvasBg: "#f1f5f9", dotColor: "rgba(0,0,0,0.055)",
+    toolbarBg: "rgba(255,255,255,0.97)", toolbarBorder: "#e5e7eb",
+    btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
+    titleColor: "#111827", subtitleColor: "#9ca3af",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#ffffff 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#f9fafb 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#f9fafb 100%)`,
+    labelColor: "#111827",
+    zoomBtnBg: "#f3f4f6", zoomBtnBorder: "#d1d5db",
+    collapseIdleBg: "#f3f4f6",
+    emojiPickerBg: "#ffffff", emojiPickerBorder: "#e5e7eb", emojiPickerHover: "rgba(0,0,0,0.06)",
+    inputBg: "rgba(0,0,0,0.06)", inputColor: "#111827",
+    addChildBg: "rgba(245,247,250,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "warm", label: "קרם", preview: "#fef9f0",
+    canvasBg: "#fef9f0", dotColor: "rgba(180,120,40,0.06)",
+    toolbarBg: "rgba(255,253,245,0.97)", toolbarBorder: "#f0d8a8",
+    btnBg: "#fdf3df", btnBorder: "#e8c878", btnText: "#8a6820",
+    titleColor: "#5a3e10", subtitleColor: "#b8963c",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#fffdf5 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#fffef8 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#fffef8 100%)`,
+    labelColor: "#3a2808",
+    zoomBtnBg: "#fdf3df", zoomBtnBorder: "#e8c878",
+    collapseIdleBg: "#fdf3df",
+    emojiPickerBg: "#fffef5", emojiPickerBorder: "#f0d8a8", emojiPickerHover: "rgba(0,0,0,0.05)",
+    inputBg: "rgba(0,0,0,0.05)", inputColor: "#3a2808",
+    addChildBg: "rgba(254,249,240,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "sky", label: "שמיים", preview: "#f0f9ff",
+    canvasBg: "#f0f9ff", dotColor: "rgba(14,100,180,0.055)",
+    toolbarBg: "rgba(240,249,255,0.97)", toolbarBorder: "#bae6fd",
+    btnBg: "#e0f2fe", btnBorder: "#7dd3fc", btnText: "#0369a1",
+    titleColor: "#0c4a6e", subtitleColor: "#7db8d8",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#f8fcff 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#f3faff 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#f3faff 100%)`,
+    labelColor: "#0c3050",
+    zoomBtnBg: "#e0f2fe", zoomBtnBorder: "#7dd3fc",
+    collapseIdleBg: "#e0f2fe",
+    emojiPickerBg: "#f8fcff", emojiPickerBorder: "#bae6fd", emojiPickerHover: "rgba(0,0,0,0.05)",
+    inputBg: "rgba(0,0,0,0.05)", inputColor: "#0c3050",
+    addChildBg: "rgba(240,249,255,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "rose", label: "ורוד", preview: "#fff1f2",
+    canvasBg: "#fff1f2", dotColor: "rgba(180,40,80,0.055)",
+    toolbarBg: "rgba(255,245,246,0.97)", toolbarBorder: "#fda4af",
+    btnBg: "#ffe4e6", btnBorder: "#fb7185", btnText: "#be123c",
+    titleColor: "#881337", subtitleColor: "#f08090",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#fff8f9 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#fff5f6 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#fff5f6 100%)`,
+    labelColor: "#6b0a22",
+    zoomBtnBg: "#ffe4e6", zoomBtnBorder: "#fb7185",
+    collapseIdleBg: "#ffe4e6",
+    emojiPickerBg: "#fff8f9", emojiPickerBorder: "#fda4af", emojiPickerHover: "rgba(0,0,0,0.05)",
+    inputBg: "rgba(0,0,0,0.05)", inputColor: "#6b0a22",
+    addChildBg: "rgba(255,241,242,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "mint", label: "מנטה", preview: "#f0fdf4",
+    canvasBg: "#f0fdf4", dotColor: "rgba(20,140,80,0.055)",
+    toolbarBg: "rgba(240,253,244,0.97)", toolbarBorder: "#86efac",
+    btnBg: "#dcfce7", btnBorder: "#4ade80", btnText: "#15803d",
+    titleColor: "#14532d", subtitleColor: "#6aaa85",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#f8fffe 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#f5fffb 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#f5fffb 100%)`,
+    labelColor: "#0f401e",
+    zoomBtnBg: "#dcfce7", zoomBtnBorder: "#4ade80",
+    collapseIdleBg: "#dcfce7",
+    emojiPickerBg: "#f8fffe", emojiPickerBorder: "#86efac", emojiPickerHover: "rgba(0,0,0,0.05)",
+    inputBg: "rgba(0,0,0,0.05)", inputColor: "#0f401e",
+    addChildBg: "rgba(240,253,244,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "grid-light", label: "גריד", preview: "#f8fafc",
+    canvasBg: "#f8fafc",
+    canvasBgImg: "linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px)",
+    canvasBgSize: "24px 24px",
+    dotColor: "transparent",
+    toolbarBg: "rgba(255,255,255,0.97)", toolbarBorder: "#e5e7eb",
+    btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
+    titleColor: "#111827", subtitleColor: "#9ca3af",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}18 0%,#ffffff 100%)`,
+    nodeBrandBorder: c => c + "50",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}12 0%,#f9fafb 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}0e 0%,#f9fafb 100%)`,
+    labelColor: "#111827",
+    zoomBtnBg: "#f3f4f6", zoomBtnBorder: "#d1d5db",
+    collapseIdleBg: "#f3f4f6",
+    emojiPickerBg: "#ffffff", emojiPickerBorder: "#e5e7eb", emojiPickerHover: "rgba(0,0,0,0.06)",
+    inputBg: "rgba(0,0,0,0.06)", inputColor: "#111827",
+    addChildBg: "rgba(248,250,252,0.95)", deleteBtnBg: "#ef4444",
+  },
+  {
+    id: "dots-dark", label: "נקודות כהות", preview: "#1e2130",
+    canvasBg: "#1e2130",
+    canvasBgImg: "radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px)",
+    canvasBgSize: "24px 24px",
+    dotColor: "transparent",
+    toolbarBg: "rgba(20,22,36,0.96)", toolbarBorder: "#2a2d42",
+    btnBg: "#252838", btnBorder: "#353850", btnText: "#8890aa",
+    titleColor: "#dde4f4", subtitleColor: "#525870",
+    nodeBrandBg: c => `linear-gradient(135deg,${c}2a 0%,#1e2238 100%)`,
+    nodeBrandBorder: c => c + "55",
+    nodeProjectBg: c => `linear-gradient(135deg,${c}20 0%,#191d30 100%)`,
+    nodeSubBg: c => `linear-gradient(135deg,${c}18 0%,#161928 100%)`,
+    labelColor: "#e8eeff",
+    zoomBtnBg: "#252838", zoomBtnBorder: "#353850",
+    collapseIdleBg: "#2a2d42",
+    emojiPickerBg: "#1e2238", emojiPickerBorder: "#2a2d42", emojiPickerHover: "rgba(255,255,255,0.08)",
+    inputBg: "rgba(255,255,255,0.08)", inputColor: "#e8eeff",
+    addChildBg: "rgba(30,33,48,0.9)", deleteBtnBg: "#ef4444",
+  },
+];
+
 /* ─── Brand financials helper ────────────────────────────── */
 function brandFinancials(brand: Brand): { income: number; expenses: number } {
   let income = 0, expenses = 0;
@@ -350,46 +595,19 @@ export default function WhiteboardBuilder({
   onClose: () => void;
 }) {
   const rawNodes = useMemo(() => brandsToNodes(brands), []);
-  const [isDark, setIsDark] = useState(true);
+  const [themeId, setThemeId] = useState<string>(() => {
+    if (typeof localStorage !== "undefined") {
+      return localStorage.getItem(WB_THEME_KEY) ?? "noir";
+    }
+    return "noir";
+  });
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const th = WB_THEMES.find(t => t.id === themeId) ?? WB_THEMES[0];
 
-  const th = isDark ? {
-    canvasBg: "#0d0f18",
-    dotColor: "rgba(255,255,255,0.025)",
-    toolbarBg: "rgba(13,15,24,0.94)",
-    toolbarBorder: "#1a1d2c",
-    btnBg: "#181b28", btnBorder: "#252838", btnText: "#9ca3af",
-    titleColor: "#e2e8f0", subtitleColor: "#4b5563",
-    nodeBrandBg: (c: string) => `linear-gradient(135deg, ${c}30 0%, #1a1d2a 100%)`,
-    nodeBrandBorder: (c: string) => c + "55",
-    nodeProjectBg: (c: string) => `linear-gradient(135deg, ${c}20 0%, #151821 100%)`,
-    nodeSubBg: (c: string) => `linear-gradient(135deg, ${c}15 0%, #131620 100%)`,
-    labelColor: "#f1f5f9",
-    zoomBtnBg: "#181b28", zoomBtnBorder: "#252838",
-    collapseIdleBg: "#1e2130",
-    emojiPickerBg: "#1a1d2a", emojiPickerBorder: "#2a2d3e",
-    emojiPickerHover: "rgba(255,255,255,0.1)",
-    inputBg: "rgba(255,255,255,0.08)", inputColor: "#fff",
-    addChildBg: "rgba(15,17,23,0.9)",
-    deleteBtnBg: "#ef4444",
-  } : {
-    canvasBg: "#f1f5f9",
-    dotColor: "rgba(0,0,0,0.055)",
-    toolbarBg: "rgba(255,255,255,0.97)",
-    toolbarBorder: "#e5e7eb",
-    btnBg: "#f3f4f6", btnBorder: "#d1d5db", btnText: "#6b7280",
-    titleColor: "#111827", subtitleColor: "#9ca3af",
-    nodeBrandBg: (c: string) => `linear-gradient(135deg, ${c}18 0%, #ffffff 100%)`,
-    nodeBrandBorder: (c: string) => c + "50",
-    nodeProjectBg: (c: string) => `linear-gradient(135deg, ${c}12 0%, #f9fafb 100%)`,
-    nodeSubBg: (c: string) => `linear-gradient(135deg, ${c}0e 0%, #f9fafb 100%)`,
-    labelColor: "#111827",
-    zoomBtnBg: "#f3f4f6", zoomBtnBorder: "#d1d5db",
-    collapseIdleBg: "#f3f4f6",
-    emojiPickerBg: "#ffffff", emojiPickerBorder: "#e5e7eb",
-    emojiPickerHover: "rgba(0,0,0,0.06)",
-    inputBg: "rgba(0,0,0,0.06)", inputColor: "#111827",
-    addChildBg: "rgba(245,247,250,0.95)",
-    deleteBtnBg: "#ef4444",
+  const applyTheme = (id: string) => {
+    setThemeId(id);
+    if (typeof localStorage !== "undefined") localStorage.setItem(WB_THEME_KEY, id);
+    setShowThemePicker(false);
   };
 
   // Projects collapsed by default, brands open
@@ -912,7 +1130,7 @@ export default function WhiteboardBuilder({
                 style={{
                   width: 18, height: 18, borderRadius: "50%",
                   background: c,
-                  border: node.color === c ? "2.5px solid white" : `1.5px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`,
+                  border: node.color === c ? "2.5px solid white" : `1.5px solid ${th.btnBorder}`,
                   cursor: "pointer", padding: 0,
                   boxShadow: node.color === c ? `0 0 8px ${c}` : "none",
                   transition: "transform 0.1s",
@@ -1023,18 +1241,83 @@ export default function WhiteboardBuilder({
             × סגור
           </button>
 
-          {/* Dark/light toggle */}
-          <button
-            onClick={() => setIsDark(d => !d)}
-            style={{
-              background: th.btnBg, border: `1px solid ${th.btnBorder}`,
-              color: th.btnText, borderRadius: 10,
-              padding: "7px 12px", fontSize: 14, cursor: "pointer",
-            }}
-            title={isDark ? "מצב בהיר" : "מצב כהה"}
-          >
-            {isDark ? "☀️" : "🌙"}
-          </button>
+          {/* Theme picker button */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowThemePicker(v => !v)}
+              style={{
+                background: th.btnBg, border: `1px solid ${th.btnBorder}`,
+                color: th.btnText, borderRadius: 10,
+                padding: "7px 11px", fontSize: 15, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}
+              title="שנה רקע"
+            >
+              🎨
+              <span style={{ width: 14, height: 14, borderRadius: "50%", background: th.preview.startsWith("linear") || th.preview.startsWith("radial") ? th.preview : th.canvasBg, display: "inline-block", border: `1.5px solid ${th.btnBorder}`, flexShrink: 0 }} />
+            </button>
+
+            {/* Theme picker popup */}
+            {showThemePicker && (
+              <div
+                style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0,
+                  background: th.toolbarBg, border: `1px solid ${th.toolbarBorder}`,
+                  borderRadius: 16, padding: 14, zIndex: 100,
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+                  backdropFilter: "blur(12px)",
+                  width: 240,
+                }}
+              >
+                <p style={{ color: th.subtitleColor, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", marginBottom: 10 }}>
+                  בחר רקע לבד
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                  {WB_THEMES.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => applyTheme(t.id)}
+                      title={t.label}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                        background: "transparent", border: "none", cursor: "pointer", padding: "4px 2px",
+                        borderRadius: 8,
+                        outline: t.id === themeId ? `2px solid #f97316` : "none",
+                        outlineOffset: 2,
+                      }}
+                    >
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10,
+                        background: t.preview.startsWith("linear") || t.preview.startsWith("radial") ? t.preview : t.canvasBg,
+                        border: `1.5px solid ${t.id === themeId ? "#f97316" : "rgba(128,128,128,0.3)"}`,
+                        flexShrink: 0,
+                        position: "relative",
+                        overflow: "hidden",
+                      }}>
+                        {t.canvasBgImg && (
+                          <div style={{
+                            position: "absolute", inset: 0,
+                            backgroundImage: t.canvasBgImg,
+                            backgroundSize: t.canvasBgSize ?? "24px 24px",
+                          }} />
+                        )}
+                        {t.id === themeId && (
+                          <div style={{
+                            position: "absolute", inset: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 14,
+                          }}>✓</div>
+                        )}
+                      </div>
+                      <span style={{ color: th.btnText, fontSize: 9, fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
+                        {t.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -1065,8 +1348,8 @@ export default function WhiteboardBuilder({
         style={{
           position: "absolute", inset: 0,
           cursor: isPanning.current ? "grabbing" : "grab",
-          backgroundImage: `radial-gradient(circle, ${th.dotColor} 1px, transparent 1px)`,
-          backgroundSize: "32px 32px",
+          backgroundImage: th.canvasBgImg ?? `radial-gradient(circle, ${th.dotColor} 1px, transparent 1px)`,
+          backgroundSize: th.canvasBgSize ?? "32px 32px",
         }}
         onMouseDown={handleBgMouseDown}
         onMouseMove={handleMouseMove}
@@ -1075,7 +1358,7 @@ export default function WhiteboardBuilder({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => setEmojiPickerId(null)}
+        onClick={() => { setEmojiPickerId(null); setShowThemePicker(false); }}
       >
         {/* Transform wrapper: pan + zoom */}
         <div
@@ -1167,8 +1450,8 @@ export default function WhiteboardBuilder({
         <button
           onClick={addBrand}
           style={{
-            background: isDark ? "linear-gradient(135deg, #1e2130, #252838)" : "linear-gradient(135deg, #f3f4f6, #e5e7eb)",
-            border: `1.5px dashed ${isDark ? "#3b4256" : "#d1d5db"}`,
+            background: th.btnBg,
+            border: `1.5px dashed ${th.btnBorder}`,
             color: th.btnText, borderRadius: 20,
             padding: "9px 22px", fontSize: 13, fontWeight: 600,
             cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
@@ -1180,7 +1463,7 @@ export default function WhiteboardBuilder({
             (e.currentTarget as HTMLButtonElement).style.color = "#f97316";
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = isDark ? "#3b4256" : "#d1d5db";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = th.btnBorder;
             (e.currentTarget as HTMLButtonElement).style.color = th.btnText;
           }}
         >+ מותג חדש</button>
