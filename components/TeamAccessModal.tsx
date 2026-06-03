@@ -143,38 +143,63 @@ export default function TeamAccessModal({ brand, onClose }: Props) {
 
         <div className="p-5 space-y-6">
           {/* Invite section */}
-          <div>
-            <h3 className="font-bold text-gray-700 text-sm mb-3">שלח הזמנה</h3>
-            <div className="flex gap-2 mb-2">
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#f8fafc', border: '1.5px solid #e8edf3' }}>
+            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+              <span>✉️</span> הזמן איש צוות
+            </h3>
+
+            {/* Email field — full width, clearly labeled */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">כתובת אימייל</label>
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleInvite()}
-                placeholder="כתובת אימייל"
-                className="input flex-1 text-sm"
+                placeholder="name@example.com"
+                className="input text-sm w-full"
                 dir="ltr"
+                style={{ textAlign: 'left' }}
+                autoComplete="off"
               />
-              <select
-                value={inviteRole}
-                onChange={e => setInviteRole(e.target.value as 'editor' | 'viewer')}
-                className="input text-sm"
-                style={{ minWidth: 90 }}
-              >
-                <option value="editor">עורך</option>
-                <option value="viewer">צופה</option>
-              </select>
             </div>
+
+            {/* Role selector */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">הרשאה</label>
+              <div className="flex gap-2">
+                {(['editor', 'viewer'] as const).map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setInviteRole(r)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: inviteRole === r ? 'var(--brand-gradient)' : 'white',
+                      color: inviteRole === r ? 'white' : '#6b7280',
+                      border: inviteRole === r ? 'none' : '1.5px solid #e6ebf1',
+                      boxShadow: inviteRole === r ? '0 2px 8px rgba(14,95,168,0.2)' : 'none',
+                    }}
+                  >
+                    {r === 'editor' ? '✏️ עורך — יכול לערוך' : '👁️ צופה — קריאה בלבד'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {error && (
-              <p className="text-red-500 text-xs mb-2">{error}</p>
+              <p className="text-red-500 text-xs flex items-center gap-1">⚠️ {error}</p>
             )}
+
             <button
               onClick={handleInvite}
               disabled={inviting || !inviteEmail.trim()}
-              className="btn btn-orange text-sm w-full"
+              className="btn btn-orange text-sm w-full justify-center"
+              style={{ padding: '12px 18px' }}
             >
-              {inviting ? 'שולח...' : 'שלח הזמנה'}
+              {inviting ? '⏳ שולח...' : '📨 שלח קישור הזמנה'}
             </button>
+          </div>
 
             {/* Invite link */}
             {inviteLink && (
