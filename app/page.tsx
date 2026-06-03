@@ -3,21 +3,21 @@ import { useEffect, useRef, useState } from 'react'
 
 const T = {
   en: {
-    nav: { features: 'Features', howItWorks: 'How it works', pricing: 'Pricing', signin: 'Sign in', cta: 'Get started free' },
+    nav: { features: 'Features', howItWorks: 'Why beseder', pricing: 'Pricing', signin: 'Sign in', cta: 'Get started free' },
     hero: {
       chip: 'Business OS for Founders',
       h1a: 'Every brand.',
       h1b: 'Every project.',
       h1c: 'One place.',
-      sub: 'beseder is the operating system for founders who run multiple businesses. Brands, projects, teams, milestones — structured and clear, finally.',
+      sub: 'beseder is the operating system for founders who run multiple businesses. Brands, projects, departments, finances — structured and clear, finally.',
       cta: 'Get started free →',
-      demo: 'Watch demo',
-      trust: 'No credit card · Free forever · Cancel anytime',
+      demo: 'See how it works',
+      trust: 'No credit card · Free to start',
     },
     proof: [
-      { n: '500+', label: 'Active founders' },
-      { n: '2,400+', label: 'Brands managed' },
-      { n: '18,000+', label: 'Stages completed' },
+      { n: '∞', label: 'Brands & projects' },
+      { n: '5 min', label: 'To set up' },
+      { n: '100%', label: 'Built for Hebrew & RTL' },
       { n: '₪0', label: 'To get started' },
     ],
     spotlights: [
@@ -40,38 +40,38 @@ const T = {
         bullets: ['Income & expense by frequency', 'Loan & asset tracking', 'Cash flow at every level'],
       },
     ],
-    testimonials: [
-      { quote: 'beseder changed how I manage all my projects. Finally I have a clear picture.', name: 'Dan L.', title: 'Serial founder' },
-      { quote: 'The AI wizard saved me hours of planning. One click and I had a full structure.', name: 'Michal R.', title: 'Marketing manager' },
-      { quote: 'Managing 4 businesses from one place — exactly what I was looking for.', name: 'Uri K.', title: 'Business owner' },
+    why: [
+      { icon: '🧭', title: 'One clear picture', desc: 'Every brand, project and stage in a single view — stop rebuilding the plan from memory each morning.' },
+      { icon: '⚡', title: 'Structure in seconds', desc: 'The AI wizard scaffolds your projects, departments and stages from one sentence. Edit freely after.' },
+      { icon: '💰', title: 'Money, built in', desc: 'Income, expenses, loans and cash flow live next to the work — no separate spreadsheet to maintain.' },
     ],
     pricing: {
       chip: 'Pricing', h2: 'Start free. Grow as you go.',
       free: { name: 'Free', price: '₪0', per: '/month', cta: 'Get started free',
         items: ['Up to 3 brands', 'Unlimited projects', 'Stage pipeline', 'Financial tracker', '7-day history'] },
       pro: { name: 'Pro', price: '₪49', per: '/month', badge: 'Most popular', cta: 'Go Pro →',
-        items: ['Unlimited brands', 'AI brand wizard', 'Visual whiteboard', 'Priority support', 'Advanced analytics', 'Team collaboration'] },
-      footnote: 'All plans · 14-day Pro trial · No credit card needed',
+        items: ['Unlimited brands', 'AI brand wizard', 'Visual whiteboard', 'Credit report import', 'Monthly reviews & snapshots', 'Priority support'] },
+      footnote: 'Start free · Upgrade any time · No credit card needed',
     },
     bottomCta: { h2: 'Stop building from memory.', sub: 'beseder gives every business you run a clear, structured home.', btn: 'Get started free →', link: 'Learn more' },
     footer: { tagline: 'Order from chaos.' },
   },
   he: {
-    nav: { features: 'פיצ׳רים', howItWorks: 'איך זה עובד', pricing: 'תמחור', signin: 'התחבר', cta: 'התחל בחינם' },
+    nav: { features: 'פיצ׳רים', howItWorks: 'למה beseder', pricing: 'תמחור', signin: 'התחבר', cta: 'התחל בחינם' },
     hero: {
       chip: 'מערכת ניהול לעצמאים ויזמים',
       h1a: 'כל מותג.',
       h1b: 'כל פרויקט.',
       h1c: 'מקום אחד.',
-      sub: 'beseder היא מערכת הניהול ליזמים שמנהלים כמה עסקים במקביל. מותגים, פרויקטים, מחלקות, הוצאות — הכל מסודר ומובן, סוף סוף.',
+      sub: 'beseder היא מערכת הניהול ליזמים שמנהלים כמה עסקים במקביל. מותגים, פרויקטים, מחלקות והוצאות — הכל מסודר ומובן, סוף סוף.',
       cta: 'התחל בחינם ←',
-      demo: 'צפה בדמו',
-      trust: 'ללא כרטיס אשראי · חינמי לתמיד',
+      demo: 'ראה איך זה עובד',
+      trust: 'ללא כרטיס אשראי · חינמי להתחלה',
     },
     proof: [
-      { n: '500+', label: 'יזמים פעילים' },
-      { n: '2,400+', label: 'מותגים מנוהלים' },
-      { n: '18,000+', label: 'שלבים הושלמו' },
+      { n: '∞', label: 'מותגים ופרויקטים' },
+      { n: '5 דק׳', label: 'להקמה מלאה' },
+      { n: '100%', label: 'בעברית ו-RTL' },
       { n: '₪0', label: 'כדי להתחיל' },
     ],
     spotlights: [
@@ -94,18 +94,18 @@ const T = {
         bullets: ['הכנסות והוצאות לפי תדירות', 'מעקב הלוואות ונכסים', 'תזרים מזומנים בכל רמה'],
       },
     ],
-    testimonials: [
-      { quote: 'beseder שינה לי את כל שיטת הניהול. סוף סוף יש לי תמונה ברורה של כל העסקים שלי.', name: 'דן ל.', title: 'יזם סדרתי' },
-      { quote: 'אשף ה-AI חסך לי שעות של תכנון. לחצתי כפתור אחד וקיבלתי מבנה מלא ומוכן לעבודה.', name: 'מיכל ר.', title: 'מנהלת שיווק' },
-      { quote: 'לנהל 4 עסקים ממקום אחד — זה בדיוק מה שחיפשתי כל הזמן.', name: 'אורי כ.', title: 'בעל עסק' },
+    why: [
+      { icon: '🧭', title: 'תמונה אחת ברורה', desc: 'כל מותג, פרויקט ושלב במבט אחד — תפסיק לבנות מחדש את התוכנית מהראש בכל בוקר.' },
+      { icon: '⚡', title: 'מבנה בשניות', desc: 'אשף ה-AI בונה לך את הפרויקטים, המחלקות והשלבים ממשפט אחד. עורכים בחופשיות אחרי.' },
+      { icon: '💰', title: 'כסף, מובנה פנימה', desc: 'הכנסות, הוצאות, הלוואות ותזרים יושבים ליד העבודה — בלי גיליון אקסל נפרד לתחזק.' },
     ],
     pricing: {
       chip: 'תמחור', h2: 'התחל בחינם. גדל בקצב שלך.',
       free: { name: 'חינמי', price: '₪0', per: '/חודש', cta: 'התחל בחינם',
         items: ['עד 3 מותגים', 'פרויקטים ללא הגבלה', 'מסלול שלבים', 'ניהול פיננסי', 'גישה מלאה לפיצ׳רים'] },
       pro: { name: 'Pro', price: '₪49', per: '/חודש', badge: 'הפופולרי ביותר', cta: 'עבור ל-Pro ←',
-        items: ['מותגים ללא הגבלה', 'אשף מותג AI', 'לוח ניהול ויזואלי', 'תמיכה מועדפת', 'אנליטיקס מתקדם', 'שיתוף פעולה בצוות'] },
-      footnote: 'כל התוכניות · ניסיון Pro חינמי 14 יום · ללא כרטיס אשראי',
+        items: ['מותגים ללא הגבלה', 'אשף מותג AI', 'לוח ניהול ויזואלי', 'ייבוא דוח אשראי', 'סקירות וצילומי חודש', 'תמיכה מועדפת'] },
+      footnote: 'מתחילים בחינם · משדרגים מתי שרוצים · ללא כרטיס אשראי',
     },
     bottomCta: { h2: 'הפסק לנהל מהראש.', sub: 'beseder נותן לכל עסק שאתה מנהל בית ברור, מסודר וקל לעדכון.', btn: 'התחל בחינם ←', link: 'קרא עוד' },
     footer: { tagline: 'סדר מתוך כאוס.' },
@@ -353,8 +353,8 @@ export default function Home() {
           .spotlight-grid { grid-template-columns: 1fr !important; gap: 36px !important; direction: ltr !important; }
           .spotlight-grid > * { direction: inherit !important; }
 
-          /* Testimonials */
-          .testimonials-grid { grid-template-columns: 1fr !important; }
+          /* Why beseder */
+          .why-grid { grid-template-columns: 1fr !important; }
 
           /* Pricing */
           .pricing-grid { grid-template-columns: 1fr !important; max-width: 440px !important; }
@@ -386,7 +386,7 @@ export default function Home() {
           <div className="nav-desktop-links hidden md:flex" style={{ alignItems: 'center', gap: 36 }}>
             {[
               { label: t.nav.features, href: '#features' },
-              { label: t.nav.howItWorks, href: '#spotlights' },
+              { label: t.nav.howItWorks, href: '#why' },
               { label: t.nav.pricing, href: '#pricing' },
             ].map(link => (
               <a key={link.href} href={link.href} style={{ fontFamily: 'Manrope, sans-serif', fontSize: 14, fontWeight: 500, color: 'rgba(232,244,246,0.65)', textDecoration: 'none', transition: 'color 0.2s' }}
@@ -428,7 +428,7 @@ export default function Home() {
         }}>
           <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <a href="#features" style={{ fontSize: 15, color: 'rgba(232,244,246,0.75)', textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>{t.nav.features}</a>
-            <a href="#spotlights" style={{ fontSize: 15, color: 'rgba(232,244,246,0.75)', textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>{t.nav.howItWorks}</a>
+            <a href="#why" style={{ fontSize: 15, color: 'rgba(232,244,246,0.75)', textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>{t.nav.howItWorks}</a>
             <a href="#pricing" style={{ fontSize: 15, color: 'rgba(232,244,246,0.75)', textDecoration: 'none' }} onClick={() => setMobileOpen(false)}>{t.nav.pricing}</a>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <LangToggle lang={lang} setLang={setLang} />
@@ -477,7 +477,7 @@ export default function Home() {
               onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.boxShadow = '0 12px 56px rgba(31,174,181,0.65)'; el.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.boxShadow = '0 8px 40px rgba(31,174,181,0.45)'; el.style.transform = 'none'; }}
             >{t.hero.cta}</a>
-            <a href="#spotlights" style={{
+            <a href="#features" style={{
               display: 'inline-flex', alignItems: 'center', gap: 9,
               fontFamily: 'Sora, sans-serif', fontWeight: 600, fontSize: 15,
               color: 'rgba(232,244,246,0.75)',
@@ -605,7 +605,7 @@ export default function Home() {
       </section>
 
       {/* ── Feature spotlights ── */}
-      <section id="spotlights" className="section-pad" style={{ background: '#fff', padding: '110px 0' }}>
+      <section id="features" className="section-pad" style={{ background: '#fff', padding: '110px 0' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 24px' }}>
           <Fade style={{ textAlign: 'center', marginBottom: 72 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 18, background: 'rgba(11,27,43,0.05)', border: '1px solid rgba(11,27,43,0.1)', borderRadius: 999, padding: '5px 16px' }}>
@@ -656,19 +656,19 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials ── */}
-      <section id="features" className="section-pad" style={{ background: '#0B1B2B', padding: '110px 0', position: 'relative', overflow: 'hidden' }}>
+      <section id="why" className="section-pad" style={{ background: '#0B1B2B', padding: '110px 0', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '20%', left: '30%', width: 600, height: 400, background: 'radial-gradient(circle,rgba(31,174,181,0.07) 0%,transparent 70%)', filter: 'blur(60px)' }} />
         </div>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
           <Fade style={{ textAlign: 'center', marginBottom: 64 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20, background: 'rgba(31,174,181,0.1)', border: '1px solid rgba(31,174,181,0.25)', borderRadius: 999, padding: '5px 16px' }}>
-              <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: '#1FAEB5', textTransform: 'uppercase' }}>{isHe ? 'מה אומרים עלינו' : 'Testimonials'}</span>
+              <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: '#1FAEB5', textTransform: 'uppercase' }}>{isHe ? 'למה beseder' : 'Why beseder'}</span>
             </div>
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 'clamp(26px,4vw,46px)', color: '#E8F4F6', letterSpacing: '-0.02em' }}>{isHe ? 'ייסדרים שכבר מסודרים' : 'Founders who got sorted'}</h2>
+            <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 'clamp(26px,4vw,46px)', color: '#E8F4F6', letterSpacing: '-0.02em' }}>{isHe ? 'נבנה בשביל מי שמנהל הכל לבד' : 'Built for founders who run it all'}</h2>
           </Fade>
-          <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
-            {t.testimonials.map((test, i) => (
+          <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+            {t.why.map((item, i) => (
               <Fade key={i} delay={i * 120}>
                 <div style={{
                   background: 'rgba(255,255,255,0.04)',
@@ -681,22 +681,11 @@ export default function Home() {
                   onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.background = 'rgba(255,255,255,0.07)'; el.style.borderColor = 'rgba(31,174,181,0.3)'; el.style.transform = 'translateY(-4px)'; }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.background = 'rgba(255,255,255,0.04)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; el.style.transform = 'none'; }}
                 >
-                  {/* Stars */}
-                  <div style={{ display: 'flex', gap: 3, marginBottom: 20 }}>
-                    {[...Array(5)].map((_, k) => (
-                      <svg key={k} width="14" height="14" viewBox="0 0 24 24" fill="#1FAEB5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    ))}
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(31,174,181,0.12)', border: '1px solid rgba(31,174,181,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, marginBottom: 22 }}>
+                    {item.icon}
                   </div>
-                  <p style={{ fontSize: 15, color: 'rgba(232,244,246,0.8)', lineHeight: 1.75, marginBottom: 24, fontStyle: 'italic' }}>&ldquo;{test.quote}&rdquo;</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#1FAEB5,#0E5FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 13, color: '#fff', flexShrink: 0 }}>
-                      {test.name[0]}
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 13, color: '#E8F4F6' }}>{test.name}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(232,244,246,0.4)' }}>{test.title}</div>
-                    </div>
-                  </div>
+                  <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 18, color: '#E8F4F6', marginBottom: 10, letterSpacing: '-0.01em' }}>{item.title}</h3>
+                  <p style={{ fontSize: 15, color: 'rgba(232,244,246,0.62)', lineHeight: 1.7 }}>{item.desc}</p>
                 </div>
               </Fade>
             ))}
