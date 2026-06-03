@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Brand, Project, SubProject } from "@/lib/types";
+import { Brand, Project, SubProject, Stage, Channel } from "@/lib/types";
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface WBNode {
@@ -584,15 +584,32 @@ function brandFinancials(brand: Brand): { income: number; expenses: number } {
   return { income, expenses };
 }
 
+/* ─── Edit-panel target ──────────────────────────────────── */
+interface EditTarget {
+  brandId: string;    // brand.id (existingId)
+  projectId: string;  // project.id
+  subId?: string;     // subProject.id (if drilling into sub)
+}
+
+const STATUS_CYCLE: Stage["status"][] = ["todo", "active", "done", "blocked"];
+const STATUS_META: Record<Stage["status"], { label: string; bg: string; text: string }> = {
+  todo:    { label: "לא התחיל", bg: "#2a2d3e",   text: "#9ca3af" },
+  active:  { label: "בתהליך",   bg: "#1e3a5f55", text: "#60a5fa" },
+  done:    { label: "הושלם",    bg: "#14532d44", text: "#4ade80" },
+  blocked: { label: "תקוע",     bg: "#4c051944", text: "#f87171" },
+};
+
 /* ─── Main component ─────────────────────────────────────── */
 export default function WhiteboardBuilder({
   brands,
   onSave,
   onClose,
+  onBrandUpdate,
 }: {
   brands: Brand[];
   onSave: (updated: Brand[]) => void;
   onClose: () => void;
+  onBrandUpdate?: (brand: Brand) => void;
 }) {
   const rawNodes = useMemo(() => brandsToNodes(brands), []);
   const [themeId, setThemeId] = useState<string>(() => {
@@ -603,6 +620,7 @@ export default function WhiteboardBuilder({
   });
   const [showThemePicker, setShowThemePicker] = useState(false);
   const th = WB_THEMES.find(t => t.id === themeId) ?? WB_THEMES[0];
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
 
   const applyTheme = (id: string) => {
     setThemeId(id);
@@ -969,6 +987,46 @@ export default function WhiteboardBuilder({
         onMouseEnter={() => setHoveredId(node.id)}
         onMouseLeave={() => setHoveredId(null)}
       >
+        {/* Open-editor button (project + sub only) */}
+        {isHovered && node.type !== "brand" && node.existingId && (
+          <button
+            data-node="true"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Find brand that owns this node
+              const parentBrandNode = nodes.find(n => {
+                if (n.type === "brand" && !n.parentId) {
+                  // Walk from this node up to see if it reaches n
+                  let cur: WBNode | undefined = node;
+                  while (cur) {
+                    if (cur.parentId === n.id || cur.id === n.id) return true;
+                    cur = nodes.find(x => x.id === cur!.parentId);
+                  }
+                }
+                return false;
+              });
+              const brandId = parentBrandNode?.existingId ?? "";
+              if (node.type === "project" && node.existingId) {
+                setEditTarget({ brandId, projectId: node.existingId });
+              } else if (node.type === "subproject" && node.existingId) {
+                // find parent project node
+                const projNode = nodes.find(n => n.id === node.parentId);
+                setEditTarget({ brandId, projectId: projNode?.existingId ?? "", subId: node.existingId });
+              }
+            }}
+            style={{
+              position: "absolute", bottom: -10, right: -10,
+              width: 26, height: 26, borderRadius: "50%",
+              background: node.color, color: "white",
+              fontSize: 13, fontWeight: 700, border: "none",
+              cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              zIndex: 10, boxShadow: `0 2px 10px ${node.color}80`,
+            }}
+            title="ערוך תוכן"
+          >✎</button>
+        )}
+
         {/* Delete button */}
         {isHovered && (
           <button
@@ -1479,6 +1537,165 @@ export default function WhiteboardBuilder({
           }}
         >כווץ הכל ▶</button>
       </div>
+
+      {/* ── Node editor panel ── */}
+      {editTarget && (() => {
+        const brand   = brands.find(b => b.id === editTarget.brandId);
+        const project = brand?.projects.find(p => p.id === editTarget.projectId);
+        const sub     = editTarget.subId ? project?.subProjects.find(s => s.id === editTarget.subId) : null;
+        if (!brand || !project) return null;
+
+        /* Update a single stage inside this brand, then call onBrandUpdate */
+        const patchStage = (subId: string, stageId: string, changes: Partial<Stage>, channelId?: string) => {
+          const updated: Brand = JSON.parse(JSON.stringify(brand));
+          const updProj = updated.projects.find(p => p.id === project.id)!;
+          const updSub  = updProj.subProjects.find(s => s.id === subId)!;
+          if (channelId) {
+            const ch = updSub.channels.find(c => c.id === channelId);
+            const st = ch?.stages.find(s => s.id === stageId);
+            if (st) Object.assign(st, changes);
+          } else {
+            const st = updSub.stages.find(s => s.id === stageId);
+            if (st) Object.assign(st, changes);
+          }
+          onBrandUpdate?.(updated);
+        };
+
+        const panelBg   = th.toolbarBg;
+        const border    = th.toolbarBorder;
+        const textPrim  = th.labelColor;
+        const textSec   = th.btnText;
+        const inputSt   = { background: th.inputBg, border: `1px solid ${border}`, color: textPrim, borderRadius: 8, padding: "5px 9px", fontSize: 12, width: "100%", outline: "none", direction: "rtl" as const };
+
+        const renderStageList = (stages: Stage[], targetSubId: string, channelId?: string, channelColor?: string) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {stages.map(stage => {
+              const sm = STATUS_META[stage.status];
+              return (
+                <div key={stage.id} style={{ background: th.collapseIdleBg, borderRadius: 10, padding: "8px 10px", border: `1px solid ${border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                    <button
+                      onClick={() => {
+                        const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(stage.status) + 1) % 4];
+                        patchStage(targetSubId, stage.id, { status: next }, channelId);
+                      }}
+                      style={{ background: sm.bg, color: sm.text, border: "none", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                    >{sm.label}</button>
+                    <span style={{ color: textPrim, fontSize: 12, fontWeight: 700, flex: 1, textAlign: "right" }}>{stage.name}</span>
+                  </div>
+                  <input
+                    style={inputSt}
+                    placeholder="פעולה הבאה..."
+                    value={stage.nextAction ?? ""}
+                    onChange={e => patchStage(targetSubId, stage.id, { nextAction: e.target.value }, channelId)}
+                  />
+                  {stage.notes && (
+                    <p style={{ color: textSec, fontSize: 10, margin: "4px 0 0", lineHeight: 1.4 }}>{stage.notes}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+
+        return (
+          <div
+            data-node="true"
+            style={{
+              position: "fixed", top: 0, left: 0, bottom: 0, width: 390,
+              zIndex: 80, display: "flex", flexDirection: "column",
+              background: panelBg, borderRight: `1px solid ${border}`,
+              backdropFilter: "blur(16px)",
+              boxShadow: "4px 0 32px rgba(0,0,0,0.4)",
+              fontFamily: "'Heebo', system-ui, sans-serif",
+              direction: "rtl",
+              animation: "slideInFromLeft 0.2s ease",
+            }}
+          >
+            {/* Panel header */}
+            <div style={{ padding: "14px 16px", borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                <button
+                  onClick={() => sub ? setEditTarget({ ...editTarget, subId: undefined }) : setEditTarget(null)}
+                  style={{ background: th.btnBg, border: `1px solid ${border}`, color: th.btnText, borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+                >← חזור</button>
+                <button
+                  onClick={() => setEditTarget(null)}
+                  style={{ background: "transparent", border: "none", color: th.btnText, fontSize: 14, cursor: "pointer", marginRight: "auto" }}
+                >×</button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 22 }}>{sub ? sub.emoji : project.emoji}</span>
+                <div>
+                  <p style={{ color: textPrim, fontWeight: 900, fontSize: 15, margin: 0 }}>{sub ? sub.name : project.name}</p>
+                  <p style={{ color: textSec, fontSize: 10, margin: "2px 0 0" }}>
+                    {sub
+                      ? `${sub.stages.length + sub.channels.reduce((n,c) => n + c.stages.length, 0)} משימות`
+                      : `${project.subProjects.length} פרויקטים`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel body */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {sub ? (
+                /* ── Sub level: show stages ── */
+                sub.channels.length > 0 ? (
+                  sub.channels.map(ch => (
+                    <div key={ch.id}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <span style={{ fontSize: 14 }}>{ch.emoji}</span>
+                        <span style={{ color: textSec, fontSize: 11, fontWeight: 700 }}>{ch.name}</span>
+                        <span style={{ color: textSec, fontSize: 10 }}>· {ch.stages.length} משימות</span>
+                      </div>
+                      {renderStageList(ch.stages, sub.id, ch.id, project.color)}
+                    </div>
+                  ))
+                ) : (
+                  renderStageList(sub.stages, sub.id, undefined, project.color)
+                )
+              ) : (
+                /* ── Project level: show subs list ── */
+                project.subProjects.map(s => {
+                  const totalStages = s.stages.length + s.channels.reduce((n,c) => n + c.stages.length, 0);
+                  const doneN   = s.stages.filter(st => st.status === "done").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "done").length, 0);
+                  const activeN = s.stages.filter(st => st.status === "active").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "active").length, 0);
+                  const blockedN = s.stages.filter(st => st.status === "blocked").length + s.channels.reduce((n,c) => n + c.stages.filter(st => st.status === "blocked").length, 0);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setEditTarget({ ...editTarget, subId: s.id })}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: th.collapseIdleBg, borderRadius: 12,
+                        border: `1px solid ${border}`, padding: "10px 12px",
+                        cursor: "pointer", textAlign: "right", width: "100%",
+                        transition: "opacity 0.1s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{s.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: textPrim, fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</p>
+                        <p style={{ color: textSec, fontSize: 10, margin: "2px 0 0" }}>{totalStages} משימות</p>
+                      </div>
+                      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                        {doneN > 0    && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#14532d44", color: "#4ade80" }}>✓{doneN}</span>}
+                        {activeN > 0  && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#1e3a5f55", color: "#60a5fa" }}>●{activeN}</span>}
+                        {blockedN > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 5, background: "#4c051944", color: "#f87171" }}>⚠{blockedN}</span>}
+                      </div>
+                      <span style={{ color: textSec, fontSize: 14 }}>←</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

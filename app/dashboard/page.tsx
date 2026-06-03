@@ -3555,6 +3555,7 @@ export default function Dashboard() {
           brands={brands}
           onSave={(updated) => { syncAll(updated); setShowWBBuilder(false); }}
           onClose={() => setShowWBBuilder(false)}
+          onBrandUpdate={(updatedBrand) => handleSaveBrand(updatedBrand)}
         />
       )}
 
