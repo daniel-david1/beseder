@@ -2250,102 +2250,123 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, 
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-grab active:cursor-grabbing"
+      className="group relative flex flex-col cursor-grab active:cursor-grabbing"
       style={{
+        background: "white",
+        borderRadius: 20,
+        border: `1px solid rgba(17,24,39,0.07)`,
+        boxShadow: "0 1px 3px rgba(17,24,39,0.06), 0 8px 24px rgba(17,24,39,0.05)",
+        transition: "box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.16,1,0.3,1), opacity 0.15s",
         outline: isDragOver ? `2px solid ${brand.color}` : "none",
         outlineOffset: 2,
         opacity: isDragOver ? 0.85 : brand.hidden ? 0.45 : 1,
         transform: isDragOver ? "scale(0.98)" : undefined,
-        transition: "all 0.15s ease",
+        overflow: "hidden",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 8px rgba(17,24,39,0.08), 0 16px 40px rgba(17,24,39,0.1)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(17,24,39,0.06), 0 8px 24px rgba(17,24,39,0.05)";
+        (e.currentTarget as HTMLDivElement).style.transform = isDragOver ? "scale(0.98)" : "translateY(0)";
       }}
     >
-      <div className="h-2 w-full rounded-t-[18px]" style={{ background: brand.color }} />
-      <div className="p-3 sm:p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-start gap-3 flex-1 text-right">
-            {brand.logo
-              ? <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-xl object-contain bg-gray-50 border border-gray-100 flex-shrink-0" />
-              : <span className="text-3xl mt-0.5 flex-shrink-0">{brand.emoji}</span>
-            }
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-black text-gray-900 text-base leading-tight">{brand.name}</h3>
-                {/* Health dot */}
-                <div
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ background: HEALTH_COLORS[health.level] }}
-                  title={health.level === "critical" ? "דחוף" : health.level === "attention" ? "דורש תשומת לב" : health.level === "good" ? "תקין" : "ריק"}
-                />
-              </div>
-              {/* Status badges */}
-              <div className="flex gap-1 flex-wrap mt-1">
-                {health.blockedCount > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
-                    {health.blockedCount} תקוע
-                  </span>
-                )}
-                {health.activeCount > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>
-                    {health.activeCount} פעיל
-                  </span>
-                )}
-              </div>
-              {/* Next action preview */}
-              {health.topNextAction && (
-                <p className="text-[10px] text-gray-400 mt-0.5 truncate">→ {health.topNextAction}</p>
-              )}
-              {/* Shared brand badge */}
-              {brand.sharedFrom && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: "#ede9fe", color: "#7c3aed" }}>
-                  שותף · {brand.sharedFrom.role === 'editor' ? 'עורך' : 'צופה'}
-                </span>
-              )}
+      {/* Accent bar — full width, taller, more prominent */}
+      <div style={{ height: 5, background: brand.color, width: "100%", flexShrink: 0 }} />
+
+      <div className="p-5 flex flex-col gap-4 flex-1">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3">
+          <button onClick={onClick} className="flex items-start gap-3.5 flex-1 text-right">
+            {/* Emoji container */}
+            <div
+              className="flex-shrink-0 flex items-center justify-center text-2xl"
+              style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: brand.color + "18",
+                border: `1.5px solid ${brand.color}30`,
+              }}
+            >
+              {brand.logo
+                ? <img src={brand.logo} alt={brand.name} className="w-8 h-8 object-contain rounded-lg" />
+                : brand.emoji
+              }
+            </div>
+            <div className="min-w-0 pt-0.5">
+              <h3 className="font-bold text-gray-900 text-[17px] leading-snug">{brand.name}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{nProjects} מחלקות · {allSubs.length} פרויקטים</p>
             </div>
           </button>
-          <div className="flex items-center gap-1 shrink-0">
-            <span
-              className="w-6 h-6 hidden sm:flex items-center justify-center text-gray-300 group-hover:text-gray-400 transition-colors cursor-grab select-none"
-              title="גרור לשינוי סדר"
-              style={{ fontSize: 14 }}
-            >⠿</span>
-            <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-              <button onClick={e => { e.stopPropagation(); onHide(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 flex items-center justify-center text-xs" title={brand.hidden ? "הצג" : "הסתר"}>{brand.hidden ? "👁" : "🙈"}</button>
-              {!brand.sharedFrom && (
-                <button onClick={e => { e.stopPropagation(); onTeamAccess(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-purple-50 text-gray-400 hover:text-purple-600 flex items-center justify-center text-xs" title="גישת צוות">👥</button>
-              )}
-              <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-              <button onClick={e => { e.stopPropagation(); onDelete(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
-            </div>
+
+          {/* Action buttons — appear on hover */}
+          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0 pt-0.5">
+            <button onClick={e => { e.stopPropagation(); onHide(); }}
+              className="icon-btn w-7 h-7 rounded-lg bg-gray-100 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 flex items-center justify-center text-xs"
+              title={brand.hidden ? "הצג" : "הסתר"}>{brand.hidden ? "👁" : "🙈"}</button>
+            {!brand.sharedFrom && (
+              <button onClick={e => { e.stopPropagation(); onTeamAccess(); }}
+                className="icon-btn w-7 h-7 rounded-lg bg-gray-100 hover:bg-purple-50 text-gray-400 hover:text-purple-600 flex items-center justify-center text-xs"
+                title="גישת צוות">👥</button>
+            )}
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}
+              className="icon-btn w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }}
+              className="icon-btn w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold">×</button>
           </div>
         </div>
 
-        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-400">{nProjects} מחלקות</span>
-          {health.activeCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
-              ▶ {health.activeCount} פעיל
-            </span>
-          )}
-          {health.activeCount === 0 && allSubs.length > 0 && (
-            <span className="text-xs text-gray-300">אין משימות פעילות</span>
-          )}
-        </button>
+        {/* Status pills */}
+        {(health.blockedCount > 0 || health.activeCount > 0 || brand.sharedFrom) && (
+          <div className="flex gap-1.5 flex-wrap">
+            {health.blockedCount > 0 && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#fef2f2", color: "#dc2626" }}>
+                {health.blockedCount} תקוע
+              </span>
+            )}
+            {health.activeCount > 0 && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
+                {health.activeCount} פעיל
+              </span>
+            )}
+            {brand.sharedFrom && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+                שותף · {brand.sharedFrom.role === 'editor' ? 'עורך' : 'צופה'}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* Setup CTA — shown when stages lack next actions */}
+        {/* Next action preview */}
+        {health.topNextAction && (
+          <p className="text-xs text-gray-400 truncate leading-relaxed">
+            <span style={{ color: brand.color, fontWeight: 600 }}>→</span> {health.topNextAction}
+          </p>
+        )}
+
+        {/* Setup nudge */}
         {health.noNextActionCount > 0 && health.level !== "empty" && (
           <button
             onClick={e => { e.stopPropagation(); onSetup(); }}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border-2 border-dashed text-xs font-bold transition-all hover:opacity-80"
-            style={{ borderColor: "#f59e0b", color: "#b45309", background: "#fffbeb" }}
+            className="flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-70"
+            style={{ color: "#d97706" }}
           >
-            <span className="sm:hidden">⚡ {health.noNextActionCount} משימות חסרות</span>
-            <span className="hidden sm:inline">⚡ השלם הגדרה ({health.noNextActionCount} משימות)</span>
+            ⚡ {health.noNextActionCount} משימות ממתינות להגדרה
           </button>
         )}
 
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto" style={{ borderColor: brand.color + "40", color: brand.color }}>
-          פתח מותג ←
-        </button>
+        {/* Health indicator footer */}
+        <div className="mt-auto pt-3 border-t flex items-center justify-between" style={{ borderColor: "rgba(17,24,39,0.06)" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ background: HEALTH_COLORS[health.level] }} />
+            <span className="text-xs text-gray-400">
+              {health.level === "critical" ? "דחוף" : health.level === "attention" ? "דורש תשומת לב" : health.level === "good" ? "תקין" : "ריק"}
+            </span>
+          </div>
+          <button onClick={onClick} className="text-xs font-semibold transition-colors" style={{ color: brand.color }}>
+            פתח ←
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -3644,7 +3665,11 @@ export default function Dashboard() {
 
             <MonthlyMemorySection brands={brands} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold text-gray-500 tracking-wide">המותגים שלי</h2>
+              <span className="text-xs text-gray-400">{brands.filter(b => b.emoji !== "💰").length} מותגים</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               {brands.filter(b => b.emoji !== "💰").map(b => {
                 const health = getBrandHealth(b);
                 return (
