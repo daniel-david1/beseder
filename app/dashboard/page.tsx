@@ -15,6 +15,7 @@ import ChannelModal from "@/components/ChannelModal";
 import FinancialDashboard from "@/components/FinancialDashboard";
 import BrandFinancialSummary from "@/components/BrandFinancialSummary";
 import { HebrewDateInput } from "@/components/HebrewDateInput";
+import WhiteboardBuilder from "@/components/WhiteboardBuilder";
 
 /* ─── Brand health ────────────────────────────────────── */
 interface BrandHealth {
@@ -2347,6 +2348,7 @@ export default function Dashboard() {
   const [showBrandFinancial,   setShowBrandFinancial]   = useState(false);
   const [showLoansManager,     setShowLoansManager]     = useState(false);
   const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
+  const [showWBBuilder,    setShowWBBuilder]   = useState(false);
   const [userEmail,        setUserEmail]       = useState("");
 
   // Drag-to-reorder brand cards
@@ -3362,6 +3364,13 @@ export default function Dashboard() {
           }}
         />
       )}
+      {showWBBuilder && (
+        <WhiteboardBuilder
+          brands={brands}
+          onSave={(updated) => { syncAll(updated); setShowWBBuilder(false); }}
+          onClose={() => setShowWBBuilder(false)}
+        />
+      )}
 
       <div className="max-w-screen-lg mx-auto px-4 py-5 sm:py-8 space-y-6 animate-in">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -3377,6 +3386,7 @@ export default function Dashboard() {
             })()}
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => setShowWBBuilder(true)} className="btn btn-ghost text-sm flex items-center gap-2">🗺️ בנה מפה</button>
             <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
           </div>
         </div>
