@@ -30,3 +30,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# brand assets / local folders (not part of the app)
+/מיתוג/
+.claude/
