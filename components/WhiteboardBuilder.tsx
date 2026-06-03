@@ -413,11 +413,48 @@ export default function WhiteboardBuilder({
   const offsetAtStart = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  /* Live refs so the non-passive wheel handler never reads stale state */
+  const scaleRef  = useRef(1);
+  const offsetRef = useRef({ x: 0, y: 0 });
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { offsetRef.current = offset; }, [offset]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setOffset({ x: window.innerWidth / 2, y: 80 });
     }
   }, []);
+
+  /* ── Non-passive wheel: zoom anchored to cursor, no browser page zoom ── */
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      const oldScale  = scaleRef.current;
+      const oldOffset = offsetRef.current;
+      const factor    = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale  = Math.min(2.5, Math.max(0.2, oldScale * factor));
+
+      /* cursor position relative to the canvas div */
+      const rect = el.getBoundingClientRect();
+      const cx   = e.clientX - rect.left;
+      const cy   = e.clientY - rect.top;
+
+      /* Keep the canvas point under the cursor stationary:
+         canvas_pt = (cursor - offset) / scale  must stay the same
+         ⟹ newOffset = cursor - canvas_pt * newScale                */
+      const newOffset = {
+        x: cx - ((cx - oldOffset.x) / oldScale) * newScale,
+        y: cy - ((cy - oldOffset.y) / oldScale) * newScale,
+      };
+
+      setScale(newScale);
+      setOffset(newOffset);
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, []); // only attaches once; reads live values via refs
 
   // Relayout whenever nodes structure or collapsed changes
   const relayout = useCallback((newNodes: WBNode[], newCollapsed: Set<string>) => {
@@ -443,12 +480,6 @@ export default function WhiteboardBuilder({
   const svgW = maxX - minX;
   const svgH = maxY - minY;
 
-  /* ── Wheel zoom ── */
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setScale(s => Math.min(2, Math.max(0.3, s * delta)));
-  }, []);
 
   /* ── Pan: mouse ── */
   const handleBgMouseDown = useCallback(
@@ -1037,7 +1068,6 @@ export default function WhiteboardBuilder({
           backgroundImage: `radial-gradient(circle, ${th.dotColor} 1px, transparent 1px)`,
           backgroundSize: "32px 32px",
         }}
-        onWheel={handleWheel}
         onMouseDown={handleBgMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
