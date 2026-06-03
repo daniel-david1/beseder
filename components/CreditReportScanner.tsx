@@ -51,8 +51,10 @@ export default function CreditReportScanner({ onClose, onImport }: Props) {
       // Dynamic import to avoid SSR issues
       const pdfjsLib = await import("pdfjs-dist");
 
-      // Use CDN worker so we don't need to configure webpack
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+      // Self-hosted worker (copied to /public via the "sync-pdf-worker" npm script).
+      // Keeping it local means the user's credit-report PDF — and even the metadata
+      // of processing one — never triggers a request to a third-party CDN.
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
       setProgress(20);
 
@@ -113,7 +115,7 @@ export default function CreditReportScanner({ onClose, onImport }: Props) {
     } catch (err) {
       console.error("PDF parse error:", err);
       setError(
-        `שגיאה בעיבוד הקובץ: ${err instanceof Error ? err.message : "שגיאה לא ידועה"}. ניסה להעלות קובץ PDF תקין.`
+        `שגיאה בעיבוד הקובץ: ${err instanceof Error ? err.message : "שגיאה לא ידועה"}. נסה להעלות קובץ PDF תקין.`
       );
       setStep("upload");
     }
@@ -252,7 +254,7 @@ export default function CreditReportScanner({ onClose, onImport }: Props) {
                 <strong>BDI:</strong> bdi.co.il →{" "}
                 <strong>דוח אשראי צרכני</strong>
                 <br />
-                <strong>נתב"ג:</strong> niv.cma.gov.il → <strong>ריכוז נתונים</strong>
+                <strong>בנק ישראל:</strong> niv.cma.gov.il → <strong>ריכוז נתונים</strong>
               </p>
             </div>
           </div>
@@ -339,7 +341,7 @@ export default function CreditReportScanner({ onClose, onImport }: Props) {
                   {report.rawTextSample && (
                     <details className="mt-4 text-right">
                       <summary className="text-xs text-gray-400 cursor-pointer">
-                        טקסט גולמי (לדיבוג)
+                        הצג את הטקסט שזוהה בדוח
                       </summary>
                       <pre className="text-[9px] text-gray-400 bg-gray-50 rounded-lg p-3 mt-2 whitespace-pre-wrap overflow-auto max-h-40 text-right" dir="ltr">
                         {report.rawTextSample}
@@ -452,17 +454,6 @@ export default function CreditReportScanner({ onClose, onImport }: Props) {
                     </div>
                   ))}
 
-                  {/* Raw text sample toggle */}
-                  {report.rawTextSample && (
-                    <details className="mt-2">
-                      <summary className="text-xs text-gray-400 cursor-pointer">
-                        טקסט גולמי (לדיבוג)
-                      </summary>
-                      <pre className="text-[9px] text-gray-400 bg-gray-50 rounded-lg p-3 mt-2 whitespace-pre-wrap overflow-auto max-h-40 text-right" dir="ltr">
-                        {report.rawTextSample}
-                      </pre>
-                    </details>
-                  )}
                 </>
               )}
             </div>
