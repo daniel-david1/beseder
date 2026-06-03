@@ -226,7 +226,6 @@ export default function TeamAccessModal({ brand, onClose }: Props) {
                 </div>
               </div>
             )}
-          </div>
 
           {/* Members section */}
           {loading ? (
