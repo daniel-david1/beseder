@@ -394,7 +394,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
         <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/80 text-xs text-gray-500">
           <span className="font-semibold">{selProjects.size} מחלקות</span>
           <span className="text-gray-300">·</span>
-          <span>{totalSubs} מחלקות</span>
+          <span>{totalSubs} פרויקטים</span>
           {totalStages > 0 && <><span className="text-gray-300">·</span><span>{totalStages} משימות</span></>}
         </div>
 
@@ -532,7 +532,7 @@ export default function BrandWizard({ existing, onClose, onSave, onEnter }: Prop
             <div className="flex gap-3 flex-wrap justify-center">
               {[
                 { n: totalProjects, label: "מחלקות",  emoji: "📁" },
-                { n: totalSubsCount, label: "מחלקות",   emoji: "🗂️" },
+                { n: totalSubsCount, label: "פרויקטים", emoji: "🗂️" },
                 { n: totalStagesCount, label: "משימות",  emoji: "✅" },
               ].filter(s => s.n > 0).map(s => (
                 <div key={s.label} className="px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-100">
@@ -748,19 +748,6 @@ function LogoUploader({ logo, emoji, color, onLogoChange }: {
         />
       </div>
 
-      {/* Emoji grid — only show when no logo */}
-      {!logo && (
-        <div className="mt-3">
-          <p className="text-[11px] text-gray-400 mb-1.5">או בחר אמוג'י:</p>
-          <div className="grid grid-cols-10 gap-1">
-            {EMOJIS.map(e => (
-              <button key={e} onClick={() => {}}
-                className="text-xl p-1.5 rounded-lg hover:bg-gray-100 transition-all"
-              >{e}</button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
