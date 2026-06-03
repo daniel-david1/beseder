@@ -3,10 +3,21 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
+function hebrewAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login") || m.includes("invalid credentials")) return "אימייל או סיסמה שגויים";
+  if (m.includes("email not confirmed")) return "המייל עוד לא אומת. בדוק את תיבת הדואר שלך";
+  if (m.includes("rate limit") || m.includes("too many")) return "יותר מדי ניסיונות. נסה שוב בעוד כמה דקות";
+  if (m.includes("network") || m.includes("fetch")) return "בעיית חיבור לרשת. בדוק את האינטרנט ונסה שוב";
+  if (m.includes("user not found")) return "לא נמצא חשבון עם האימייל הזה";
+  return "משהו השתבש. נסה שוב";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
 
@@ -15,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(error.message); setLoading(false); return; }
+    if (error) { setError(hebrewAuthError(error.message)); setLoading(false); return; }
     router.push("/dashboard");
     router.refresh();
   };
@@ -82,25 +93,44 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label style={{ fontFamily: "Heebo, sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(232,244,246,0.45)", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 7 }}>
-                סיסמה
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                dir="ltr"
-                style={{
-                  width: "100%", padding: "12px 16px", borderRadius: 12,
-                  background: "rgba(232,244,246,0.06)", border: "1px solid rgba(232,244,246,0.11)",
-                  color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15,
-                  outline: "none", boxSizing: "border-box", transition: "border-color 0.15s",
-                }}
-                onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
-                onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
-              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
+                <label style={{ fontFamily: "Heebo, sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(232,244,246,0.45)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  סיסמה
+                </label>
+                <a href="/reset-password" style={{ fontFamily: "Heebo, sans-serif", fontSize: 12, color: "rgba(31,174,181,0.85)", textDecoration: "none", fontWeight: 600 }}>
+                  שכחת סיסמה?
+                </a>
+              </div>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  dir="ltr"
+                  style={{
+                    width: "100%", padding: "12px 44px 12px 16px", borderRadius: 12,
+                    background: "rgba(232,244,246,0.06)", border: "1px solid rgba(232,244,246,0.11)",
+                    color: "#F0F6F8", fontFamily: "Heebo, sans-serif", fontSize: 15,
+                    outline: "none", boxSizing: "border-box", transition: "border-color 0.15s",
+                  }}
+                  onFocus={e => (e.target.style.borderColor = "rgba(31,174,181,0.6)")}
+                  onBlur={e => (e.target.style.borderColor = "rgba(232,244,246,0.11)")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(v => !v)}
+                  aria-label={showPw ? "הסתר סיסמה" : "הצג סיסמה"}
+                  style={{
+                    position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer", padding: 4,
+                    color: "rgba(232,244,246,0.45)", fontSize: 16, lineHeight: 0,
+                  }}
+                >
+                  {showPw ? "🙈" : "👁"}
+                </button>
+              </div>
             </div>
 
             {error && (
