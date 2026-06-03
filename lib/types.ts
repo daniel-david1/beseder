@@ -93,6 +93,41 @@ export interface Brand {
   goals?: BrandGoal[];
   createdAt: string;
   hidden?: boolean;
+  sharedFrom?: { ownerUserId: string; role: 'viewer' | 'editor' };
+}
+
+export interface TeamInvitation {
+  id: string;
+  brand_id: string;
+  brand_name: string;
+  brand_emoji: string;
+  owner_user_id: string;
+  invited_email: string;
+  role: 'viewer' | 'editor';
+  token: string;
+  status: 'pending' | 'accepted' | 'revoked';
+  created_at: string;
+  accepted_at?: string;
+  member_user_id?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  brand_id: string;
+  brand_name: string;
+  brand_emoji: string;
+  owner_user_id: string;
+  member_user_id: string;
+  member_email: string;
+  role: 'viewer' | 'editor';
+  created_at: string;
+}
+
+export interface SharedBrand {
+  brand: Brand;
+  ownerEmail: string;
+  role: 'viewer' | 'editor';
+  ownerUserId: string;
 }
 
 export interface Loan {

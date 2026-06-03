@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Brand, BrandGoal, Project, SubProject, Channel, Stage, StageStatus, FinancialData, DailyTask, MonthlySnapshot } from "@/lib/types";
-import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData, saveDailyTasks, loadDailyTasksFromCloud, saveMonthlySnapshot, loadMonthlySnapshot, loadAllMonthlySnapshots, loadMonthlySnapshotsFromCloud } from "@/lib/storage";
+import { loadBrands, saveBrands, createStage, loadBrandsFromCloud, saveFinancialData, saveDailyTasks, loadDailyTasksFromCloud, saveMonthlySnapshot, loadMonthlySnapshot, loadAllMonthlySnapshots, loadMonthlySnapshotsFromCloud, loadSharedBrands, saveSharedBrand } from "@/lib/storage";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,7 @@ import FinancialDashboard from "@/components/FinancialDashboard";
 import BrandFinancialSummary from "@/components/BrandFinancialSummary";
 import { HebrewDateInput } from "@/components/HebrewDateInput";
 import WhiteboardBuilder from "@/components/WhiteboardBuilder";
+import TeamAccessModal from "@/components/TeamAccessModal";
 
 /* ─── Brand health ────────────────────────────────────── */
 interface BrandHealth {
@@ -2231,8 +2232,8 @@ function BackButton({ emoji, label, onClick }: { emoji?: string; label: string; 
 }
 
 /* ─── Brand card ──────────────────────────────────────── */
-function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
-  brand: Brand; health: BrandHealth; onClick: () => void; onEdit: () => void; onDelete: () => void; onSetup: () => void; onHide: () => void;
+function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, onTeamAccess, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: {
+  brand: Brand; health: BrandHealth; onClick: () => void; onEdit: () => void; onDelete: () => void; onSetup: () => void; onHide: () => void; onTeamAccess: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
@@ -2293,6 +2294,12 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, 
               {health.topNextAction && (
                 <p className="text-[10px] text-gray-400 mt-0.5 truncate">→ {health.topNextAction}</p>
               )}
+              {/* Shared brand badge */}
+              {brand.sharedFrom && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: "#ede9fe", color: "#7c3aed" }}>
+                  שותף · {brand.sharedFrom.role === 'editor' ? 'עורך' : 'צופה'}
+                </span>
+              )}
             </div>
           </button>
           <div className="flex items-center gap-1 shrink-0">
@@ -2303,6 +2310,9 @@ function BrandCard({ brand, health, onClick, onEdit, onDelete, onSetup, onHide, 
             >⠿</span>
             <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <button onClick={e => { e.stopPropagation(); onHide(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-yellow-50 text-gray-400 hover:text-yellow-600 flex items-center justify-center text-xs" title={brand.hidden ? "הצג" : "הסתר"}>{brand.hidden ? "👁" : "🙈"}</button>
+              {!brand.sharedFrom && (
+                <button onClick={e => { e.stopPropagation(); onTeamAccess(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-purple-50 text-gray-400 hover:text-purple-600 flex items-center justify-center text-xs" title="גישת צוות">👥</button>
+              )}
               <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
               <button onClick={e => { e.stopPropagation(); onDelete(); }} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
             </div>
@@ -2534,6 +2544,7 @@ export default function Dashboard() {
   const [setupBrand,       setSetupBrand]      = useState<Brand | null>(null);
   const [showWBBuilder,    setShowWBBuilder]   = useState(false);
   const [userEmail,        setUserEmail]       = useState("");
+  const [teamAccessBrand,  setTeamAccessBrand] = useState<Brand | null>(null);
 
   // Drag-to-reorder brand cards
   const dragBrandId = useRef<string | null>(null);
@@ -2550,25 +2561,49 @@ export default function Dashboard() {
     const local = loadBrands();
     setBrands(local);
     setLoaded(true);
-    loadBrandsFromCloud().then(cloud => {
+    loadBrandsFromCloud().then(async cloud => {
       const base = (cloud && cloud.length > 0) ? cloud : local;
       if (!cloud && local.length > 0) {
         saveBrands(base);
       }
-      setBrands(base);
+      // Strip any previously loaded shared brands (avoid duplicates on re-load)
+      const ownedBase = base.filter(b => !b.sharedFrom);
+      setBrands(ownedBase);
       if (typeof window !== "undefined") {
-        localStorage.setItem("vaachalta_brands_v1", JSON.stringify(base));
+        localStorage.setItem("vaachalta_brands_v1", JSON.stringify(ownedBase));
       }
-      if (base.length === 0) {
+      if (ownedBase.length === 0) {
         setTimeout(() => setShowBrandModal(true), 400);
       }
+      // Load shared brands
+      try {
+        const shared = await loadSharedBrands();
+        if (shared.length > 0) {
+          const sharedBrands: Brand[] = shared.map(s => ({
+            ...s.brand,
+            sharedFrom: { ownerUserId: s.ownerUserId, role: s.role },
+          }));
+          setBrands(prev => [
+            ...prev.filter(b => !b.sharedFrom),
+            ...sharedBrands,
+          ]);
+        }
+      } catch { /* silent */ }
     });
   }, []);
 
   /* ── persist + sync active objects ── */
   const syncAll = (updated: Brand[]) => {
     setBrands(updated);
-    saveBrands(updated);
+    // Only save owned brands to localStorage/cloud; shared brands go back to the owner
+    const ownedBrands = updated.filter(b => !b.sharedFrom);
+    saveBrands(ownedBrands);
+    // Persist any modified shared brands back to owner
+    for (const b of updated) {
+      if (b.sharedFrom?.role === 'editor') {
+        saveSharedBrand(b, b.sharedFrom.ownerUserId).catch(() => {/* silent */});
+      }
+    }
     if (activeBrand) {
       const ab = updated.find(b => b.id === activeBrand.id) ?? null;
       setActiveBrand(ab);
@@ -3364,6 +3399,13 @@ export default function Dashboard() {
                 className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 items-center justify-center text-base transition-colors"
                 title="פיננסי"
               >💰</button>
+              {!activeBrand.sharedFrom && (
+                <button
+                  onClick={() => setTeamAccessBrand(activeBrand)}
+                  className="hidden sm:flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-purple-50 hover:text-purple-600 items-center justify-center text-base transition-colors"
+                  title="גישת צוות"
+                >👥</button>
+              )}
               <button
                 onClick={() => setEditingBrand(activeBrand)}
                 className="flex w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 items-center justify-center text-base transition-colors"
@@ -3541,6 +3583,9 @@ export default function Dashboard() {
           onBrandUpdate={(updatedBrand) => handleSaveBrand(updatedBrand)}
         />
       )}
+      {teamAccessBrand && (
+        <TeamAccessModal brand={teamAccessBrand} onClose={() => setTeamAccessBrand(null)} />
+      )}
 
       <div className="max-w-screen-lg mx-auto px-4 py-5 sm:py-8 space-y-6 animate-in">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -3614,6 +3659,7 @@ export default function Dashboard() {
                       const updated = brands.map(br => br.id === b.id ? { ...br, hidden: !br.hidden } : br);
                       syncAll(updated);
                     }}
+                    onTeamAccess={() => setTeamAccessBrand(b)}
                     onSetup={() => setSetupBrand(b)}
                     onDragStart={e => handleBrandDragStart(e, b.id)}
                     onDragOver={e => handleBrandDragOver(e, b.id)}

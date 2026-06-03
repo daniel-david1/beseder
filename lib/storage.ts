@@ -278,3 +278,50 @@ export async function loadMonthlySnapshotsFromCloud(): Promise<import("./types")
     return Object.values(snapshots).sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
   } catch { return null; }
 }
+
+/* ─── Shared Brands (Team Access) ────────────────────── */
+
+// Load all brands the current user has access to as a member (not owner)
+export async function loadSharedBrands(): Promise<Array<{ brand: Brand; role: 'viewer' | 'editor'; ownerUserId: string; ownerEmail: string }>> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data: memberships } = await supabase
+      .from("brand_members")
+      .select("brand_id, owner_user_id, role, member_email")
+      .eq("member_user_id", user.id);
+
+    if (!memberships || memberships.length === 0) return [];
+
+    const results: Array<{ brand: Brand; role: 'viewer' | 'editor'; ownerUserId: string; ownerEmail: string }> = [];
+
+    for (const membership of memberships) {
+      try {
+        const res = await fetch(`/api/team/brand?brand_id=${membership.brand_id}&owner_user_id=${membership.owner_user_id}`);
+        if (!res.ok) continue;
+        const data = await res.json() as { brand?: Brand; role?: string };
+        if (data.brand) {
+          results.push({
+            brand: data.brand as Brand,
+            role: membership.role as 'viewer' | 'editor',
+            ownerUserId: membership.owner_user_id as string,
+            ownerEmail: '',
+          });
+        }
+      } catch { continue; }
+    }
+    return results;
+  } catch { return []; }
+}
+
+// Save a shared brand back to the owner (member editor only)
+export async function saveSharedBrand(brand: Brand, ownerUserId: string): Promise<void> {
+  try {
+    await fetch('/api/team/brand', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand_id: brand.id, owner_user_id: ownerUserId, brand }),
+    });
+  } catch { /* silent */ }
+}
