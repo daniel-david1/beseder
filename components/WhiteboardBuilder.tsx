@@ -1763,9 +1763,8 @@ export default function WhiteboardBuilder({
               background: cardBg, borderRadius: 12,
               border: `1.5px solid ${border}`,
               padding: "10px 14px",
-              display: "flex", flexDirection: "column", gap: 6,
+              display: "flex", alignItems: "center", gap: 8,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => {
                     const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(stage.status) + 1) % 4];
@@ -1779,13 +1778,6 @@ export default function WhiteboardBuilder({
                   }}
                 >{sm.label}</button>
                 <span style={{ color: textPrim, fontSize: 13, fontWeight: 700, flex: 1, textAlign: "right" }}>{stage.name}</span>
-              </div>
-              <input
-                style={{ ...inputSt, fontSize: 12, padding: "6px 10px" }}
-                placeholder="תיאור / הערות..."
-                value={stage.notes ?? ""}
-                onChange={e => patchStage(targetSubId, stage.id, { notes: e.target.value }, channelId)}
-              />
             </div>
           );
         };
