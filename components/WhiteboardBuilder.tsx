@@ -644,6 +644,7 @@ export default function WhiteboardBuilder({
   const [editValue, setEditValue] = useState("");
   const [emojiPickerId, setEmojiPickerId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
 
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
@@ -979,6 +980,22 @@ export default function WhiteboardBuilder({
       return [];
     })();
 
+    // IDs needed to open the edit panel from within task mini-cards
+    const taskBrandId = (() => {
+      if (node.type !== "subproject") return "";
+      let cur: WBNode | undefined = node;
+      while (cur) {
+        const parentNode = nodes.find(n => n.id === cur!.parentId);
+        if (!parentNode && cur.type === "brand") return cur.existingId ?? "";
+        if (parentNode?.type === "brand") return parentNode.existingId ?? "";
+        cur = parentNode;
+      }
+      return "";
+    })();
+    const taskProjNode = nodes.find(n => n.id === node.parentId);
+    const taskProjectId = taskProjNode?.existingId ?? "";
+    const taskSubId = node.existingId ?? "";
+
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (node.type === "brand" || !node.existingId) return;
@@ -1153,31 +1170,124 @@ export default function WhiteboardBuilder({
           <div
             data-node="true"
             style={{
-              display: "flex", flexDirection: "column", gap: 4,
-              marginTop: 8, paddingTop: 7,
+              display: "flex", flexDirection: "column", gap: 5,
+              marginTop: 10, paddingTop: 8,
               borderTop: `1px solid ${node.color}22`,
             }}
           >
             {subTasks.map(t => {
               const sm = STATUS_META[t.status];
+              const isHov = hoveredTaskId === t.id;
+              const STATUS_COLORS_LIGHT: Record<Stage["status"], string> = {
+                todo: "rgba(156,163,175,0.12)",
+                active: "rgba(96,165,250,0.12)",
+                done: "rgba(74,222,128,0.1)",
+                blocked: "rgba(248,113,113,0.12)",
+              };
               return (
-                <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{
-                    width: 7, height: 7, borderRadius: "50%",
-                    background: sm.text, flexShrink: 0,
+                <div
+                  key={t.id}
+                  data-node="true"
+                  onMouseEnter={() => setHoveredTaskId(t.id)}
+                  onMouseLeave={() => setHoveredTaskId(null)}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setEditTarget({ brandId: taskBrandId, projectId: taskProjectId, subId: taskSubId });
+                    setAddingStage(null);
+                  }}
+                  style={{
+                    position: "relative",
+                    display: "flex", alignItems: "center", gap: 7,
+                    background: isHov ? STATUS_COLORS_LIGHT[t.status] : "rgba(255,255,255,0.04)",
+                    borderRadius: 9,
+                    border: `1px solid ${isHov ? sm.text + "44" : node.color + "18"}`,
+                    padding: "6px 8px 6px 10px",
+                    cursor: "pointer",
+                    transition: "background 0.15s, border-color 0.15s",
+                  }}
+                >
+                  {/* Status accent bar */}
+                  <div style={{
+                    width: 3, borderRadius: 2, alignSelf: "stretch", flexShrink: 0,
+                    background: sm.text,
+                    minHeight: 16,
                   }} />
+
+                  {/* Task name */}
                   <span style={{
                     color: th.labelColor, fontSize: 11, fontWeight: 500,
-                    flex: 1, textAlign: "right",
+                    flex: 1, textAlign: "right", direction: "rtl",
                     whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     textDecoration: t.status === "done" ? "line-through" : "none",
-                    opacity: t.status === "done" ? 0.6 : 1,
+                    opacity: t.status === "done" ? 0.5 : 1,
                   }}>
                     {t.name || "ללא שם"}
                   </span>
+
+                  {/* Arrow */}
+                  <span style={{
+                    fontSize: 10, flexShrink: 0,
+                    color: isHov ? sm.text : node.color + "55",
+                    transition: "color 0.15s",
+                  }}>←</span>
+
+                  {/* + button on hover */}
+                  {isHov && (
+                    <button
+                      data-node="true"
+                      onMouseEnter={e => e.stopPropagation()}
+                      onClick={e => {
+                        e.stopPropagation();
+                        setEditTarget({ brandId: taskBrandId, projectId: taskProjectId, subId: taskSubId });
+                        setAddingStage({ name: "", notes: "", status: "todo", nextAction: "" });
+                      }}
+                      title="הוסף משימה"
+                      style={{
+                        position: "absolute",
+                        insetInlineStart: -24,
+                        top: "50%", transform: "translateY(-50%)",
+                        width: 20, height: 20, borderRadius: "50%",
+                        background: sm.text, color: "white", border: "none",
+                        fontSize: 15, fontWeight: 700, lineHeight: 1,
+                        cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: `0 2px 8px ${sm.text}55`,
+                        flexShrink: 0,
+                      }}
+                    >+</button>
+                  )}
                 </div>
               );
             })}
+
+            {/* Add task row — always visible at bottom */}
+            <button
+              data-node="true"
+              onClick={e => {
+                e.stopPropagation();
+                setEditTarget({ brandId: taskBrandId, projectId: taskProjectId, subId: taskSubId });
+                setAddingStage({ name: "", notes: "", status: "todo", nextAction: "" });
+              }}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                padding: "5px 8px", borderRadius: 8, border: `1.5px dashed ${node.color}44`,
+                background: "transparent", color: node.color + "88", fontSize: 11, fontWeight: 600,
+                cursor: "pointer", marginTop: 2, width: "100%",
+                transition: "background 0.15s, border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = node.color + "12";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = node.color + "88";
+                (e.currentTarget as HTMLButtonElement).style.color = node.color;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = node.color + "44";
+                (e.currentTarget as HTMLButtonElement).style.color = node.color + "88";
+              }}
+            >
+              + משימה
+            </button>
           </div>
         )}
 
