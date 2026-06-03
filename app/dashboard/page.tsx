@@ -2424,9 +2424,10 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
   sub: SubProject; color: string;
   onClick: () => void; onEdit: () => void; onDelete: () => void;
 }) {
-  const blocked     = sub.stages.filter(s => s.status === "blocked").length;
-  const active      = sub.stages.filter(s => s.status === "active").length;
-  const done        = sub.stages.filter(s => s.status === "done").length;
+  const allTasks    = [...sub.stages, ...(sub.channels ?? []).flatMap(c => c.stages)];
+  const blocked     = allTasks.filter(s => s.status === "blocked").length;
+  const active      = allTasks.filter(s => s.status === "active").length;
+  const done        = allTasks.filter(s => s.status === "done").length;
   const monthlyExp  = subMonthlyExpenses(sub);
   const monthlyInc  = subMonthlyIncomes(sub);
 
@@ -2445,7 +2446,7 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
           </div>
         </div>
         <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
-          <span className="text-[11px] text-gray-400">{sub.stages.length} שלבים</span>
+          <span className="text-[11px] text-gray-400">{[...sub.stages, ...(sub.channels ?? []).flatMap(c => c.stages)].length} משימות</span>
           {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
           {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50  text-red-600">⚠ {blocked}</span>}
           {done    > 0 && <span className="text-[10px] font-semibold text-green-600">✓ {done}</span>}
