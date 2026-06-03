@@ -31,9 +31,11 @@ const NODE_H = 80;
 const BRAND_Y = 100;
 const PROJECT_DY = 260;
 const SUB_DY = 220;
-const BRAND_GAP = 520;
-const PROJECT_GAP = 380;
-const SUB_GAP = 300;
+
+/* Minimum gap between NODE EDGES (not centers) */
+const GAP_SUB   = 40;   // gap between adjacent sub edges within a project
+const GAP_PROJ  = 60;   // gap between adjacent project footprint edges within a brand
+const GAP_BRAND = 140;  // gap between adjacent brand footprint edges
 
 const BRAND_COLORS = [
   "#f97316", "#3b82f6", "#10b981", "#8b5cf6",
@@ -47,85 +49,113 @@ const EMOJI_PALETTE = [
 ];
 
 /* ─── Layout helpers ────────────────────────────────────── */
+
+/**
+ * Returns the total pixel FOOTPRINT of a node (left-edge to right-edge)
+ * including all its visible children, using GAP_* constants between edges.
+ *
+ * All coordinates are LEFT-EDGE based (matching CSS `left`).
+ */
+function footprint(
+  node: WBNode,
+  allNodes: WBNode[],
+  collapsed: Set<string>
+): number {
+  if (node.type === "subproject") return SUB_W;
+
+  const children = allNodes.filter((n) => n.parentId === node.id);
+
+  if (node.type === "project") {
+    if (collapsed.has(node.id) || children.length === 0) return PROJECT_W;
+    const childSpan =
+      children.length * SUB_W + (children.length - 1) * GAP_SUB;
+    return Math.max(PROJECT_W, childSpan);
+  }
+
+  // brand
+  if (collapsed.has(node.id) || children.length === 0) return BRAND_W;
+  const projFootprints = children.map((p) => footprint(p, allNodes, collapsed));
+  const childSpan =
+    projFootprints.reduce((s, fp) => s + fp, 0) +
+    (children.length - 1) * GAP_PROJ;
+  return Math.max(BRAND_W, childSpan);
+}
+
 function layoutNodes(nodes: WBNode[], collapsed: Set<string>): WBNode[] {
-  const brands = nodes.filter((n) => n.type === "brand");
+  const brands   = nodes.filter((n) => n.type === "brand");
   const projects = nodes.filter((n) => n.type === "project");
-  const subs = nodes.filter((n) => n.type === "subproject");
+  const subs     = nodes.filter((n) => n.type === "subproject");
+
+  /* ── total canvas width ── */
+  const brandFootprints = brands.map((b) => footprint(b, nodes, collapsed));
+  const totalCanvasW =
+    brandFootprints.reduce((s, fp) => s + fp, 0) +
+    (brands.length - 1) * GAP_BRAND;
 
   const out: WBNode[] = [];
+  /* Start left-edge of first brand so everything is centred on x=0 */
+  let brandLeft = -totalCanvasW / 2;
 
-  // Calculate total width for centering
-  let totalBrandW = 0;
-  for (const brand of brands) {
-    const brandProjects = projects.filter((p) => p.parentId === brand.id);
-    if (collapsed.has(brand.id) || brandProjects.length === 0) {
-      totalBrandW += BRAND_W;
-    } else {
-      const projWidth = brandProjects.length * PROJECT_W + (brandProjects.length - 1) * (PROJECT_GAP - PROJECT_W);
-      totalBrandW += Math.max(BRAND_W, projWidth);
-    }
-  }
-  totalBrandW += (brands.length - 1) * (BRAND_GAP - BRAND_W);
+  for (let bi = 0; bi < brands.length; bi++) {
+    const brand  = brands[bi];
+    const brandFP = brandFootprints[bi];
+    const brandCX = brandLeft + brandFP / 2; // visual centre of brand footprint
 
-  let bx = -(totalBrandW / 2) + BRAND_W / 2;
+    /* Brand node — centred in its footprint */
+    out.push({ ...brand, x: brandCX - BRAND_W / 2, y: BRAND_Y });
 
-  for (const brand of brands) {
-    const brandProjects = projects.filter((p) => p.parentId === brand.id);
-    const brandCollapsed = collapsed.has(brand.id);
+    if (!collapsed.has(brand.id)) {
+      const brandProjects = projects.filter((p) => p.parentId === brand.id);
+      if (brandProjects.length > 0) {
+        const projFPs = brandProjects.map((p) =>
+          footprint(p, nodes, collapsed)
+        );
+        const totalProjSpan =
+          projFPs.reduce((s, fp) => s + fp, 0) +
+          (brandProjects.length - 1) * GAP_PROJ;
 
-    if (!brandCollapsed && brandProjects.length > 0) {
-      // Calculate total width needed for this brand's children
-      let totalProjW = 0;
-      for (const project of brandProjects) {
-        const projectSubs = subs.filter((s) => s.parentId === project.id);
-        const projCollapsed = collapsed.has(project.id);
-        if (projCollapsed || projectSubs.length === 0) {
-          totalProjW += PROJECT_W;
-        } else {
-          const subWidth = projectSubs.length * SUB_W + (projectSubs.length - 1) * (SUB_GAP - SUB_W);
-          totalProjW += Math.max(PROJECT_W, subWidth);
-        }
-      }
-      totalProjW += (brandProjects.length - 1) * (PROJECT_GAP - PROJECT_W);
+        /* centre projects inside brand footprint */
+        let projLeft = brandLeft + (brandFP - totalProjSpan) / 2;
 
-      const brandCenterX = bx;
-      let px = brandCenterX - totalProjW / 2 + PROJECT_W / 2;
+        for (let pi = 0; pi < brandProjects.length; pi++) {
+          const project = brandProjects[pi];
+          const projFP  = projFPs[pi];
+          const projCX  = projLeft + projFP / 2;
 
-      for (const project of brandProjects) {
-        const projectSubs = subs.filter((s) => s.parentId === project.id);
-        const projCollapsed = collapsed.has(project.id);
+          out.push({
+            ...project,
+            x: projCX - PROJECT_W / 2,
+            y: BRAND_Y + PROJECT_DY,
+          });
 
-        if (!projCollapsed && projectSubs.length > 0) {
-          const totalSubW = projectSubs.length * SUB_W + (projectSubs.length - 1) * (SUB_GAP - SUB_W);
-          let sx = px - totalSubW / 2 + SUB_W / 2;
-          for (const sub of projectSubs) {
-            out.push({ ...sub, x: sx, y: BRAND_Y + PROJECT_DY + SUB_DY });
-            sx += SUB_GAP;
+          if (!collapsed.has(project.id)) {
+            const projectSubs = subs.filter((s) => s.parentId === project.id);
+            if (projectSubs.length > 0) {
+              const totalSubSpan =
+                projectSubs.length * SUB_W +
+                (projectSubs.length - 1) * GAP_SUB;
+              /* centre subs inside project footprint */
+              let subLeft = projCX - totalSubSpan / 2;
+              for (const sub of projectSubs) {
+                out.push({
+                  ...sub,
+                  x: subLeft,
+                  y: BRAND_Y + PROJECT_DY + SUB_DY,
+                });
+                subLeft += SUB_W + GAP_SUB;
+              }
+            }
           }
-        }
-        out.push({ ...project, x: px, y: BRAND_Y + PROJECT_DY });
 
-        // Advance px by either sub-span or PROJECT_GAP
-        const projectSubs2 = subs.filter((s) => s.parentId === project.id);
-        const projCollapsed2 = collapsed.has(project.id);
-        if (!projCollapsed2 && projectSubs2.length > 0) {
-          const subSpan = projectSubs2.length * SUB_W + (projectSubs2.length - 1) * (SUB_GAP - SUB_W);
-          px += Math.max(PROJECT_GAP, subSpan + 40);
-        } else {
-          px += PROJECT_GAP;
+          projLeft += projFP + GAP_PROJ;
         }
       }
-
-      out.push({ ...brand, x: brandCenterX, y: BRAND_Y });
-      const projSpan = totalProjW;
-      bx += Math.max(BRAND_GAP, projSpan + 80);
-    } else {
-      out.push({ ...brand, x: bx, y: BRAND_Y });
-      bx += BRAND_GAP;
     }
+
+    brandLeft += brandFP + GAP_BRAND;
   }
 
-  // Any orphan nodes not placed — fallback
+  /* Orphans (nodes not placed above) */
   const placedIds = new Set(out.map((n) => n.id));
   for (const n of nodes) {
     if (!placedIds.has(n.id)) out.push(n);
