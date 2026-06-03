@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beseder CRM — Screen Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0c12;
+      --surface: #111520;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.12);
+      --teal: #0d9488;
+      --teal-light: #14b8a6;
+      --orange: #f97316;
+      --orange-light: #fb923c;
+      --emerald: #10b981;
+      --emerald-light: #34d399;
+      --arrow: #4b5563;
+      --arrow-label: #6b7280;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --header-bg: rgba(10,12,18,0.94);
+    }
+    :root.light {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.06);
+      --border-bright: rgba(0,0,0,0.12);
+      --arrow: #9ca3af;
+      --arrow-label: #6b7280;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --header-bg: rgba(248,250,252,0.94);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      font-family: 'Heebo', sans-serif;
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: auto;
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-bright);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-family: 'Heebo', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { background: var(--border); color: var(--text-primary); }
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, #0d9488, #10b981);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-style: normal;
+    }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .legend { display: flex; align-items: center; gap: 18px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+    .canvas-wrap { padding: 40px 36px 80px; overflow-x: auto; }
+    .svg-wrap {
+      display: block;
+      min-width: 1520px;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .svg-wrap { animation: fadeInUp 0.7s ease 0.1s both; }
+    /* dot grid */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none; z-index: 0;
+    }
+    .canvas-wrap { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">✦</div>
+    <div>
+      <div class="header-title">Beseder CRM &mdash; מפת מסכים</div>
+      <div class="header-subtitle">Screen Architecture · v1.0</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#0d9488"></div>מסכים ראשיים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>מודאלים / דרוארים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>פיננסים</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4b5563;border-radius:50%"></div>ניווט</div>
+    </div>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 כהה</button>
+  </div>
+</header>
+
+<div class="canvas-wrap">
+<svg class="svg-wrap" viewBox="0 0 1540 1020" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+  <defs>
+    <!-- arrowheads -->
+    <marker id="ah-nav"   markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#4b5563"/>
+    </marker>
+    <marker id="ah-modal" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#f97316" opacity="0.65"/>
+    </marker>
+    <marker id="ah-fin"   markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0.5 L0,6.5 L8,3.5 z" fill="#10b981" opacity="0.65"/>
+    </marker>
+    <!-- node shadow filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+    <!-- glow teal -->
+    <filter id="glow-t" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- background grid -->
+    <pattern id="grid" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0L0 0 0 36" fill="none" stroke="rgba(255,255,255,0.018)" stroke-width="1"/>
+    </pattern>
+    <!-- radial glow center -->
+    <radialGradient id="vignette" cx="50%" cy="38%" r="65%">
+      <stop offset="0%"   stop-color="rgba(13,148,136,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── BG ── -->
+  <rect id="svgBgRect" width="1540" height="1020" fill="#0a0c12"/>
+  <rect id="svgGridRect" width="1540" height="1020" fill="url(#grid)"/>
+  <rect width="1540" height="1020" fill="url(#vignette)"/>
+
+  <!-- corner accents -->
+  <path d="M28,28 h32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,28 v32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,28 h-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,28 v32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,992 h32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M28,992 v-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,992 h-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+  <path d="M1512,992 v-32" stroke="rgba(13,148,136,0.18)" stroke-width="1.5" fill="none"/>
+
+  <!-- ══════════════════════════════════════════════
+       SECTION LABELS
+  ══════════════════════════════════════════════ -->
+  <!-- Main nav label -->
+  <text x="770" y="46" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">ניווט ראשי · MAIN NAVIGATION</text>
+  <line x1="60"   y1="44" x2="490"  y2="44" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="1050" y1="44" x2="1480" y2="44" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+  <!-- Modals label -->
+  <text x="770" y="434" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">מודאלים ודרוארים · MODALS &amp; DRAWERS</text>
+  <line x1="60"   y1="432" x2="460"  y2="432" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="1080" y1="432" x2="1480" y2="432" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+  <!-- Financial label -->
+  <text x="770" y="814" text-anchor="middle" font-family="Heebo" font-size="10.5" font-weight="600" letter-spacing="2.5" fill="#2d3748">פיננסים · FINANCIAL</text>
+  <line x1="60"   y1="812" x2="570"  y2="812" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="970"  y1="812" x2="1480" y2="812" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+  <!-- dashed separators -->
+  <line x1="60" y1="408" x2="1480" y2="408" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="5,7"/>
+  <line x1="60" y1="788" x2="1480" y2="788" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="5,7"/>
+
+  <!-- ══════════════════════════════════════════════
+       MAIN NAV ARROWS
+       Node centers (cx of rect+w/2):
+         Home     rect x=60  w=152 → cx=136  cy=148
+         Brand    rect x=284 w=152 → cx=360  cy=148
+         Project  rect x=508 w=152 → cx=584  cy=148
+         Pipeline rect x=740 w=160 → cx=820  cy=128 (top split)
+         Roster   rect x=740 w=160 → cx=820  cy=228 (bot split)
+         Stage    rect x=986 w=152 → cx=1062 cy=148
+         Tasks    rect x=1212 w=152→ cx=1288 cy=148
+  ══════════════════════════════════════════════ -->
+
+  <!-- Home → Brand -->
+  <line x1="212" y1="148" x2="280" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="218" y="134" width="58" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="247" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ מותג</text>
+
+  <!-- Brand → Project -->
+  <line x1="436" y1="148" x2="504" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="440" y="134" width="62" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="471" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ פרויקט</text>
+
+  <!-- Project → Pipeline (fork up) -->
+  <path d="M660 130 C700 130 720 110 736 108" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="695" y="104" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">Pipeline</text>
+
+  <!-- Project → Roster (fork down) -->
+  <path d="M660 166 C700 166 720 208 736 210" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="695" y="200" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">Roster</text>
+
+  <!-- Pipeline → Stage -->
+  <path d="M900 120 C940 120 960 135 982 140" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <rect  x="916" y="107" width="52" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="942" y="117" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ שלב</text>
+
+  <!-- Roster → Stage -->
+  <path d="M900 222 C944 222 960 175 982 158" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#ah-nav)"/>
+  <text x="948" y="204" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ פריט</text>
+
+  <!-- Stage → Tasks -->
+  <line x1="1138" y1="148" x2="1208" y2="148" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah-nav)"/>
+  <rect  x="1143" y="134" width="60" height="15" rx="4" fill="#0a0c12"/>
+  <text  x="1173" y="144" text-anchor="middle" font-family="Heebo" font-size="10" fill="#6b7280">לחץ משימה</text>
+
+  <!-- ══════════════════════════════════════════════
+       MAIN SCREEN NODES
+  ══════════════════════════════════════════════ -->
+
+  <!-- ── HOME ── -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.38)" stroke-width="1.3"/>
+  </g>
+  <circle cx="136" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="136" y="122" text-anchor="middle" font-size="20">🏠</text>
+  <text x="136" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">דף הבית</text>
+  <text x="136" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Home · Brands Grid</text>
+  <!-- START badge -->
+  <rect x="60" y="72" width="36" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.3)" stroke-width="1"/>
+  <text x="78" y="81.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">START</text>
+
+  <!-- ── BRAND ── -->
+  <g filter="url(#shadow)">
+    <rect x="284" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="360" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="360" y="122" text-anchor="middle" font-size="20">📁</text>
+  <text x="360" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">מותג</text>
+  <text x="360" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Brand · Projects List</text>
+
+  <!-- ── PROJECT ── -->
+  <g filter="url(#shadow)">
+    <rect x="508" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="584" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="584" y="122" text-anchor="middle" font-size="20">🗂️</text>
+  <text x="584" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">פרויקט</text>
+  <text x="584" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Project · SubProjects</text>
+
+  <!-- ── PIPELINE (top) ── -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="68" width="160" height="84" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="820" cy="97" r="16" fill="rgba(13,148,136,0.18)"/>
+  <text x="820" y="103" text-anchor="middle" font-size="16">📋</text>
+  <text x="820" y="126" text-anchor="middle" font-family="Heebo" font-size="13" font-weight="700" fill="#14b8a6">תת-פרויקט</text>
+  <text x="820" y="142" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Pipeline Mode</text>
+  <!-- pipeline badge -->
+  <rect x="740" y="60" width="58" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.28)" stroke-width="1"/>
+  <text x="769" y="69.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">PIPELINE</text>
+
+  <!-- ── ROSTER (bottom) ── -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="168" width="160" height="84" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="820" cy="197" r="16" fill="rgba(13,148,136,0.18)"/>
+  <text x="820" y="203" text-anchor="middle" font-size="16">👥</text>
+  <text x="820" y="226" text-anchor="middle" font-family="Heebo" font-size="13" font-weight="700" fill="#14b8a6">תת-פרויקט</text>
+  <text x="820" y="242" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Roster · Items</text>
+  <!-- roster badge -->
+  <rect x="740" y="160" width="50" height="13" rx="4" fill="#0f172a" stroke="rgba(13,148,136,0.28)" stroke-width="1"/>
+  <text x="765" y="169.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#0d9488" letter-spacing="0.5">ROSTER</text>
+
+  <!-- vertical divider between pipeline and roster -->
+  <line x1="820" y1="152" x2="820" y2="168" stroke="rgba(13,148,136,0.25)" stroke-width="1" stroke-dasharray="2,2"/>
+
+  <!-- ── STAGE ── -->
+  <g filter="url(#shadow)">
+    <rect x="986" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.11)" stroke="rgba(13,148,136,0.32)" stroke-width="1.3"/>
+  </g>
+  <circle cx="1062" cy="114" r="19" fill="rgba(13,148,136,0.18)"/>
+  <text x="1062" y="122" text-anchor="middle" font-size="20">🎯</text>
+  <text x="1062" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6">שלב</text>
+  <text x="1062" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Stage · Tasks List</text>
+
+  <!-- ── TASKS (dashed = terminal) ── -->
+  <rect x="1212" y="80" width="152" height="92" rx="14" fill="rgba(13,148,136,0.07)" stroke="rgba(13,148,136,0.2)" stroke-width="1.3" stroke-dasharray="5,3"/>
+  <circle cx="1288" cy="114" r="19" fill="rgba(13,148,136,0.12)"/>
+  <text x="1288" y="122" text-anchor="middle" font-size="20">✅</text>
+  <text x="1288" y="147" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#14b8a6" opacity="0.65">משימות</text>
+  <text x="1288" y="162" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Tasks View</text>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL VERTICAL CONNECTOR ARROWS
+  ══════════════════════════════════════════════ -->
+  <!-- Home → Daily Update -->
+  <path d="M122,172 L122,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Home → Settings -->
+  <path d="M152,172 L152,610" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
+
+  <!-- Brand → Whiteboard -->
+  <path d="M332,172 L332,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Brand → New Project -->
+  <path d="M370,172 L370,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+  <!-- Brand → Financial Summary -->
+  <path d="M398,172 L398,610" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
+
+  <!-- Project → New SubProject -->
+  <path d="M584,172 L584,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+
+  <!-- Roster → Item Modal -->
+  <path d="M790,252 L790,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.45"/>
+
+  <!-- Pipeline → Stage Drawer -->
+  <path d="M856,152 C870,300 970,390 1000,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.40"/>
+  <!-- Roster → Stage Drawer -->
+  <path d="M866,252 C878,350 980,400 1010,444" stroke="#f97316" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#ah-modal)" opacity="0.35"/>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL NODES  (row 1: y=444)
+  ══════════════════════════════════════════════ -->
+
+  <!-- Daily Update (x=60) -->
+  <rect x="60"  y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="127" y="469" text-anchor="middle" font-size="17">📝</text>
+  <text x="127" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">עדכון יומי</text>
+  <text x="127" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Daily Update Modal</text>
+  <rect x="60"  y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="80" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Whiteboard (x=212) -->
+  <rect x="212" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="279" y="469" text-anchor="middle" font-size="17">🧠</text>
+  <text x="279" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">לוח לבן</text>
+  <text x="279" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Brand Whiteboard</text>
+  <rect x="212" y="437" width="48" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="236" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">OVERLAY</text>
+
+  <!-- New Project (x=364) -->
+  <rect x="364" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="431" y="469" text-anchor="middle" font-size="17">➕</text>
+  <text x="431" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">פרויקט חדש</text>
+  <text x="431" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">New Project Modal</text>
+  <rect x="364" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="384" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- New SubProject (x=516) -->
+  <rect x="516" y="444" width="148" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="590" y="469" text-anchor="middle" font-size="17">📐</text>
+  <text x="590" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">תת-פרויקט חדש</text>
+  <text x="590" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">New SubProject Modal</text>
+  <rect x="516" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="536" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Item Modal (x=682) -->
+  <rect x="682" y="444" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="749" y="469" text-anchor="middle" font-size="17">📦</text>
+  <text x="749" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">פריט חדש</text>
+  <text x="749" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Item Modal</text>
+  <rect x="682" y="437" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="702" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Stage Drawer (x=848) -->
+  <rect x="848" y="444" width="148" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.30)" stroke-width="1.2"/>
+  <text x="922" y="469" text-anchor="middle" font-size="17">📌</text>
+  <text x="922" y="490" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">Stage Drawer</text>
+  <text x="922" y="505" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Side Panel Drawer</text>
+  <rect x="848" y="437" width="52" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.25)" stroke-width="1"/>
+  <text x="874" y="446" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">DRAWER</text>
+
+  <!-- ── MODAL ROW 2 (y=610) ── -->
+  <!-- Settings (x=60) -->
+  <rect x="60"  y="610" width="134" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.28)" stroke-width="1.2"/>
+  <text x="127" y="635" text-anchor="middle" font-size="17">⚙️</text>
+  <text x="127" y="656" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">הגדרות</text>
+  <text x="127" y="671" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Settings Modal</text>
+  <rect x="60"  y="603" width="40" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.22)" stroke-width="1"/>
+  <text x="80"  y="612" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">MODAL</text>
+
+  <!-- Brand Financial Summary (x=212) -->
+  <rect x="212" y="610" width="152" height="72" rx="12" fill="rgba(249,115,22,0.10)" stroke="rgba(249,115,22,0.28)" stroke-width="1.2"/>
+  <text x="288" y="635" text-anchor="middle" font-size="17">💼</text>
+  <text x="288" y="656" text-anchor="middle" font-family="Heebo" font-size="12" font-weight="700" fill="#fb923c">סיכום פיננסי</text>
+  <text x="288" y="671" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#6b7280">Brand Financial Summary</text>
+  <rect x="212" y="603" width="48" height="12" rx="3" fill="#0f172a" stroke="rgba(249,115,22,0.22)" stroke-width="1"/>
+  <text x="236" y="612" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#f97316" letter-spacing="0.3">OVERLAY</text>
+
+  <!-- Notes box (x=1030, y=444) -->
+  <rect x="1030" y="444" width="270" height="130" rx="10" fill="rgba(255,255,255,0.015)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <text x="1048" y="466" font-family="Heebo" font-size="10" font-weight="700" fill="#374151" letter-spacing="0.8">הערות ניווט</text>
+  <line x1="1048" y1="472" x2="1286" y2="472" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="1048" y="490" font-family="Heebo" font-size="9.5" fill="#4b5563">• Stage Drawer נגיש מ-Pipeline וגם Roster</text>
+  <text x="1048" y="507" font-family="Heebo" font-size="9.5" fill="#4b5563">• Daily Update נגיש תמיד מדף הבית</text>
+  <text x="1048" y="524" font-family="Heebo" font-size="9.5" fill="#4b5563">• מותג 💰 מנתב לדשבורד פיננסי</text>
+  <text x="1048" y="541" font-family="Heebo" font-size="9.5" fill="#4b5563">• Items ב-Roster כוללים Stages → Tasks</text>
+  <text x="1048" y="558" font-family="Heebo" font-size="9.5" fill="#4b5563">• כל מסך ראשי תומך בניווט חזרה</text>
+
+  <!-- count badge -->
+  <rect x="1030" y="590" width="270" height="36" rx="8" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <text x="1165" y="606" text-anchor="middle" font-family="Heebo" font-size="10" fill="#374151">7 מסכים · 8 מודאלים · 4 views פיננסיים</text>
+  <text x="1165" y="620" text-anchor="middle" font-family="Heebo" font-size="9" fill="#2d3748">סה״כ 19 views</text>
+
+  <!-- ══════════════════════════════════════════════
+       FINANCIAL SECTION  (y≈828)
+  ══════════════════════════════════════════════ -->
+
+  <!-- Arrow from Home → Financial Dashboard (long curve) -->
+  <path d="M136,172 C136,480 600,828 680,870" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="5,4" marker-end="url(#ah-fin)" opacity="0.45"/>
+  <rect x="240" y="752" width="108" height="15" rx="4" fill="#0a0c12"/>
+  <text x="294" y="762" text-anchor="middle" font-family="Heebo" font-size="10" fill="#10b981" opacity="0.7">לחץ 💰 מותג</text>
+
+  <!-- Financial Dashboard node -->
+  <g filter="url(#shadow)">
+    <rect x="614" y="828" width="176" height="96" rx="14" fill="rgba(16,185,129,0.11)" stroke="rgba(16,185,129,0.38)" stroke-width="1.3"/>
+  </g>
+  <circle cx="702" cy="862" r="21" fill="rgba(16,185,129,0.18)"/>
+  <text x="702" y="870" text-anchor="middle" font-size="21">💰</text>
+  <text x="702" y="898" text-anchor="middle" font-family="Heebo" font-size="14" font-weight="700" fill="#34d399">ניהול פיננסי</text>
+  <text x="702" y="914" text-anchor="middle" font-family="Heebo" font-size="10" fill="#475569">Financial Dashboard</text>
+  <rect x="614" y="820" width="52" height="13" rx="3" fill="#0f172a" stroke="rgba(16,185,129,0.3)" stroke-width="1"/>
+  <text x="640" y="829.5" text-anchor="middle" font-family="Heebo" font-size="7.5" font-weight="700" fill="#10b981" letter-spacing="0.3">SCREEN</text>
+
+  <!-- Arrow to sub-sections -->
+  <line x1="790" y1="876" x2="840" y2="876" stroke="#10b981" stroke-width="1.2" marker-end="url(#ah-fin)" opacity="0.45"/>
+  <text x="820" y="868" text-anchor="middle" font-family="Heebo" font-size="9.5" fill="#10b981" opacity="0.6">תצוגות</text>
+
+  <!-- Loans -->
+  <rect x="842"  y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="897"  y="870" text-anchor="middle" font-size="14">🏦</text>
+  <text x="897"  y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הלוואות</text>
+  <text x="897"  y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Loans</text>
+
+  <line x1="952" y1="876" x2="962" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Liabilities -->
+  <rect x="964"  y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1019" y="870" text-anchor="middle" font-size="14">📊</text>
+  <text x="1019" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">התחייבויות</text>
+  <text x="1019" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Liabilities</text>
+
+  <line x1="1074" y1="876" x2="1084" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Income -->
+  <rect x="1086" y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1141" y="870" text-anchor="middle" font-size="14">💵</text>
+  <text x="1141" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הכנסות</text>
+  <text x="1141" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Income</text>
+
+  <line x1="1196" y1="876" x2="1206" y2="876" stroke="#10b981" stroke-width="1" opacity="0.2"/>
+
+  <!-- Expenses -->
+  <rect x="1208" y="848" width="110" height="56" rx="10" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.20)" stroke-width="1"/>
+  <text x="1263" y="870" text-anchor="middle" font-size="14">💸</text>
+  <text x="1263" y="889" text-anchor="middle" font-family="Heebo" font-size="11" font-weight="600" fill="#34d399">הוצאות</text>
+  <text x="1263" y="901" text-anchor="middle" font-family="Heebo" font-size="9"  fill="#475569">Expenses</text>
+
+  <!-- ══════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════ -->
+  <text x="770" y="985" text-anchor="middle" font-family="Heebo" font-size="10" fill="#1e2433" letter-spacing="0.5">Beseder CRM · מפת מסכים · 2024</text>
+
+  <!-- top-right watermark -->
+  <text x="1480" y="34" text-anchor="end" font-family="Heebo" font-size="10" fill="#1e2433" font-weight="700" letter-spacing="1">BESEDER CRM</text>
+  <text x="1480" y="48" text-anchor="end" font-family="Heebo" font-size="9.5" fill="#1a2035">Screen Architecture v1.0</text>
+
+</svg>
+</div>
+
+<script>
+  const DARK_BG = '#0a0c12';
+  const LIGHT_BG = '#f0f4f8';
+  let isLight = false;
+
+  function toggleTheme() {
+    isLight = !isLight;
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+
+    if (isLight) {
+      root.classList.add('light');
+      btn.textContent = '☀️ בהיר';
+      // update SVG bg rects
+      document.querySelectorAll('#svgBgRect').forEach(el => el.setAttribute('fill', LIGHT_BG));
+      document.querySelectorAll('#svgGridRect').forEach(el => el.setAttribute('opacity', '0.3'));
+      document.body.style.background = LIGHT_BG;
+    } else {
+      root.classList.remove('light');
+      btn.textContent = '🌙 כהה';
+      document.querySelectorAll('#svgBgRect').forEach(el => el.setAttribute('fill', DARK_BG));
+      document.querySelectorAll('#svgGridRect').forEach(el => el.setAttribute('opacity', '1'));
+      document.body.style.background = '';
+    }
+  }
+</script>
+</body>
+</html>
