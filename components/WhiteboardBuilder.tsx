@@ -967,6 +967,18 @@ export default function WhiteboardBuilder({
       ? brandFinancials(brands.find(b => b.id === node.existingId) ?? { projects: [], name: "", emoji: "", color: "", id: "", description: "", createdAt: "", goals: [] })
       : null;
 
+    // Tasks shown directly under each subproject card
+    const subTasks: Stage[] = (() => {
+      if (node.type !== "subproject" || !node.existingId) return [];
+      for (const b of brands) {
+        for (const p of b.projects) {
+          const s = p.subProjects.find(sp => sp.id === node.existingId);
+          if (s) return [...s.stages, ...(s.channels ?? []).flatMap(c => c.stages)];
+        }
+      }
+      return [];
+    })();
+
     const openModal = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (node.type === "brand" || !node.existingId) return;
@@ -1128,11 +1140,46 @@ export default function WhiteboardBuilder({
                   ? isCollapsed
                     ? `${childCount} פרויקטים — לחץ ▶ להרחבה`
                     : `${childCount} פרויקטים`
-                  : ""}
+                  : subTasks.length > 0
+                  ? `${subTasks.length} משימות`
+                  : "אין משימות — לחץ להוספה"}
               </p>
             )}
           </div>
         </div>
+
+        {/* Task list (subproject only) */}
+        {node.type === "subproject" && !isEditing && subTasks.length > 0 && (
+          <div
+            data-node="true"
+            style={{
+              display: "flex", flexDirection: "column", gap: 4,
+              marginTop: 8, paddingTop: 7,
+              borderTop: `1px solid ${node.color}22`,
+            }}
+          >
+            {subTasks.map(t => {
+              const sm = STATUS_META[t.status];
+              return (
+                <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: sm.text, flexShrink: 0,
+                  }} />
+                  <span style={{
+                    color: th.labelColor, fontSize: 11, fontWeight: 500,
+                    flex: 1, textAlign: "right",
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    textDecoration: t.status === "done" ? "line-through" : "none",
+                    opacity: t.status === "done" ? 0.6 : 1,
+                  }}>
+                    {t.name || "ללא שם"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Financial data row (brand only) */}
         {fin && (fin.income > 0 || fin.expenses > 0) && (
