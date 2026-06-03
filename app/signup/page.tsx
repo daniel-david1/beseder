@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function hebrewAuthError(message: string): string {
   const m = message.toLowerCase();
@@ -13,8 +13,10 @@ function hebrewAuthError(message: string): string {
   return "משהו השתבש. נסה שוב";
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/dashboard";
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [name, setName]         = useState("");
@@ -28,17 +30,24 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    // emailRedirectTo tells Supabase where to redirect after email confirmation.
+    // We pass the invite page (or dashboard) via /auth/callback?next=...
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+        : `https://getbeseder.com/auth/callback?next=${encodeURIComponent(redirectTo)}`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: { data: { full_name: name }, emailRedirectTo },
     });
     if (error) { setError(hebrewAuthError(error.message)); setLoading(false); return; }
     // If Supabase returns an active session, email confirmation is disabled → go straight in.
     // Otherwise the user must confirm via email before logging in.
     if (data.session) {
       setDone(true);
-      setTimeout(() => router.push("/dashboard"), 1500);
+      setTimeout(() => router.push(redirectTo), 1500);
     } else {
       setNeedsConfirm(true);
     }
@@ -188,5 +197,13 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

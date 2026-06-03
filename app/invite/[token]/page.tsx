@@ -200,14 +200,30 @@ export default function InvitePage() {
                 </span>
               </div>
 
-              {/* Not logged in warning */}
+              {/* Not logged in — show login + signup options */}
               {!userEmail && (
-                <div
-                  className="rounded-2xl p-4 text-sm text-amber-700"
-                  style={{ background: '#fffbeb', border: '1.5px solid #fde68a' }}
-                >
-                  <p className="font-bold mb-1">יש להתחבר תחילה</p>
-                  <p className="text-amber-600">לאחר ההתחברות תחזור אוטומטית לדף זה</p>
+                <div className="space-y-3">
+                  <div
+                    className="rounded-2xl p-4 text-sm text-center"
+                    style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd' }}
+                  >
+                    <p className="font-bold text-blue-800 mb-1">צריך חשבון beseder</p>
+                    <p className="text-blue-600 text-xs">לאחר הכניסה תחזור אוטומטית לדף זה ותוכל לקבל גישה</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`/login?redirect=/invite/${token}`}
+                      className="btn btn-orange justify-center text-sm"
+                    >
+                      כניסה לחשבון
+                    </a>
+                    <a
+                      href={`/signup?redirect=/invite/${token}`}
+                      className="btn btn-ghost justify-center text-sm"
+                    >
+                      הרשמה חדשה
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -221,7 +237,8 @@ export default function InvitePage() {
                 </div>
               )}
 
-              {/* Accept button */}
+              {/* Accept button — only when logged in */}
+              {userEmail && (
               <button
                 onClick={handleAccept}
                 disabled={pageState === 'accepting'}
@@ -232,8 +249,9 @@ export default function InvitePage() {
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     מעבד...
                   </span>
-                ) : userEmail ? 'קבל גישה' : 'התחבר וקבל גישה'}
+                ) : 'קבל גישה ✓'}
               </button>
+              )}
 
               <p className="text-center text-xs text-gray-300">
                 על ידי קבלת ההזמנה, תקבל גישה לנתוני המותג

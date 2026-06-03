@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 function hebrewAuthError(message: string): string {
   const m = message.toLowerCase();
@@ -13,8 +14,10 @@ function hebrewAuthError(message: string): string {
   return "משהו השתבש. נסה שוב";
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/dashboard";
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw]     = useState(false);
@@ -27,7 +30,7 @@ export default function LoginPage() {
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(hebrewAuthError(error.message)); setLoading(false); return; }
-    router.push("/dashboard");
+    router.push(redirectTo);
     router.refresh();
   };
 
@@ -170,5 +173,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
