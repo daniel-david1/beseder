@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>לפני ואחרי — Beseder CRM</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Heebo', 'Segoe UI', system-ui, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+    direction: rtl;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 900;
+    color: #f8fafc;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 48px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 1000px;
+    margin: 0 auto 56px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #475569;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #1e293b;
+  }
+
+  /* ── COMPARISON GRID ── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 48px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 40px;
+    font-size: 22px;
+    color: #334155;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid;
+  }
+  .panel.before {
+    border-color: #ef444430;
+    background: #1e0a0a;
+  }
+  .panel.after {
+    border-color: #10b98130;
+    background: #031a10;
+  }
+  .panel-header {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap-6px;
+  }
+  .panel.before .panel-header { background: #ef444415; color: #f87171; }
+  .panel.after  .panel-header { background: #10b98115; color: #34d399; }
+
+  .panel-body { padding: 16px; }
+
+  /* ── MOCK UI ── */
+  .mock-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1e293b;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .mock-logo { font-weight: 900; color: #38bdf8; font-size: 13px; }
+  .mock-user { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#14b8a6,#3b82f6); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .finance-btn {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: #064e3b;
+    color: #34d399;
+    border: 1px solid #065f46;
+  }
+
+  .mock-card {
+    background: #1e293b;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border: 1px solid #334155;
+  }
+  .mock-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mock-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+  .chip {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .chip-red   { background: #7f1d1d30; color: #f87171; border: 1px solid #7f1d1d50; }
+  .chip-green { background: #065f4630; color: #34d399; border: 1px solid #065f4650; }
+  .chip-blue  { background: #1e3a5f30; color: #60a5fa; border: 1px solid #1e3a5f50; }
+  .chip-gray  { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+  .chip-orange{ background: #7c2d1230; color: #fb923c; border: 1px solid #7c2d1250; }
+
+  .mock-count {
+    font-size: 10px;
+    color: #64748b;
+  }
+  .strike { text-decoration: line-through; opacity: 0.5; }
+
+  /* progress bar */
+  .prog { height: 3px; background: #334155; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .prog-fill { height: 100%; border-radius: 99px; }
+
+  /* modal mock */
+  .mock-modal {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .mock-modal-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: #f1f5f9;
+  }
+  .mock-modal-body { padding: 12px 14px; }
+  .mock-field { margin-bottom: 8px; }
+  .mock-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 3px;
+  }
+  .mock-input {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    color: #94a3b8;
+    width: 100%;
+  }
+  .mock-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+  .btn-orange { background: #f97316; color: white; }
+  .btn-red    { background: #ef4444; color: white; }
+  .btn-green  { background: #10b981; color: white; }
+
+  /* ── EMPTY STATE ── */
+  .mock-empty {
+    background: #1e293b;
+    border: 1.5px dashed #334155;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .mock-empty-title { font-size: 12px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+  .mock-empty-sub { font-size: 10px; color: #64748b; margin-bottom: 12px; }
+  .mock-choices { display: flex; gap: 8px; justify-content: center; }
+  .mock-choice {
+    flex: 1;
+    max-width: 120px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+  .mock-choice span { display: block; font-size: 18px; margin-bottom: 4px; }
+  .mock-choice small { display: block; font-weight: 400; color: #475569; margin-top: 2px; font-size: 9px; line-height: 1.3; }
+
+  /* ── CHANGE ROW ── */
+  .change-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .change-row.was { background: #1a0a0a; border: 1px solid #7f1d1d30; }
+  .change-row.now { background: #031a10; border: 1px solid #065f4630; }
+  .change-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+  .change-text { flex: 1; }
+  .change-label { font-weight: 800; margin-bottom: 1px; }
+  .change-label.red  { color: #f87171; }
+  .change-label.green{ color: #34d399; }
+  .change-body { color: #64748b; line-height: 1.4; }
+
+  /* ── STRUCTURE CHANGE ── */
+  .tree-line {
+    font-size: 12px;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+  }
+  .tree-line .indent { margin-right: 12px; color: #334155; }
+  .tree-line .node {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .node-brand  { background: #1e3a5f30; color: #60a5fa; }
+  .node-proj   { background: #4c1d9530; color: #a78bfa; }
+  .node-sub    { background: #7c2d1230; color: #fb923c; }
+  .node-ch     { background: #7f1d1d30; color: #f87171; }
+  .node-item   { background: #065f4630; color: #34d399; }
+  .node-stage  { background: #1e293b; color: #94a3b8; }
+  .node-new    { background: #064e3b; color: #34d399; border: 1px solid #065f46; }
+
+  .divider { height: 1px; background: #1e293b; margin: 20px 0; }
+
+  @media (max-width: 640px) {
+    .compare { grid-template-columns: 1fr; }
+    .arrow-col { padding: 8px; transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<h1>לפני ← → אחרי</h1>
+<p class="subtitle">השינויים שבוצעו — Beseder CRM · יוני 2026</p>
+
+<!-- ══ SECTION 1: TERMINOLOGY ══ -->
+<div class="section">
+  <div class="section-title">1 — שינוי שמות: "ערוץ" → "פריט"</div>
+  <div class="compare">
+
+    <!-- BEFORE -->
+    <div class="panel before">
+      <div class="panel-header">❌ לפני</div>
+      <div class="panel-body">
+
+        <!-- SubProject card showing "ערוצים" -->
+        <div class="mock-card">
+          <div class="mock-card-title">💼 לקוחות פעילים</div>
+          <div class="mock-chips">
+            <span class="chip chip-red">⭐ מיס טים</span>
+            <span class="chip chip-red">🍕 פאנזה</span>
+            <span class="chip chip-red">🎸 ממפיס</span>
+            <span class="chip chip-red">+2</span>
+          </div>
+          <div class="mock-count">5 <span style="color:#ef4444;font-weight:700;">ערוצים</span></div>
+          <div class="prog"><div class="prog-fill" style="width:30%;background:#ef4444;"></div></div>
+        </div>
+
+        <!-- Modal title -->
+        <div class="mock-modal">
+          <div class="mock-modal-header">
+            <span>ערוץ חדש</span>
+            <span style="color:#475569;">✕</span>
+          </div>
+          <div class="mock-modal-body">
+            <div class="mock-field">
+              <div class="mock-label">שם הערוץ *</div>
+              <div class="mock-input">מיס טים</div>
+            </div>
+            <div class="mock-field">
+              <div class="mock-label">מה הערוץ הזה מכסה?</div>
+              <div class="mock-input">ניהול סושיאל מדיה</div>
+            </div>
+            <div class="mock-label" style="margin-top:8px;">הכנסות חודשיות של הערוץ 💚</div>
+            <div class="mock-label" style="margin-top:6px;">הוצאות חודשיות של הערוץ 🔴</div>
+            <div style="margin-top:10px;">
+              <span class="mock-btn btn-orange">צור ערוץ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="mock-empty">
+          <div class="mock-empty-title">איך תרצה לארגן?</div>
+          <div class="mock-choices">
+            <div class="mock-choice"><span>📋</span>שלבים ישירים<small>רשימה אחת</small></div>
+            <div class="mock-choice" style="border-color:#ef444450;"><span>🗂️</span><span style="color:#f87171;">פרויקטים</span><small>כמה פרויקטים נפרדים, לכל אחד שלבים</small></div>
+          </div>
+        </div>
+
+        <!-- SubProject expense badge -->
+        <div class="mock-card">
+          <div class="mock-card-title">💸 הוצאות</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
+            <span>סרטונים — ₪2,500</span>
+            <span class="chip chip-red">יצור ערוץ בשמירה</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER -->
+    <div class="panel after">
+      <div class="panel-header">✅ אחרי</div>
+      <div class="panel-body">
+
+        <!-- SubProject card showing "פריטים" -->
+        <div class="mock-card">
+          <div class="mock-card-title">💼 לקוחות פעילים</div>
+          <div class="mock-chips">
+            <span class="chip chip-green">⭐ מיס טים</span>
+            <span class="chip chip-green">🍕 פאנזה</span>
+            <span class="chip chip-green">🎸 ממפיס</span>
+            <span class="chip chip-green">+2</span>
+          </div>
+          <div class="mock-count">5 <span style="color:#10b981;font-weight:700;">פריטים</span></div>
+          <div class="prog"><div class="prog-fill" style="width:30%;background:#10b981;"></div></div>
+        </div>
+
+        <!-- Modal title -->
+        <div class="mock-modal">
+          <div class="mock-modal-header">
+            <span>פריט חדש</span>
+            <span style="color:#475569;">✕</span>
+          </div>
+          <div class="mock-modal-body">
+            <div class="mock-field">
+              <div class="mock-label">שם הפריט *</div>
+              <div class="mock-input">מיס טים</div>
+            </div>
+            <div class="mock-field">
+              <div class="mock-label">תיאור הפריט...</div>
+              <div class="mock-input">ניהול סושיאל מדיה</div>
+            </div>
+            <div class="mock-label" style="margin-top:8px;">הכנסות חודשיות 💚</div>
+            <div class="mock-label" style="margin-top:6px;">הוצאות חודשיות 🔴</div>
+            <div style="margin-top:10px;">
+              <span class="mock-btn btn-green">צור פריט</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="mock-empty">
+          <div class="mock-empty-title">איך תרצה לארגן?</div>
+          <div class="mock-choices">
+            <div class="mock-choice"><span>📋</span>שלבים ישירים<small>רשימה אחת</small></div>
+            <div class="mock-choice" style="border-color:#10b98150;"><span>🗂️</span><span style="color:#34d399;">פריטים (רשימה)</span><small>לקוחות / ספקים / פריטים</small></div>
+          </div>
+        </div>
+
+        <!-- SubProject expense badge -->
+        <div class="mock-card">
+          <div class="mock-card-title">💸 הוצאות</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
+            <span>סרטונים — ₪2,500</span>
+            <span class="chip chip-green">✨ צור פריט בשמירה</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 2: FINANCE SHORTCUT ══ -->
+<div class="section">
+  <div class="section-title">2 — גישה לפיננסי מכל מסך</div>
+  <div class="compare">
+
+    <!-- BEFORE -->
+    <div class="panel before">
+      <div class="panel-header">❌ לפני — נתיב ארוך</div>
+      <div class="panel-body">
+
+        <div class="mock-nav">
+          <div class="mock-user">DA</div>
+          <div class="mock-logo">beseder</div>
+        </div>
+
+        <div style="font-size:11px;color:#64748b;margin-bottom:12px;text-align:center;">כדי להגיע לפיננסי:</div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-size:11px;">
+          <div class="chip chip-gray" style="padding:6px 14px;">🏠 דף הבית</div>
+          <div style="color:#334155;font-size:16px;">↓</div>
+          <div class="chip chip-red" style="padding:6px 14px;">💰 מותג "פיננסי אישי"</div>
+          <div style="color:#334155;font-size:16px;">↓</div>
+          <div class="chip chip-red" style="padding:6px 14px;">📊 כפתור "פיננסי"</div>
+          <div style="color:#334155;font-size:16px;">↓</div>
+          <div class="chip chip-red" style="padding:6px 14px;">💰 BrandFinancialSummary</div>
+          <div style="color:#334155;font-size:16px;">↓</div>
+          <div class="chip chip-red" style="padding:6px 14px;">🏦 FinancialDashboard</div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px;background:#1a0a0a;border-radius:8px;font-size:10px;color:#f87171;text-align:center;border:1px solid #7f1d1d30;">
+          5 קליקים + זוכרים שיש מותג "פיננסי אישי"
+        </div>
+
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER -->
+    <div class="panel after">
+      <div class="panel-header">✅ אחרי — כפתור בכל מסך</div>
+      <div class="panel-body">
+
+        <div class="mock-nav">
+          <div class="mock-user">DA</div>
+          <div class="finance-btn">💰 פיננסי</div>
+          <div class="mock-logo">beseder</div>
+        </div>
+
+        <div style="font-size:11px;color:#64748b;margin-bottom:12px;text-align:center;">כפתור קבוע ב-TopNav — נראה בכל רמה:</div>
+
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e293b;border-radius:6px;">
+            <span>🏠</span><span style="color:#94a3b8;">דף הבית</span>
+            <span style="margin-right:auto;" class="finance-btn" style="font-size:9px;">💰</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e293b;border-radius:6px;">
+            <span>🏢</span><span style="color:#94a3b8;">תצוגת מותג</span>
+            <span style="margin-right:auto;" class="finance-btn" style="font-size:9px;">💰</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e293b;border-radius:6px;">
+            <span>🚀</span><span style="color:#94a3b8;">תצוגת פרויקט</span>
+            <span style="margin-right:auto;" class="finance-btn" style="font-size:9px;">💰</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#1e293b;border-radius:6px;">
+            <span>📋</span><span style="color:#94a3b8;">תצוגת שלבים</span>
+            <span style="margin-right:auto;" class="finance-btn" style="font-size:9px;">💰</span>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px;background:#031a10;border-radius:8px;font-size:10px;color:#34d399;text-align:center;border:1px solid #065f4630;">
+          1 קליק מכל מקום — תמיד נראה
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 3: HIERARCHY ══ -->
+<div class="section">
+  <div class="section-title">3 — מה השתנה ומה נשאר</div>
+  <div class="compare">
+
+    <div class="panel before">
+      <div class="panel-header">❌ לפני — המינוח הישן</div>
+      <div class="panel-body">
+        <div class="tree-line"><span class="node node-brand">מותג</span></div>
+        <div class="tree-line"><span class="indent">└</span><span class="node node-proj">פרויקט</span></div>
+        <div class="tree-line"><span class="indent">  └</span><span class="node node-sub">תת-פרויקט</span></div>
+        <div class="tree-line"><span class="indent">    └</span><span class="node node-ch">ערוץ ←</span><span style="font-size:10px;color:#64748b;margin-right:6px;">מה זה אומר?</span></div>
+        <div class="tree-line"><span class="indent">      └</span><span class="node node-stage">שלב</span></div>
+
+        <div class="divider"></div>
+
+        <div class="change-row was">
+          <div class="change-icon">🔴</div>
+          <div class="change-text">
+            <div class="change-label red">ערוץ</div>
+            <div class="change-body">שם שלא מתאים לשימוש האמיתי. אצלך "ערוץ" = לקוח / ספק / פריט פיננסי</div>
+          </div>
+        </div>
+        <div class="change-row was">
+          <div class="change-icon">🔴</div>
+          <div class="change-text">
+            <div class="change-label red">פיננסי = מותג</div>
+            <div class="change-body">ניהול הלוואות דורש 5 קליקים דרך "מותג פיננסי אישי"</div>
+          </div>
+        </div>
+        <div class="change-row was">
+          <div class="change-icon">🔴</div>
+          <div class="change-text">
+            <div class="change-label red">בחירת מצב: "פרויקטים"</div>
+            <div class="change-body">מסך הבחירה הריק אמר "פרויקטים" כשמתכוונים לרשימת לקוחות/פריטים</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <div class="panel after">
+      <div class="panel-header">✅ אחרי — מינוח ברור</div>
+      <div class="panel-body">
+        <div class="tree-line"><span class="node node-brand">מותג</span></div>
+        <div class="tree-line"><span class="indent">└</span><span class="node node-proj">פרויקט</span></div>
+        <div class="tree-line"><span class="indent">  └</span><span class="node node-sub">תת-פרויקט</span></div>
+        <div class="tree-line"><span class="indent">    └</span><span class="node node-item">פריט ←</span><span style="font-size:10px;color:#34d399;margin-right:6px;">לקוח / ספק / יחידה</span></div>
+        <div class="tree-line"><span class="indent">      └</span><span class="node node-stage">שלב</span></div>
+
+        <div class="divider"></div>
+
+        <div class="change-row now">
+          <div class="change-icon">🟢</div>
+          <div class="change-text">
+            <div class="change-label green">פריט</div>
+            <div class="change-body">מונח ניטרלי שמתאים לכל ה-use cases שלך: לקוח, ספק, הלוואה</div>
+          </div>
+        </div>
+        <div class="change-row now">
+          <div class="change-icon">🟢</div>
+          <div class="change-text">
+            <div class="change-label green">💰 בכל מסך</div>
+            <div class="change-body">כפתור פיננסי קבוע ב-TopNav — מגיע ישירות ל-FinancialDashboard</div>
+          </div>
+        </div>
+        <div class="change-row now">
+          <div class="change-icon">🟢</div>
+          <div class="change-text">
+            <div class="change-label green">בחירת מצב: "פריטים (רשימה)"</div>
+            <div class="change-body">עם תיאור: "לקוחות / ספקים / פריטים — לכל אחד שלבים"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SECTION 4: WHAT DIDN'T CHANGE ══ -->
+<div class="section">
+  <div class="section-title">4 — מה לא השתנה (בכוונה)</div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;max-width:1000px;margin:0 auto;">
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px;">
+      <div style="font-size:20px;margin-bottom:6px;">🗄️</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:4px;">מבנה הנתונים</div>
+      <div style="font-size:11px;color:#475569;line-height:1.5;">כל הנתונים שמורים עם <code style="color:#38bdf8;">channel</code> בקוד. לא נשבר כלום, לא צריך migration.</div>
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px;">
+      <div style="font-size:20px;margin-bottom:6px;">🏗️</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:4px;">היררכיית הרמות</div>
+      <div style="font-size:11px;color:#475569;line-height:1.5;">מותג → פרויקט → תת-פרויקט → פריט → שלב — 5 רמות, אותה עומק.</div>
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px;">
+      <div style="font-size:20px;margin-bottom:6px;">⚙️</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:4px;">FinancialDashboard</div>
+      <div style="font-size:11px;color:#475569;line-height:1.5;">מותג "פיננסי אישי" עדיין קיים — הנתונים שם. רק הגישה קלה יותר.</div>
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px;">
+      <div style="font-size:20px;margin-bottom:6px;">🎨</div>
+      <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:4px;">עיצוב הכרטיסים</div>
+      <div style="font-size:11px;color:#475569;line-height:1.5;">ChannelCard, SubProjectCard — אותו מראה, רק הטקסט השתנה.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUMMARY BAR ══ -->
+<div style="max-width:1000px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-around;align-items:center;">
+  <div style="text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:#f87171;">18</div>
+    <div style="font-size:10px;color:#64748b;">מחרוזות שונו</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:#fb923c;">5</div>
+    <div style="font-size:10px;color:#64748b;">קבצים עודכנו</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:#34d399;">0</div>
+    <div style="font-size:10px;color:#64748b;">שבירות נתונים</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:#60a5fa;">1</div>
+    <div style="font-size:10px;color:#64748b;">קליק לפיננסי (היה 5)</div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:28px;font-size:11px;color:#1e293b;">
+  getbeseder.com · Beseder CRM
+</div>
+
+</body>
+</html>
