@@ -220,13 +220,13 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
-        style={{ background: "linear-gradient(135deg, #f0f9ff 0%, #fefce8 100%)", borderBottom: collapsed ? "none" : "1px solid #f3f4f6" }}
+        style={{ background: "linear-gradient(135deg, #f5fbfc 0%, #f0f7fa 100%)", borderBottom: collapsed ? "none" : "1px solid #eef2f6" }}
         onClick={() => setCollapsed(v => !v)}
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">☀️</span>
           <div>
-            <h2 className="font-black text-gray-900 text-base leading-tight">בוקר טוב, {firstName}</h2>
+            <h2 className="font-bold text-gray-900 text-base leading-tight">בוקר טוב, {firstName}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{hebrewDate}</p>
           </div>
         </div>
