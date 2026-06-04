@@ -7,310 +7,423 @@
 <title>KUDU — רהיטים מודרניים בהזמנה אישית</title>
 <meta name="description" content="KUDU מעצבת ובונה רהיטים מודרניים בהתאמה אישית ברמה גבוהה — נגרות אמן, חומרים נבחרים וליווי אישי מהרעיון ועד ההתקנה." />
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          bone:  '#F7F3EC',
-          paper: '#FBF9F4',
-          sand:  '#ECE3D6',
-          stone: '#8C8275',
-          ink:   '#1B1814',
-          ink2:  '#2E2A24',
-          clay:  '#A9764F',
-          clayd: '#8A5E3C',
-          olive: '#5E5E47',
-        },
-        fontFamily: {
-          serif:   ['"Frank Ruhl Libre"', 'Georgia', 'serif'],
-          display: ['"Cormorant Garamond"', '"Frank Ruhl Libre"', 'serif'],
-          sans:    ['Heebo', 'system-ui', 'sans-serif'],
-        },
-        maxWidth: { container: '1280px' },
-      },
-    },
-  };
-</script>
-
 <style>
-  :root { --line: rgba(27,24,20,0.12); }
-  html { scroll-behavior: smooth; }
-  body { background:#F7F3EC; color:#1B1814; font-family:'Heebo',system-ui,sans-serif; letter-spacing:-0.01em; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
-  ::selection { background:#A9764F; color:#F7F3EC; }
+/* ─────────────────────────────────────────────────────────────
+   KUDU — fully self-contained. No CDN, no web fonts, no remote
+   images. Everything renders offline.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --bone:#F7F3EC; --paper:#FBF9F4; --sand:#ECE3D6; --stone:#8C8275;
+  --ink:#1B1814; --ink2:#2E2A24; --clay:#A9764F; --clayd:#8A5E3C; --olive:#5E5E47;
+  --line:rgba(27,24,20,.12);
+  --serif:Georgia,'Frank Ruhl Libre','Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Heebo',Arial,system-ui,sans-serif;
+  --wrap:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bone);color:var(--ink);font-family:var(--sans);letter-spacing:-.01em;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--clay);color:var(--bone)}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
 
-  h1,h2,h3,h4 { font-family:'Frank Ruhl Libre',Georgia,serif; font-weight:500; line-height:1.04; letter-spacing:-0.02em; }
+h1,h2,h3,h4{font-family:var(--serif);font-weight:500;line-height:1.06;letter-spacing:-.02em}
+.serif{font-family:var(--serif)}
 
-  .wordmark { font-family:'Cormorant Garamond',serif; font-weight:600; letter-spacing:0.42em; text-transform:uppercase; }
-  .eyebrow  { font-weight:500; font-size:0.72rem; letter-spacing:0.32em; text-transform:uppercase; color:#A9764F; }
-  .display  { font-family:'Frank Ruhl Libre',serif; font-weight:400; font-size:clamp(2.6rem,8vw,6rem); line-height:0.98; letter-spacing:-0.03em; }
-  .stat     { font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(2.6rem,6vw,3.8rem); line-height:1; letter-spacing:-0.02em; }
+.wordmark{font-family:var(--serif);font-weight:600;letter-spacing:.4em;text-transform:uppercase}
+.eyebrow{font-weight:600;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--clay)}
+.display{font-family:var(--serif);font-weight:500;font-size:clamp(2.6rem,8.5vw,5.6rem);line-height:1.02;letter-spacing:-.025em}
+.lede{font-size:clamp(1.02rem,1.6vw,1.3rem);line-height:1.7;font-weight:400}
+.h2{font-size:clamp(2rem,5vw,3.2rem)}
+.stat{font-family:var(--serif);font-weight:600;font-size:clamp(2.4rem,6vw,3.4rem);line-height:1;color:var(--clay)}
 
-  .btn { display:inline-flex; align-items:center; gap:.55rem; font-weight:500; font-size:.95rem; padding:.95rem 1.8rem; border-radius:999px; border:1px solid transparent; cursor:pointer; transition:all .35s cubic-bezier(.16,1,.3,1); white-space:nowrap; }
-  .btn-solid { background:#1B1814; color:#F7F3EC; }
-  .btn-solid:hover { background:#A9764F; transform:translateY(-2px); box-shadow:0 14px 34px -12px rgba(27,24,20,.45); }
-  .btn-clay { background:#A9764F; color:#F7F3EC; }
-  .btn-clay:hover { background:#8A5E3C; transform:translateY(-2px); box-shadow:0 14px 34px -12px rgba(169,118,79,.55); }
-  .btn-ghost { background:transparent; color:#1B1814; border-color:var(--line); }
-  .btn-ghost:hover { background:#1B1814; color:#F7F3EC; }
+.wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:clamp(1.1rem,4.5vw,3rem)}
+.section{padding-block:clamp(3.8rem,9vw,7rem)}
+.muted{color:var(--stone)}
 
-  .ulink { position:relative; text-decoration:none; color:inherit; transition:color .3s; }
-  .ulink::after { content:''; position:absolute; inset-inline-start:0; bottom:-3px; width:100%; height:1px; background:currentColor; transform:scaleX(0); transform-origin:inline-end; transition:transform .4s cubic-bezier(.16,1,.3,1); }
-  .ulink:hover { color:#A9764F; }
-  .ulink:hover::after { transform:scaleX(1); transform-origin:inline-start; }
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-weight:600;font-size:.95rem;padding:.9rem 1.7rem;border-radius:999px;border:1px solid transparent;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1);white-space:nowrap}
+.btn svg{width:16px;height:16px}
+.btn-solid{background:var(--ink);color:var(--bone)}
+.btn-solid:active,.btn-solid:hover{background:var(--clay);transform:translateY(-2px)}
+.btn-clay{background:var(--clay);color:var(--bone)}
+.btn-clay:active,.btn-clay:hover{background:var(--clayd);transform:translateY(-2px)}
+.btn-ghost{background:transparent;border-color:var(--line)}
+.btn-ghost:hover{background:var(--ink);color:var(--bone)}
+.btn-block{width:100%;justify-content:center}
 
-  .frame { position:relative; overflow:hidden; border-radius:16px; background:linear-gradient(135deg,#ECE3D6,#FBF9F4); }
-  .frame img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 1.1s cubic-bezier(.16,1,.3,1); }
-  .frame:hover img { transform:scale(1.05); }
+.ulink{position:relative}
+.ulink::after{content:'';position:absolute;inset-inline-start:0;bottom:-4px;width:100%;height:1px;background:currentColor;transform:scaleX(0);transform-origin:inline-end;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.ulink:hover{color:var(--clay)}
+.ulink:hover::after{transform:scaleX(1);transform-origin:inline-start}
 
-  .reveal { opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
-  .reveal.in { opacity:1; transform:none; }
+/* nav */
+.nav{position:fixed;inset-inline:0;top:0;z-index:50;transition:background .4s,border-color .4s,box-shadow .4s}
+.nav.solid{background:rgba(247,243,236,.88);backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--line)}
+.nav__row{display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav__links{display:none;align-items:center;gap:2rem;font-size:.95rem;color:var(--ink2)}
+.nav__cta{display:none}
+.iconbtn{width:42px;height:42px;display:grid;place-items:center;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer}
+.iconbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+@media(min-width:860px){
+  .nav__row{height:80px}
+  .nav__links,.nav__cta{display:flex}
+  .nav__burger{display:none}
+}
 
-  .nav { transition:background .4s, border-color .4s, box-shadow .4s; }
-  .nav.solid { background:rgba(247,243,236,.86); backdrop-filter:saturate(160%) blur(14px); border-bottom:1px solid var(--line); }
+/* mobile sheet */
+.sheet{position:fixed;inset:0;z-index:60;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+.sheet.open{opacity:1;visibility:visible}
+.sheet__bg{position:absolute;inset:0;background:rgba(27,24,20,.35)}
+.sheet__panel{position:absolute;inset-inline:12px;top:12px;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:24px;transform:translateY(-14px);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+.sheet.open .sheet__panel{transform:none}
+.sheet__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sheet__nav{display:flex;flex-direction:column;font-family:var(--serif);font-size:1.5rem}
+.sheet__nav a{padding:14px 0;border-bottom:1px solid var(--line)}
 
-  .marquee { display:flex; overflow:hidden; user-select:none; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
-  .marquee__track { display:flex; flex-shrink:0; gap:3rem; padding-inline-end:3rem; animation:scroll 34s linear infinite; }
-  @keyframes scroll { from { transform:translateX(0); } to { transform:translateX(100%); } }
+/* hero */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;
+  background:radial-gradient(120% 90% at 80% 8%,#F3E3D2 0%,#F7F3EC 42%,#EFE7DA 100%)}
+.hero__art{position:absolute;inset:0;opacity:.9;pointer-events:none}
+.hero__inner{position:relative;padding-top:96px;padding-bottom:40px}
+.hero__inner .display em{font-style:italic;color:var(--clay)}
+.hero__sub{margin-top:1.5rem;max-width:34rem;color:var(--ink2);font-weight:400}
+.hero__cta{margin-top:2.2rem;display:flex;flex-wrap:wrap;gap:.7rem}
+.hero__scroll{position:relative;margin-top:auto;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--stone)}
 
-  .noise::before { content:''; position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); }
+/* noise overlay */
+.noise::before{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
 
-  /* mobile menu */
-  .sheet { transition:opacity .4s, visibility .4s; }
-  .sheet.open { opacity:1; visibility:visible; }
-  .sheet .panel { transition:transform .5s cubic-bezier(.16,1,.3,1); transform:translateY(-12px); }
-  .sheet.open .panel { transform:none; }
+/* marquee */
+.marqueeWrap{background:var(--ink);color:var(--bone);padding-block:1rem;overflow:hidden}
+.marquee{display:flex;width:max-content;animation:scroll 30s linear infinite}
+.marquee span{font-family:var(--serif);font-size:clamp(1.3rem,3vw,1.9rem);padding-inline:1.4rem;opacity:.92;white-space:nowrap}
+.marquee .dot{color:var(--clay)}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(50%)}}
 
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior:auto; }
-    .reveal { opacity:1; transform:none; transition:none; }
-    .marquee__track { animation:none; }
-  }
+/* collections */
+.grid{display:grid;grid-template-columns:1fr;gap:1.2rem}
+@media(min-width:620px){.grid{grid-template-columns:1fr 1fr}}
+@media(min-width:980px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card .frame{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/5}
+.card.span{grid-column:span 1}
+@media(min-width:620px){.card.span{grid-column:span 2}.card.span .frame{aspect-ratio:16/10}}
+.frame{background:linear-gradient(140deg,var(--sand),var(--paper))}
+.frame svg{width:100%;height:100%}
+.frame .price{position:absolute;top:14px;right:14px;font-size:.72rem;background:rgba(251,249,244,.92);padding:.3rem .7rem;border-radius:999px;border:1px solid var(--line)}
+.card .meta{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-top:1rem}
+.card h3{font-size:1.5rem}
+.card .tag{color:var(--stone);font-size:.9rem;margin-top:.25rem}
+.card .mat{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--stone);margin-top:.5rem}
+.card .arrow{color:var(--clay);opacity:0;transition:opacity .3s;margin-top:.3rem}
+.card:hover .arrow{opacity:1}
+.card:hover .frame svg .accent{transform:translateY(-4px)}
+.frame svg .accent{transition:transform .6s cubic-bezier(.16,1,.3,1)}
+
+/* split */
+.split{display:grid;grid-template-columns:1fr;gap:2.4rem;align-items:center}
+@media(min-width:900px){.split{grid-template-columns:1fr 1fr;gap:4rem}}
+.media{border-radius:18px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(140deg,var(--sand),#E3D3BF)}
+.media svg{width:100%;height:100%}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.8rem;margin-top:2.4rem}
+
+/* process */
+.steps{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+@media(min-width:620px){.steps{grid-template-columns:1fr 1fr}}
+@media(min-width:1000px){.steps{grid-template-columns:repeat(4,1fr)}}
+.step{background:var(--paper);padding:2rem 1.8rem;transition:background .3s}
+.step:hover{background:var(--bone)}
+.step .n{font-family:var(--serif);font-size:1.9rem;color:var(--clay)}
+.step h3{font-size:1.4rem;margin-top:.8rem}
+.step p{color:var(--stone);margin-top:.6rem;font-size:.95rem}
+
+/* materials */
+.dark{background:var(--ink);color:var(--bone)}
+.dark .eyebrow{color:#E9C9A8}
+.dark .h2{color:var(--paper)}
+.matgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:2.5rem}
+@media(min-width:620px){.matgrid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.matgrid{grid-template-columns:repeat(6,1fr)}}
+.mat-card{text-align:center}
+.mat-card .swatch{aspect-ratio:1;border-radius:16px;margin-bottom:.7rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.mat-card .name{font-family:var(--serif);font-size:1.1rem;color:var(--paper)}
+.mat-card .note{font-size:.72rem;color:#9a8f7f;margin-top:.15rem}
+
+/* testimonials */
+.quotes{display:grid;grid-template-columns:1fr;gap:1.2rem}
+@media(min-width:880px){.quotes{grid-template-columns:repeat(3,1fr)}}
+.quote{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:2rem}
+.quote .mark{font-family:var(--serif);font-size:2.4rem;line-height:.6;color:var(--clay)}
+.quote blockquote{margin-top:.6rem;font-size:1.05rem;line-height:1.65;color:var(--ink2)}
+.quote figcaption{margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--line)}
+.quote .name{font-weight:600}
+.quote .role{font-size:.85rem;color:var(--stone)}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1fr;gap:2.4rem}
+@media(min-width:900px){.contact{grid-template-columns:1fr 1fr;gap:4rem}}
+.contact ul{list-style:none;margin-top:2.2rem;display:flex;flex-direction:column;gap:1rem}
+.contact li{display:flex;align-items:center;gap:.8rem;color:var(--ink2)}
+.contact .ic{width:38px;height:38px;display:grid;place-items:center;border-radius:999px;background:var(--sand);color:var(--clay);flex:none}
+form{background:var(--bone);border:1px solid var(--line);border-radius:24px;padding:clamp(1.4rem,4vw,2.3rem)}
+.field{display:block;margin-top:1rem}
+.field:first-child{margin-top:0}
+.field .lbl{font-size:.85rem;color:var(--stone)}
+.field input,.field select,.field textarea{margin-top:.5rem;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;font-size:16px;outline:none;transition:border-color .3s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--clay)}
+.field textarea{resize:vertical;min-height:96px}
+.row2{display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:540px){.row2{grid-template-columns:1fr 1fr}}
+.form-ok{display:none;margin-top:1rem;text-align:center;color:var(--clay);font-weight:600}
+
+/* footer */
+.footer{background:var(--ink);color:var(--bone)}
+.footer__top{display:flex;flex-direction:column;gap:2rem;padding-bottom:2.4rem;border-bottom:1px solid rgba(247,243,236,.14)}
+@media(min-width:760px){.footer__top{flex-direction:row;align-items:flex-end;justify-content:space-between}}
+.footer p.brandnote{margin-top:1rem;max-width:18rem;color:#cabfb0;line-height:1.6}
+.footer nav{display:flex;flex-wrap:wrap;gap:1rem 2rem;font-size:.95rem;color:#e9e1d5}
+.footer__bottom{padding-top:1.6rem;display:flex;flex-direction:column;gap:.6rem;font-size:.78rem;color:#8c8275}
+@media(min-width:540px){.footer__bottom{flex-direction:row;justify-content:space-between}}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+  .marquee{animation:none}
+  .frame svg .accent{transition:none}
+}
 </style>
 </head>
-
 <body>
 
-<!-- ───────── NAV ───────── -->
-<header id="nav" class="nav fixed inset-x-0 top-0 z-50">
-  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 h-16 sm:h-20 flex items-center justify-between">
-    <a href="#top" class="wordmark text-lg sm:text-xl text-ink">KUDU</a>
-
-    <nav class="hidden md:flex items-center gap-9 text-[.95rem] text-ink2">
+<!-- ─── NAV ─── -->
+<header id="nav" class="nav">
+  <div class="wrap nav__row">
+    <a href="#top" class="wordmark" style="font-size:1.15rem">KUDU</a>
+    <nav class="nav__links">
       <a href="#collections" class="ulink">קולקציות</a>
       <a href="#process" class="ulink">תהליך העבודה</a>
       <a href="#craft" class="ulink">הסטודיו</a>
       <a href="#materials" class="ulink">חומרים</a>
     </nav>
-
-    <div class="flex items-center gap-3">
-      <a href="#contact" class="btn btn-solid hidden sm:inline-flex !py-2.5 !px-5 text-sm">בואו נתכנן יחד</a>
-      <button id="burger" aria-label="תפריט" class="md:hidden w-10 h-10 grid place-items-center rounded-full border" style="border-color:var(--line)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <a href="#contact" class="btn btn-solid nav__cta" style="padding:.6rem 1.2rem;font-size:.88rem">בואו נתכנן יחד</a>
+      <button id="burger" class="iconbtn nav__burger" aria-label="תפריט">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
     </div>
   </div>
 </header>
 
-<!-- mobile sheet -->
-<div id="sheet" class="sheet invisible opacity-0 fixed inset-0 z-[60] md:hidden">
-  <div class="absolute inset-0 bg-ink/30" data-close></div>
-  <div class="panel absolute inset-x-3 top-3 rounded-3xl bg-paper border p-6" style="border-color:var(--line)">
-    <div class="flex items-center justify-between mb-6">
-      <span class="wordmark text-lg">KUDU</span>
-      <button data-close aria-label="סגירה" class="w-10 h-10 grid place-items-center rounded-full border" style="border-color:var(--line)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
+<!-- ─── MOBILE SHEET ─── -->
+<div id="sheet" class="sheet">
+  <div class="sheet__bg" data-close></div>
+  <div class="sheet__panel">
+    <div class="sheet__head">
+      <span class="wordmark" style="font-size:1.1rem">KUDU</span>
+      <button class="iconbtn" data-close aria-label="סגירה"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-    <nav class="flex flex-col text-2xl font-serif">
-      <a data-close href="#collections" class="py-3 border-b" style="border-color:var(--line)">קולקציות</a>
-      <a data-close href="#process" class="py-3 border-b" style="border-color:var(--line)">תהליך העבודה</a>
-      <a data-close href="#craft" class="py-3 border-b" style="border-color:var(--line)">הסטודיו</a>
-      <a data-close href="#materials" class="py-3 border-b" style="border-color:var(--line)">חומרים</a>
+    <nav class="sheet__nav">
+      <a data-close href="#collections">קולקציות</a>
+      <a data-close href="#process">תהליך העבודה</a>
+      <a data-close href="#craft">הסטודיו</a>
+      <a data-close href="#materials">חומרים</a>
     </nav>
-    <a data-close href="#contact" class="btn btn-clay w-full justify-center mt-6">בואו נתכנן יחד</a>
+    <a data-close href="#contact" class="btn btn-clay btn-block" style="margin-top:1.4rem">בואו נתכנן יחד</a>
   </div>
 </div>
 
-<!-- ───────── HERO ───────── -->
-<section id="top" class="relative noise min-h-[100svh] flex flex-col">
-  <!-- backdrop image -->
-  <div class="absolute inset-0">
-    <img src="https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=2000&q=80"
-         alt="חלל מגורים מעוצב עם רהיטי KUDU" class="w-full h-full object-cover" />
-    <div class="absolute inset-0" style="background:linear-gradient(180deg, rgba(27,24,20,.42) 0%, rgba(27,24,20,.20) 38%, rgba(247,243,236,.0) 62%, rgba(247,243,236,.96) 100%)"></div>
+<!-- ─── HERO ─── -->
+<section id="top" class="hero noise">
+  <div class="hero__art" aria-hidden="true">
+    <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice" style="width:100%;height:100%">
+      <g fill="none" stroke="#1B1814" stroke-opacity=".10" stroke-width="2">
+        <line x1="0" y1="560" x2="1200" y2="560"/>
+      </g>
+      <!-- big lounge chair + lamp + plant composition, bottom-start -->
+      <g transform="translate(150,250)">
+        <!-- floor lamp -->
+        <g stroke="#1B1814" stroke-opacity=".16" stroke-width="3" fill="none">
+          <line x1="60" y1="60" x2="60" y2="305"/>
+          <line x1="30" y1="305" x2="90" y2="305"/>
+          <path d="M20 60 Q60 20 100 60 Z" fill="#A9764F" fill-opacity=".18" stroke="#A9764F" stroke-opacity=".4"/>
+        </g>
+      </g>
+      <!-- armchair -->
+      <g transform="translate(360,300)">
+        <rect x="40" y="120" width="240" height="90" rx="26" fill="#A9764F" fill-opacity=".16" stroke="#8A5E3C" stroke-opacity=".35" stroke-width="3"/>
+        <rect x="40" y="20" width="240" height="120" rx="34" fill="#A9764F" fill-opacity=".10" stroke="#8A5E3C" stroke-opacity=".3" stroke-width="3"/>
+        <rect x="18" y="60" width="46" height="150" rx="22" fill="#A9764F" fill-opacity=".22" stroke="#8A5E3C" stroke-opacity=".35" stroke-width="3"/>
+        <rect x="256" y="60" width="46" height="150" rx="22" fill="#A9764F" fill-opacity=".22" stroke="#8A5E3C" stroke-opacity=".35" stroke-width="3"/>
+        <line x1="70" y1="210" x2="58" y2="255" stroke="#1B1814" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+        <line x1="250" y1="210" x2="262" y2="255" stroke="#1B1814" stroke-opacity=".25" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      <!-- plant -->
+      <g transform="translate(760,360)">
+        <path d="M40 200 L60 110 L80 200 Z" fill="#5E5E47" fill-opacity=".18" stroke="#5E5E47" stroke-opacity=".4" stroke-width="2"/>
+        <path d="M60 130 Q20 70 35 30 M60 130 Q100 70 85 30 M60 130 Q60 60 60 20" fill="none" stroke="#5E5E47" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
   </div>
 
-  <div class="relative max-w-container mx-auto w-full px-5 sm:px-8 lg:px-14 flex-1 flex items-center pt-24">
-    <div class="max-w-3xl">
-      <p class="eyebrow text-clay reveal" style="color:#E9C9A8">ATELIER · נגרות אמן בהזמנה אישית</p>
-      <h1 class="display mt-5 reveal" style="color:#FBF9F4">
-        רהיטים שנבנים<br/>סביב <em style="font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:500;">החיים</em> שלכם.
-      </h1>
-      <p class="mt-6 max-w-xl text-lg leading-relaxed font-light reveal" style="color:#F3ECE0">
-        KUDU מעצבת ובונה רהיטים מודרניים בהתאמה אישית ברמה הגבוהה ביותר — מהרעיון הראשון, דרך חומרים נבחרים ועד היד שמלטפת את הגימור האחרון.
-      </p>
-      <div class="mt-9 flex flex-wrap gap-3 reveal">
-        <a href="#collections" class="btn btn-clay">לצפייה בקולקציות
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 5l-7 7 7 7" transform="rotate(180 12 12)"/></svg>
-        </a>
-        <a href="#process" class="btn btn-ghost" style="color:#FBF9F4;border-color:rgba(251,249,244,.4)">איך זה עובד</a>
-      </div>
+  <div class="wrap hero__inner">
+    <p class="eyebrow reveal">ATELIER · נגרות אמן בהזמנה אישית</p>
+    <h1 class="display reveal" style="margin-top:1.1rem">רהיטים שנבנים<br/>סביב <em>החיים</em> שלכם.</h1>
+    <p class="hero__sub lede reveal">
+      KUDU מעצבת ובונה רהיטים מודרניים בהתאמה אישית ברמה הגבוהה ביותר — מהרעיון הראשון, דרך חומרים נבחרים ועד היד שמלטפת את הגימור האחרון.
+    </p>
+    <div class="hero__cta reveal">
+      <a href="#collections" class="btn btn-clay">לצפייה בקולקציות
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 5l-7 7 7 7"/></svg>
+      </a>
+      <a href="#process" class="btn btn-ghost">איך זה עובד</a>
     </div>
   </div>
-
-  <div class="relative max-w-container mx-auto w-full px-5 sm:px-8 lg:px-14 pb-8 reveal">
-    <p class="text-xs tracking-[0.2em] uppercase" style="color:#6c655c">גללו · מעצבים יחד מאז 2007</p>
-  </div>
+  <div class="wrap hero__scroll reveal">גללו · מעצבים יחד מאז 2007</div>
 </section>
 
-<!-- ───────── MARQUEE ───────── -->
-<div class="bg-ink text-bone py-4 sm:py-5">
-  <div class="marquee">
-    <div class="marquee__track">
-      <span class="display !text-2xl sm:!text-3xl opacity-90">עץ מלא</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">בנייה ידנית</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">עיצוב אישי</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">חומרים נבחרים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">אחריות לכל החיים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">עץ מלא</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">בנייה ידנית</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">עיצוב אישי</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">חומרים נבחרים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-      <span class="display !text-2xl sm:!text-3xl opacity-90">אחריות לכל החיים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
-    </div>
-  </div>
+<!-- ─── MARQUEE ─── -->
+<div class="marqueeWrap">
+  <div class="marquee" id="marquee"></div>
 </div>
 
-<!-- ───────── COLLECTIONS ───────── -->
-<section id="collections" class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
-  <div class="flex flex-wrap items-end justify-between gap-6 mb-12 reveal">
-    <div>
+<!-- ─── COLLECTIONS ─── -->
+<section id="collections" class="wrap section">
+  <div class="reveal" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem;margin-bottom:3rem">
+    <div style="max-width:36rem">
       <p class="eyebrow">הקולקציות</p>
-      <h2 class="text-4xl sm:text-5xl mt-3 max-w-xl">חתיכות שנוצרו להישאר. ולהיות מסופרות הלאה.</h2>
+      <h2 class="h2" style="margin-top:.7rem">חתיכות שנוצרו להישאר. ולהיות מסופרות הלאה.</h2>
     </div>
-    <p class="max-w-sm text-stone leading-relaxed">כל פריט הוא נקודת התחלה — צבע, מידה, חומר וגימור מותאמים בדיוק לחלל ולכם.</p>
+    <p class="muted" style="max-width:22rem">כל פריט הוא נקודת התחלה — צבע, מידה, חומר וגימור מותאמים בדיוק לחלל ולכם.</p>
   </div>
-
-  <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"></div>
-
-  <div class="mt-12 text-center reveal">
+  <div class="grid" id="grid"></div>
+  <div class="reveal" style="text-align:center;margin-top:3rem">
     <a href="#contact" class="btn btn-solid">רוצים פריט משלכם? דברו איתנו</a>
   </div>
 </section>
 
-<!-- ───────── CRAFT / ABOUT ───────── -->
-<section id="craft" class="bg-paper border-y" style="border-color:var(--line)">
-  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-    <div class="frame aspect-[4/5] reveal">
-      <img src="https://images.unsplash.com/photo-1572297870735-d3a8c1d35e94?auto=format&fit=crop&w=1100&q=80" alt="נגר בעבודה בסטודיו KUDU" />
+<!-- ─── CRAFT / ABOUT ─── -->
+<section id="craft" style="background:var(--paper);border-block:1px solid var(--line)">
+  <div class="wrap section split">
+    <div class="media reveal">
+      <svg viewBox="0 0 500 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="500" height="620" fill="url(#cg)"/>
+        <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#E3D3BF"/><stop offset="1" stop-color="#C9A878"/>
+        </linearGradient></defs>
+        <!-- workbench / hands crafting motif -->
+        <g stroke="#3A2A1C" stroke-opacity=".55" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="70" y="300" width="360" height="40" rx="8" fill="#3A2A1C" fill-opacity=".22"/>
+          <line x1="110" y1="340" x2="110" y2="520"/><line x1="390" y1="340" x2="390" y2="520"/>
+          <!-- plane tool -->
+          <rect x="180" y="250" width="150" height="46" rx="10" fill="#8A5E3C" fill-opacity=".4"/>
+          <path d="M200 296 L210 320 M300 296 L310 320"/>
+          <!-- wood shavings -->
+          <path d="M150 250 q20 -20 40 0 t40 0" stroke-opacity=".4"/>
+          <path d="M330 250 q18 -16 34 0" stroke-opacity=".4"/>
+          <!-- grain lines -->
+          <line x1="80" y1="430" x2="420" y2="430" stroke-opacity=".25"/>
+          <line x1="80" y1="460" x2="420" y2="460" stroke-opacity=".18"/>
+        </g>
+      </svg>
     </div>
     <div class="reveal">
       <p class="eyebrow">הסטודיו</p>
-      <h2 class="text-4xl sm:text-5xl mt-3 leading-tight">מהיד אל הבית.<br/>בלי קיצורי דרך.</h2>
-      <p class="mt-6 text-lg leading-relaxed text-ink2 font-light">
+      <h2 class="h2" style="margin-top:.7rem;line-height:1.1">מהיד אל הבית.<br/>בלי קיצורי דרך.</h2>
+      <p class="lede" style="margin-top:1.4rem;color:var(--ink2)">
         בסטודיו שלנו בדרום תל אביב נפגשים עיצוב מודרני ונגרות מסורתית. אנחנו לא מייצרים בסדרות — כל רהיט נבנה ביד, פריט אחר פריט, מעצים נבחרים שאנחנו בוחרים אישית.
       </p>
-      <p class="mt-4 text-lg leading-relaxed text-ink2 font-light">
+      <p class="lede" style="margin-top:1rem;color:var(--ink2)">
         זו הסיבה שלקוחות חוזרים אלינו עשור אחרי עשור: רהיט של KUDU לא מתבלה — הוא מתיישן יפה.
       </p>
-      <div id="stats" class="mt-10 grid grid-cols-2 gap-x-8 gap-y-8"></div>
+      <div class="statgrid" id="stats"></div>
     </div>
   </div>
 </section>
 
-<!-- ───────── PROCESS ───────── -->
-<section id="process" class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
-  <div class="text-center max-w-2xl mx-auto mb-14 reveal">
+<!-- ─── PROCESS ─── -->
+<section id="process" class="wrap section">
+  <div class="reveal" style="text-align:center;max-width:42rem;margin-inline:auto;margin-bottom:3.2rem">
     <p class="eyebrow">תהליך העבודה</p>
-    <h2 class="text-4xl sm:text-5xl mt-3">ארבעה צעדים, ליווי אחד אישי</h2>
-    <p class="mt-5 text-stone leading-relaxed">מהרגע שנפגשים ועד שהרהיט עומד במקומו — אתם בידיים של אדם אחד שמלווה את כל הדרך.</p>
+    <h2 class="h2" style="margin-top:.7rem">ארבעה צעדים, ליווי אחד אישי</h2>
+    <p class="muted" style="margin-top:1rem">מהרגע שנפגשים ועד שהרהיט עומד במקומו — אתם בידיים של אדם אחד שמלווה את כל הדרך.</p>
   </div>
-  <div id="steps" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden border" style="border-color:var(--line); background:var(--line)"></div>
+  <div class="steps" id="steps"></div>
 </section>
 
-<!-- ───────── MATERIALS ───────── -->
-<section id="materials" class="bg-ink text-bone">
-  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
-    <div class="flex flex-wrap items-end justify-between gap-6 mb-12 reveal">
+<!-- ─── MATERIALS ─── -->
+<section id="materials" class="dark">
+  <div class="wrap section">
+    <div class="reveal" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem">
       <div>
-        <p class="eyebrow" style="color:#E9C9A8">חומרים</p>
-        <h2 class="text-4xl sm:text-5xl mt-3" style="color:#FBF9F4">החומר הוא חצי מהסיפור</h2>
+        <p class="eyebrow">חומרים</p>
+        <h2 class="h2" style="margin-top:.7rem">החומר הוא חצי מהסיפור</h2>
       </div>
-      <p class="max-w-sm leading-relaxed" style="color:#cabfb0">אנחנו עובדים רק עם חומרים שמשתפרים עם הזמן — עץ מלא, עור full-grain, פליז ואבן טבעית.</p>
+      <p style="max-width:22rem;color:#cabfb0">אנחנו עובדים רק עם חומרים שמשתפרים עם הזמן — עץ מלא, עור full-grain, פליז ואבן טבעית.</p>
     </div>
-    <div id="materials-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6"></div>
+    <div class="matgrid" id="materials-grid"></div>
   </div>
 </section>
 
-<!-- ───────── TESTIMONIALS ───────── -->
-<section class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
-  <p class="eyebrow text-center reveal">מספרים עלינו</p>
-  <h2 class="text-4xl sm:text-5xl text-center mt-3 mb-14 reveal">בתים שהפכו את KUDU לחלק מהמשפחה</h2>
-  <div id="testimonials" class="grid md:grid-cols-3 gap-6"></div>
+<!-- ─── TESTIMONIALS ─── -->
+<section class="wrap section">
+  <p class="eyebrow reveal" style="text-align:center">מספרים עלינו</p>
+  <h2 class="h2 reveal" style="text-align:center;margin-top:.7rem;margin-bottom:3rem">בתים שהפכו את KUDU לחלק מהמשפחה</h2>
+  <div class="quotes" id="testimonials"></div>
 </section>
 
-<!-- ───────── CONTACT / CTA ───────── -->
-<section id="contact" class="bg-paper border-t" style="border-color:var(--line)">
-  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 lg:gap-20">
+<!-- ─── CONTACT ─── -->
+<section id="contact" style="background:var(--paper);border-top:1px solid var(--line)">
+  <div class="wrap section contact">
     <div class="reveal">
       <p class="eyebrow">בואו נתחיל</p>
-      <h2 class="text-4xl sm:text-5xl mt-3 leading-tight">יש לכם חלל.<br/>יש לנו את הידיים.</h2>
-      <p class="mt-6 text-lg leading-relaxed text-ink2 font-light max-w-md">
+      <h2 class="h2" style="margin-top:.7rem;line-height:1.1">יש לכם חלל.<br/>יש לנו את הידיים.</h2>
+      <p class="lede" style="margin-top:1.4rem;color:var(--ink2);max-width:28rem">
         ספרו לנו מה אתם מדמיינים — נחזור אליכם תוך יום עסקים אחד לפגישת היכרות ללא התחייבות.
       </p>
-      <ul class="mt-9 space-y-4 text-ink2">
-        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">✆</span> 03-555-0192</li>
-        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">✉</span> studio@kudu.co.il</li>
-        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">⌖</span> רחוב המלאכה 14, דרום תל אביב</li>
+      <ul>
+        <li><span class="ic">✆</span> 03-555-0192</li>
+        <li><span class="ic">✉</span> studio@kudu.co.il</li>
+        <li><span class="ic">⌖</span> רחוב המלאכה 14, דרום תל אביב</li>
       </ul>
     </div>
-
-    <form id="contact-form" class="reveal bg-bone rounded-3xl p-7 sm:p-9 border" style="border-color:var(--line)" novalidate>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <label class="block">
-          <span class="text-sm text-stone">שם מלא</span>
-          <input required name="name" type="text" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)" placeholder="איך לפנות אליכם?" />
-        </label>
-        <label class="block">
-          <span class="text-sm text-stone">טלפון</span>
-          <input required name="phone" type="tel" inputmode="tel" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)" placeholder="050-0000000" />
-        </label>
+    <form id="contact-form" class="reveal" novalidate>
+      <div class="row2">
+        <label class="field"><span class="lbl">שם מלא</span>
+          <input required name="name" type="text" placeholder="איך לפנות אליכם?" /></label>
+        <label class="field"><span class="lbl">טלפון</span>
+          <input required name="phone" type="tel" inputmode="tel" placeholder="050-0000000" /></label>
       </div>
-      <label class="block mt-4">
-        <span class="text-sm text-stone">מה תרצו שנבנה?</span>
-        <select name="type" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)">
+      <label class="field"><span class="lbl">מה תרצו שנבנה?</span>
+        <select name="type">
           <option>ספה / פינת ישיבה</option>
           <option>שולחן אוכל</option>
           <option>יחידת אחסון / ספרייה</option>
           <option>חדר שינה</option>
           <option>פרויקט מותאם אחר</option>
-        </select>
-      </label>
-      <label class="block mt-4">
-        <span class="text-sm text-stone">כמה מילים על החלום</span>
-        <textarea name="message" rows="4" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition resize-none" style="border-color:var(--line)" placeholder="חלל, סגנון, מידות, צבעים..."></textarea>
-      </label>
-      <button type="submit" class="btn btn-clay w-full justify-center mt-6">שליחת הפנייה</button>
-      <p id="form-ok" class="hidden mt-4 text-center text-clay font-medium">תודה! קיבלנו את הפנייה — נחזור אליכם בקרוב ✦</p>
+        </select></label>
+      <label class="field"><span class="lbl">כמה מילים על החלום</span>
+        <textarea name="message" rows="4" placeholder="חלל, סגנון, מידות, צבעים..."></textarea></label>
+      <button type="submit" class="btn btn-clay btn-block" style="margin-top:1.4rem">שליחת הפנייה</button>
+      <p class="form-ok" id="form-ok">תודה! קיבלנו את הפנייה — נחזור אליכם בקרוב ✦</p>
     </form>
   </div>
 </section>
 
-<!-- ───────── FOOTER ───────── -->
-<footer class="bg-ink text-bone">
-  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-14">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b" style="border-color:rgba(247,243,236,.14)">
+<!-- ─── FOOTER ─── -->
+<footer class="footer">
+  <div class="wrap" style="padding-block:3.4rem">
+    <div class="footer__top">
       <div>
-        <span class="wordmark text-2xl">KUDU</span>
-        <p class="mt-4 max-w-xs leading-relaxed" style="color:#cabfb0">רהיטים מודרניים בהזמנה אישית. נבנים ביד בתל אביב, נשארים במשפחה לדורות.</p>
+        <span class="wordmark" style="font-size:1.5rem">KUDU</span>
+        <p class="brandnote">רהיטים מודרניים בהזמנה אישית. נבנים ביד בתל אביב, נשארים במשפחה לדורות.</p>
       </div>
-      <nav class="flex flex-wrap gap-x-8 gap-y-3 text-sm" style="color:#e9e1d5">
+      <nav>
         <a href="#collections" class="ulink">קולקציות</a>
         <a href="#process" class="ulink">תהליך</a>
         <a href="#craft" class="ulink">הסטודיו</a>
@@ -318,7 +431,7 @@
         <a href="#contact" class="ulink">צרו קשר</a>
       </nav>
     </div>
-    <div class="pt-7 flex flex-col sm:flex-row justify-between gap-3 text-xs" style="color:#8c8275">
+    <div class="footer__bottom">
       <p>© 2026 KUDU Atelier · כל הזכויות שמורות</p>
       <p>עוצב ונבנה בישראל</p>
     </div>
@@ -326,125 +439,132 @@
 </footer>
 
 <script>
-  /* ── data ── */
-  const u = (id, w=1100) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
+/* ── SVG furniture illustrations (inline, offline) ── */
+const C='#8A5E3C', I='#1B1814';
+const svgWrap=(inner)=>`<svg viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet">
+  <rect width="400" height="360" fill="none"/>${inner}</svg>`;
+const leg=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${I}" stroke-opacity=".4" stroke-width="6" stroke-linecap="round"/>`;
 
-  const collections = [
-    { name:'ספת מָארָה',    tag:'ספה מודולרית · ריפוד בוקלה',  mat:'בד בוקלה · אלון מלא',   price:'החל מ־₪14,900', img:u('1567538096630-e0c55bd6374c'), span:true },
-    { name:'שולחן אֹרֶן',    tag:'שולחן אוכל · רגלי פליז',       mat:'עץ אגוז · פליז מוברש',  price:'החל מ־₪9,400',  img:u('1604578762246-41134e37f9cc') },
-    { name:'כורסת תָּמָה',   tag:'כורסת לאונג׳ · עור איטלקי',    mat:'עור full-grain · אגוז', price:'החל מ־₪6,200',  img:u('1503602642458-232111445657') },
-    { name:'ספריית לָבִיא',  tag:'ספרייה מודולרית עד התקרה',     mat:'אלון מעושן · זכוכית',   price:'החל מ־₪11,800', img:u('1594620302200-9a762244a156') },
-    { name:'מיטת נֹגַהּ',    tag:'מסגרת מרופדת · ראש מרחף',      mat:'בד פשתן · אלון',        price:'החל מ־₪12,300', img:u('1505693416388-ac5ce068fe85'), span:true },
-    { name:'מזנון גֶּפֶן',   tag:'דלתות בחריטה ידנית',           mat:'עץ אגוז · אבן טרצו',    price:'החל מ־₪8,700',  img:u('1538688525198-9b88f6f53126') },
-  ];
+const art={
+  sofa: svgWrap(`<g class="accent">
+    <rect x="60" y="120" width="280" height="80" rx="22" fill="${C}" fill-opacity=".14" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="50" y="180" width="300" height="70" rx="24" fill="${C}" fill-opacity=".22" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="44" y="150" width="40" height="100" rx="18" fill="${C}" fill-opacity=".28" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="316" y="150" width="40" height="100" rx="18" fill="${C}" fill-opacity=".28" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <line x1="200" y1="182" x2="200" y2="248" stroke="${C}" stroke-opacity=".35" stroke-width="2"/>
+    </g>${leg(90,250,82,288)}${leg(310,250,318,288)}`),
+  table: svgWrap(`<g class="accent">
+    <rect x="70" y="150" width="260" height="22" rx="6" fill="${C}" fill-opacity=".3" stroke="${C}" stroke-opacity=".45" stroke-width="3"/></g>
+    ${leg(96,172,92,288)}${leg(304,172,308,288)}${leg(150,172,148,288)}${leg(250,172,252,288)}
+    <line x1="92" y1="288" x2="148" y2="288" stroke="${I}" stroke-opacity=".3" stroke-width="5" stroke-linecap="round"/>
+    <line x1="252" y1="288" x2="308" y2="288" stroke="${I}" stroke-opacity=".3" stroke-width="5" stroke-linecap="round"/>`),
+  chair: svgWrap(`<g class="accent">
+    <rect x="120" y="70" width="160" height="120" rx="30" fill="${C}" fill-opacity=".12" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="110" y="170" width="180" height="70" rx="24" fill="${C}" fill-opacity=".24" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="96" y="120" width="36" height="120" rx="16" fill="${C}" fill-opacity=".3" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="268" y="120" width="36" height="120" rx="16" fill="${C}" fill-opacity=".3" stroke="${C}" stroke-opacity=".4" stroke-width="3"/></g>
+    ${leg(130,240,120,292)}${leg(270,240,280,292)}`),
+  shelf: svgWrap(`<g class="accent" fill="${C}" fill-opacity=".16" stroke="${C}" stroke-opacity=".4" stroke-width="3">
+    <rect x="110" y="70" width="180" height="230" rx="8"/>
+    <line x1="110" y1="135" x2="290" y2="135"/><line x1="110" y1="200" x2="290" y2="200"/>
+    <line x1="200" y1="200" x2="200" y2="300"/>
+    <rect x="125" y="85" width="30" height="38" fill="${C}" fill-opacity=".3" stroke="none"/>
+    <rect x="165" y="92" width="22" height="31" fill="${C}" fill-opacity=".25" stroke="none"/>
+    <rect x="220" y="150" width="55" height="14" fill="${C}" fill-opacity=".3" stroke="none"/></g>
+    ${leg(125,300,120,322)}${leg(275,300,280,322)}`),
+  bed: svgWrap(`<g class="accent">
+    <rect x="70" y="90" width="120" height="130" rx="16" fill="${C}" fill-opacity=".18" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="70" y="200" width="280" height="60" rx="14" fill="${C}" fill-opacity=".24" stroke="${C}" stroke-opacity=".4" stroke-width="3"/>
+    <rect x="100" y="170" width="70" height="40" rx="10" fill="${C}" fill-opacity=".3" stroke="${C}" stroke-opacity=".35" stroke-width="2"/></g>
+    ${leg(80,258,76,292)}${leg(344,258,348,292)}`),
+  credenza: svgWrap(`<g class="accent" fill="${C}" fill-opacity=".18" stroke="${C}" stroke-opacity=".4" stroke-width="3">
+    <rect x="70" y="140" width="260" height="120" rx="10"/>
+    <line x1="200" y1="140" x2="200" y2="260"/>
+    <path d="M120 150 v100 M140 150 v100 M160 150 v100" stroke-opacity=".25" stroke-width="2"/>
+    <path d="M240 150 v100 M260 150 v100 M280 150 v100" stroke-opacity=".25" stroke-width="2"/>
+    <circle cx="185" cy="200" r="4" fill="${C}" fill-opacity=".6" stroke="none"/>
+    <circle cx="215" cy="200" r="4" fill="${C}" fill-opacity=".6" stroke="none"/></g>
+    ${leg(95,260,86,300)}${leg(305,260,314,300)}`),
+};
 
-  const stats = [
-    { n:'18',     l:'שנות נגרות אמן' },
-    { n:'1,200+', l:'פרויקטים אישיים' },
-    { n:'100%',   l:'בנייה ידנית בישראל' },
-    { n:'∞',      l:'אחריות מבנה' },
-  ];
+/* ── data ── */
+const collections=[
+  {name:'ספת מָארָה',art:'sofa',tag:'ספה מודולרית · ריפוד בוקלה',mat:'בד בוקלה · אלון מלא',price:'החל מ־₪14,900',span:true},
+  {name:'שולחן אֹרֶן',art:'table',tag:'שולחן אוכל · רגלי פליז',mat:'עץ אגוז · פליז מוברש',price:'החל מ־₪9,400'},
+  {name:'כורסת תָּמָה',art:'chair',tag:'כורסת לאונג׳ · עור איטלקי',mat:'עור full-grain · אגוז',price:'החל מ־₪6,200'},
+  {name:'ספריית לָבִיא',art:'shelf',tag:'ספרייה מודולרית עד התקרה',mat:'אלון מעושן · זכוכית',price:'החל מ־₪11,800'},
+  {name:'מיטת נֹגַהּ',art:'bed',tag:'מסגרת מרופדת · ראש מרחף',mat:'בד פשתן · אלון',price:'החל מ־₪12,300',span:true},
+  {name:'מזנון גֶּפֶן',art:'credenza',tag:'דלתות בחריטה ידנית',mat:'עץ אגוז · אבן טרצו',price:'החל מ־₪8,700'},
+];
+const stats=[{n:'18',l:'שנות נגרות אמן'},{n:'1,200+',l:'פרויקטים אישיים'},{n:'100%',l:'בנייה ידנית בישראל'},{n:'∞',l:'אחריות מבנה'}];
+const steps=[
+  {n:'01',t:'פגישת היכרות',d:'נשב יחד — בסטודיו או אצלכם — נבין את החלל, אורח החיים והחלום.'},
+  {n:'02',t:'תכנון ועיצוב',d:'הדמיות תלת־ממד, דוגמאות חומר אמיתיות ושרטוטים מדויקים לפני שנגענו בעץ.'},
+  {n:'03',t:'נגרות אמן',d:'כל פריט נבנה ביד בסטודיו, מעצים נבחרים, בגימור איטי ומוקפד.'},
+  {n:'04',t:'התקנה ומסירה',d:'אנחנו מביאים, מרכיבים וממקמים. אתם פשוט נהנים. אחריות לכל החיים.'},
+];
+const materials=[
+  {name:'אלון מלא',note:'נורדי · FSC',c:'#C9A878'},{name:'עץ אגוז',note:'אמריקאי כהה',c:'#5A3D2B'},
+  {name:'עור איטלקי',note:'full-grain',c:'#8A5E3C'},{name:'בד בוקלה',note:'טבעי · רחיץ',c:'#E3DAC9'},
+  {name:'פליז מוברש',note:'מתיישן יפה',c:'#B08D57'},{name:'אבן טרצו',note:'בעבודת יד',c:'#D9D2C5'},
+];
+const testimonials=[
+  {q:'הספה שתכננו איתנו היא לב הסלון. כל אורח שואל מאיפה היא. ההרגשה שזה משהו שנבנה רק בשבילנו — אין כמוה.',n:'מיכל ושי ברנע',r:'בית פרטי, הרצליה פיתוח'},
+  {q:'עבדנו עם הרבה נגרים. אף אחד לא התקרב לרמת הדיוק והליווי. שולחן האוכל יישאר במשפחה לדורות.',n:'אדריכלית ליאת קרן',r:'סטודיו לאדריכלות'},
+  {q:'מהפגישה הראשונה ועד ההתקנה — חוויה של אנשים שאכפת להם. החומרים מדברים בעד עצמם.',n:'דניאל אבני',r:'פנטהאוז, תל אביב'},
+];
 
-  const steps = [
-    { n:'01', t:'פגישת היכרות',  d:'נשב יחד — בסטודיו או אצלכם — נבין את החלל, אורח החיים והחלום.' },
-    { n:'02', t:'תכנון ועיצוב',  d:'הדמיות תלת־ממד, דוגמאות חומר אמיתיות ושרטוטים מדויקים לפני שנגענו בעץ.' },
-    { n:'03', t:'נגרות אמן',      d:'כל פריט נבנה ביד בסטודיו, מעצים נבחרים, בגימור איטי ומוקפד.' },
-    { n:'04', t:'התקנה ומסירה',  d:'אנחנו מביאים, מרכיבים וממקמים. אתם פשוט נהנים. אחריות לכל החיים.' },
-  ];
-
-  const materials = [
-    { name:'אלון מלא',   note:'נורדי · FSC',   c:'#C9A878' },
-    { name:'עץ אגוז',    note:'אמריקאי כהה',   c:'#5A3D2B' },
-    { name:'עור איטלקי', note:'full-grain',    c:'#8A5E3C' },
-    { name:'בד בוקלה',   note:'טבעי · רחיץ',   c:'#E3DAC9' },
-    { name:'פליז מוברש', note:'מתיישן יפה',    c:'#B08D57' },
-    { name:'אבן טרצו',   note:'בעבודת יד',     c:'#D9D2C5' },
-  ];
-
-  const testimonials = [
-    { q:'הספה שתכננו איתנו היא לב הסלון. כל אורח שואל מאיפה היא. ההרגשה שזה משהו שנבנה רק בשבילנו — אין כמוה.', n:'מיכל ושי ברנע', r:'בית פרטי, הרצליה פיתוח' },
-    { q:'עבדנו עם הרבה נגרים. אף אחד לא התקרב לרמת הדיוק והליווי. שולחן האוכל יישאר במשפחה לדורות.', n:'אדריכלית ליאת קרן', r:'סטודיו לאדריכלות' },
-    { q:'מהפגישה הראשונה ועד ההתקנה — חוויה של אנשים שאכפת להם. החומרים מדברים בעד עצמם.', n:'דניאל אבני', r:'פנטהאוז, תל אביב' },
-  ];
-
-  /* ── render ── */
-  const grid = document.getElementById('grid');
-  grid.innerHTML = collections.map(c => `
-    <article class="reveal group ${c.span ? 'sm:col-span-2 lg:col-span-2' : ''}">
-      <div class="frame ${c.span ? 'aspect-[16/10]' : 'aspect-[4/5]'}">
-        <img src="${c.img}" alt="${c.name}" loading="lazy" />
-        <span class="absolute top-4 right-4 text-xs px-3 py-1 rounded-full bg-bone/90 text-ink">${c.price}</span>
-      </div>
-      <div class="flex items-start justify-between gap-4 mt-4">
-        <div>
-          <h3 class="text-2xl">${c.name}</h3>
-          <p class="text-stone text-sm mt-1">${c.tag}</p>
-        </div>
-        <span class="text-clay opacity-0 group-hover:opacity-100 transition mt-2">→</span>
-      </div>
-      <p class="text-xs tracking-wide text-stone mt-2 uppercase">${c.mat}</p>
-    </article>
-  `).join('');
-
-  document.getElementById('stats').innerHTML = stats.map(s => `
-    <div class="reveal"><div class="stat text-clay">${s.n}</div><p class="text-sm text-stone mt-1">${s.l}</p></div>
-  `).join('');
-
-  document.getElementById('steps').innerHTML = steps.map(s => `
-    <div class="reveal bg-paper p-7 sm:p-8 hover:bg-bone transition">
-      <div class="font-display text-3xl text-clay">${s.n}</div>
-      <h3 class="text-2xl mt-4">${s.t}</h3>
-      <p class="text-stone leading-relaxed mt-3 text-[.95rem]">${s.d}</p>
+/* ── render ── */
+document.getElementById('grid').innerHTML=collections.map(c=>`
+  <article class="card reveal ${c.span?'span':''}">
+    <div class="frame">${art[c.art]}<span class="price">${c.price}</span></div>
+    <div class="meta">
+      <div><h3>${c.name}</h3><p class="tag">${c.tag}</p></div>
+      <span class="arrow">→</span>
     </div>
-  `).join('');
+    <p class="mat">${c.mat}</p>
+  </article>`).join('');
 
-  document.getElementById('materials-grid').innerHTML = materials.map(m => `
-    <div class="reveal text-center">
-      <div class="aspect-square rounded-2xl mb-3 ring-1 ring-white/10" style="background:${m.c}"></div>
-      <p class="font-serif text-lg" style="color:#FBF9F4">${m.name}</p>
-      <p class="text-xs mt-0.5" style="color:#9a8f7f">${m.note}</p>
-    </div>
-  `).join('');
+document.getElementById('stats').innerHTML=stats.map(s=>`
+  <div class="reveal"><div class="stat">${s.n}</div><p class="muted" style="margin-top:.3rem;font-size:.9rem">${s.l}</p></div>`).join('');
 
-  document.getElementById('testimonials').innerHTML = testimonials.map(t => `
-    <figure class="reveal bg-paper border rounded-3xl p-8" style="border-color:var(--line)">
-      <div class="text-clay text-3xl font-display leading-none">”</div>
-      <blockquote class="mt-2 text-lg leading-relaxed text-ink2 font-light">${t.q}</blockquote>
-      <figcaption class="mt-6 pt-5 border-t" style="border-color:var(--line)">
-        <p class="font-medium text-ink">${t.n}</p>
-        <p class="text-sm text-stone">${t.r}</p>
-      </figcaption>
-    </figure>
-  `).join('');
+document.getElementById('steps').innerHTML=steps.map(s=>`
+  <div class="step reveal"><div class="n">${s.n}</div><h3>${s.t}</h3><p>${s.d}</p></div>`).join('');
 
-  /* ── interactions ── */
-  // nav scroll state
-  const nav = document.getElementById('nav');
-  const onScroll = () => nav.classList.toggle('solid', window.scrollY > 24);
-  onScroll(); window.addEventListener('scroll', onScroll, { passive:true });
+document.getElementById('materials-grid').innerHTML=materials.map(m=>`
+  <div class="mat-card reveal"><div class="swatch" style="background:${m.c}"></div>
+  <p class="name">${m.name}</p><p class="note">${m.note}</p></div>`).join('');
 
-  // mobile menu
-  const sheet = document.getElementById('sheet');
-  document.getElementById('burger').addEventListener('click', () => sheet.classList.add('open'));
-  sheet.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => sheet.classList.remove('open')));
+document.getElementById('testimonials').innerHTML=testimonials.map(t=>`
+  <figure class="quote reveal"><div class="mark">”</div><blockquote>${t.q}</blockquote>
+  <figcaption><p class="name">${t.n}</p><p class="role">${t.r}</p></figcaption></figure>`).join('');
 
-  // reveal on scroll
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) { e.target.style.transitionDelay = Math.min(i*40, 160) + 'ms'; e.target.classList.add('in'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+const mq=['עץ מלא','בנייה ידנית','עיצוב אישי','חומרים נבחרים','אחריות לכל החיים'];
+const mqHtml=mq.map(w=>`<span>${w}</span><span class="dot">✦</span>`).join('');
+document.getElementById('marquee').innerHTML=mqHtml+mqHtml;
 
-  // contact form (front only)
-  const form = document.getElementById('contact-form');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!form.name.value.trim() || !form.phone.value.trim()) { form.reportValidity?.(); return; }
-    document.getElementById('form-ok').classList.remove('hidden');
-    form.querySelector('button').textContent = 'נשלח ✓';
-    form.querySelectorAll('input,textarea,select,button').forEach(el => el.disabled = true);
-  });
+/* ── interactions ── */
+const nav=document.getElementById('nav');
+const onScroll=()=>nav.classList.toggle('solid',window.scrollY>24);
+onScroll();window.addEventListener('scroll',onScroll,{passive:true});
+
+const sheet=document.getElementById('sheet');
+document.getElementById('burger').addEventListener('click',()=>sheet.classList.add('open'));
+sheet.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>sheet.classList.remove('open')));
+
+const io=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+const form=document.getElementById('contact-form');
+form.addEventListener('submit',(e)=>{
+  e.preventDefault();
+  if(!form.name.value.trim()||!form.phone.value.trim()){if(form.reportValidity)form.reportValidity();return;}
+  document.getElementById('form-ok').style.display='block';
+  const b=form.querySelector('button');b.textContent='נשלח ✓';
+  form.querySelectorAll('input,textarea,select,button').forEach(el=>el.disabled=true);
+});
 </script>
 </body>
 </html>
