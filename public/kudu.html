@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1B1814" />
+<title>KUDU — רהיטים מודרניים בהזמנה אישית</title>
+<meta name="description" content="KUDU מעצבת ובונה רהיטים מודרניים בהתאמה אישית ברמה גבוהה — נגרות אמן, חומרים נבחרים וליווי אישי מהרעיון ועד ההתקנה." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bone:  '#F7F3EC',
+          paper: '#FBF9F4',
+          sand:  '#ECE3D6',
+          stone: '#8C8275',
+          ink:   '#1B1814',
+          ink2:  '#2E2A24',
+          clay:  '#A9764F',
+          clayd: '#8A5E3C',
+          olive: '#5E5E47',
+        },
+        fontFamily: {
+          serif:   ['"Frank Ruhl Libre"', 'Georgia', 'serif'],
+          display: ['"Cormorant Garamond"', '"Frank Ruhl Libre"', 'serif'],
+          sans:    ['Heebo', 'system-ui', 'sans-serif'],
+        },
+        maxWidth: { container: '1280px' },
+      },
+    },
+  };
+</script>
+
+<style>
+  :root { --line: rgba(27,24,20,0.12); }
+  html { scroll-behavior: smooth; }
+  body { background:#F7F3EC; color:#1B1814; font-family:'Heebo',system-ui,sans-serif; letter-spacing:-0.01em; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  ::selection { background:#A9764F; color:#F7F3EC; }
+
+  h1,h2,h3,h4 { font-family:'Frank Ruhl Libre',Georgia,serif; font-weight:500; line-height:1.04; letter-spacing:-0.02em; }
+
+  .wordmark { font-family:'Cormorant Garamond',serif; font-weight:600; letter-spacing:0.42em; text-transform:uppercase; }
+  .eyebrow  { font-weight:500; font-size:0.72rem; letter-spacing:0.32em; text-transform:uppercase; color:#A9764F; }
+  .display  { font-family:'Frank Ruhl Libre',serif; font-weight:400; font-size:clamp(2.6rem,8vw,6rem); line-height:0.98; letter-spacing:-0.03em; }
+  .stat     { font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(2.6rem,6vw,3.8rem); line-height:1; letter-spacing:-0.02em; }
+
+  .btn { display:inline-flex; align-items:center; gap:.55rem; font-weight:500; font-size:.95rem; padding:.95rem 1.8rem; border-radius:999px; border:1px solid transparent; cursor:pointer; transition:all .35s cubic-bezier(.16,1,.3,1); white-space:nowrap; }
+  .btn-solid { background:#1B1814; color:#F7F3EC; }
+  .btn-solid:hover { background:#A9764F; transform:translateY(-2px); box-shadow:0 14px 34px -12px rgba(27,24,20,.45); }
+  .btn-clay { background:#A9764F; color:#F7F3EC; }
+  .btn-clay:hover { background:#8A5E3C; transform:translateY(-2px); box-shadow:0 14px 34px -12px rgba(169,118,79,.55); }
+  .btn-ghost { background:transparent; color:#1B1814; border-color:var(--line); }
+  .btn-ghost:hover { background:#1B1814; color:#F7F3EC; }
+
+  .ulink { position:relative; text-decoration:none; color:inherit; transition:color .3s; }
+  .ulink::after { content:''; position:absolute; inset-inline-start:0; bottom:-3px; width:100%; height:1px; background:currentColor; transform:scaleX(0); transform-origin:inline-end; transition:transform .4s cubic-bezier(.16,1,.3,1); }
+  .ulink:hover { color:#A9764F; }
+  .ulink:hover::after { transform:scaleX(1); transform-origin:inline-start; }
+
+  .frame { position:relative; overflow:hidden; border-radius:16px; background:linear-gradient(135deg,#ECE3D6,#FBF9F4); }
+  .frame img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 1.1s cubic-bezier(.16,1,.3,1); }
+  .frame:hover img { transform:scale(1.05); }
+
+  .reveal { opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
+  .reveal.in { opacity:1; transform:none; }
+
+  .nav { transition:background .4s, border-color .4s, box-shadow .4s; }
+  .nav.solid { background:rgba(247,243,236,.86); backdrop-filter:saturate(160%) blur(14px); border-bottom:1px solid var(--line); }
+
+  .marquee { display:flex; overflow:hidden; user-select:none; -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+  .marquee__track { display:flex; flex-shrink:0; gap:3rem; padding-inline-end:3rem; animation:scroll 34s linear infinite; }
+  @keyframes scroll { from { transform:translateX(0); } to { transform:translateX(100%); } }
+
+  .noise::before { content:''; position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); }
+
+  /* mobile menu */
+  .sheet { transition:opacity .4s, visibility .4s; }
+  .sheet.open { opacity:1; visibility:visible; }
+  .sheet .panel { transition:transform .5s cubic-bezier(.16,1,.3,1); transform:translateY(-12px); }
+  .sheet.open .panel { transform:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior:auto; }
+    .reveal { opacity:1; transform:none; transition:none; }
+    .marquee__track { animation:none; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ───────── NAV ───────── -->
+<header id="nav" class="nav fixed inset-x-0 top-0 z-50">
+  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 h-16 sm:h-20 flex items-center justify-between">
+    <a href="#top" class="wordmark text-lg sm:text-xl text-ink">KUDU</a>
+
+    <nav class="hidden md:flex items-center gap-9 text-[.95rem] text-ink2">
+      <a href="#collections" class="ulink">קולקציות</a>
+      <a href="#process" class="ulink">תהליך העבודה</a>
+      <a href="#craft" class="ulink">הסטודיו</a>
+      <a href="#materials" class="ulink">חומרים</a>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <a href="#contact" class="btn btn-solid hidden sm:inline-flex !py-2.5 !px-5 text-sm">בואו נתכנן יחד</a>
+      <button id="burger" aria-label="תפריט" class="md:hidden w-10 h-10 grid place-items-center rounded-full border" style="border-color:var(--line)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- mobile sheet -->
+<div id="sheet" class="sheet invisible opacity-0 fixed inset-0 z-[60] md:hidden">
+  <div class="absolute inset-0 bg-ink/30" data-close></div>
+  <div class="panel absolute inset-x-3 top-3 rounded-3xl bg-paper border p-6" style="border-color:var(--line)">
+    <div class="flex items-center justify-between mb-6">
+      <span class="wordmark text-lg">KUDU</span>
+      <button data-close aria-label="סגירה" class="w-10 h-10 grid place-items-center rounded-full border" style="border-color:var(--line)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <nav class="flex flex-col text-2xl font-serif">
+      <a data-close href="#collections" class="py-3 border-b" style="border-color:var(--line)">קולקציות</a>
+      <a data-close href="#process" class="py-3 border-b" style="border-color:var(--line)">תהליך העבודה</a>
+      <a data-close href="#craft" class="py-3 border-b" style="border-color:var(--line)">הסטודיו</a>
+      <a data-close href="#materials" class="py-3 border-b" style="border-color:var(--line)">חומרים</a>
+    </nav>
+    <a data-close href="#contact" class="btn btn-clay w-full justify-center mt-6">בואו נתכנן יחד</a>
+  </div>
+</div>
+
+<!-- ───────── HERO ───────── -->
+<section id="top" class="relative noise min-h-[100svh] flex flex-col">
+  <!-- backdrop image -->
+  <div class="absolute inset-0">
+    <img src="https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=2000&q=80"
+         alt="חלל מגורים מעוצב עם רהיטי KUDU" class="w-full h-full object-cover" />
+    <div class="absolute inset-0" style="background:linear-gradient(180deg, rgba(27,24,20,.42) 0%, rgba(27,24,20,.20) 38%, rgba(247,243,236,.0) 62%, rgba(247,243,236,.96) 100%)"></div>
+  </div>
+
+  <div class="relative max-w-container mx-auto w-full px-5 sm:px-8 lg:px-14 flex-1 flex items-center pt-24">
+    <div class="max-w-3xl">
+      <p class="eyebrow text-clay reveal" style="color:#E9C9A8">ATELIER · נגרות אמן בהזמנה אישית</p>
+      <h1 class="display mt-5 reveal" style="color:#FBF9F4">
+        רהיטים שנבנים<br/>סביב <em style="font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:500;">החיים</em> שלכם.
+      </h1>
+      <p class="mt-6 max-w-xl text-lg leading-relaxed font-light reveal" style="color:#F3ECE0">
+        KUDU מעצבת ובונה רהיטים מודרניים בהתאמה אישית ברמה הגבוהה ביותר — מהרעיון הראשון, דרך חומרים נבחרים ועד היד שמלטפת את הגימור האחרון.
+      </p>
+      <div class="mt-9 flex flex-wrap gap-3 reveal">
+        <a href="#collections" class="btn btn-clay">לצפייה בקולקציות
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 5l-7 7 7 7" transform="rotate(180 12 12)"/></svg>
+        </a>
+        <a href="#process" class="btn btn-ghost" style="color:#FBF9F4;border-color:rgba(251,249,244,.4)">איך זה עובד</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="relative max-w-container mx-auto w-full px-5 sm:px-8 lg:px-14 pb-8 reveal">
+    <p class="text-xs tracking-[0.2em] uppercase" style="color:#6c655c">גללו · מעצבים יחד מאז 2007</p>
+  </div>
+</section>
+
+<!-- ───────── MARQUEE ───────── -->
+<div class="bg-ink text-bone py-4 sm:py-5">
+  <div class="marquee">
+    <div class="marquee__track">
+      <span class="display !text-2xl sm:!text-3xl opacity-90">עץ מלא</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">בנייה ידנית</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">עיצוב אישי</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">חומרים נבחרים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">אחריות לכל החיים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">עץ מלא</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">בנייה ידנית</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">עיצוב אישי</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">חומרים נבחרים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+      <span class="display !text-2xl sm:!text-3xl opacity-90">אחריות לכל החיים</span><span class="text-clay text-2xl sm:text-3xl">✦</span>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── COLLECTIONS ───────── -->
+<section id="collections" class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
+  <div class="flex flex-wrap items-end justify-between gap-6 mb-12 reveal">
+    <div>
+      <p class="eyebrow">הקולקציות</p>
+      <h2 class="text-4xl sm:text-5xl mt-3 max-w-xl">חתיכות שנוצרו להישאר. ולהיות מסופרות הלאה.</h2>
+    </div>
+    <p class="max-w-sm text-stone leading-relaxed">כל פריט הוא נקודת התחלה — צבע, מידה, חומר וגימור מותאמים בדיוק לחלל ולכם.</p>
+  </div>
+
+  <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"></div>
+
+  <div class="mt-12 text-center reveal">
+    <a href="#contact" class="btn btn-solid">רוצים פריט משלכם? דברו איתנו</a>
+  </div>
+</section>
+
+<!-- ───────── CRAFT / ABOUT ───────── -->
+<section id="craft" class="bg-paper border-y" style="border-color:var(--line)">
+  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <div class="frame aspect-[4/5] reveal">
+      <img src="https://images.unsplash.com/photo-1572297870735-d3a8c1d35e94?auto=format&fit=crop&w=1100&q=80" alt="נגר בעבודה בסטודיו KUDU" />
+    </div>
+    <div class="reveal">
+      <p class="eyebrow">הסטודיו</p>
+      <h2 class="text-4xl sm:text-5xl mt-3 leading-tight">מהיד אל הבית.<br/>בלי קיצורי דרך.</h2>
+      <p class="mt-6 text-lg leading-relaxed text-ink2 font-light">
+        בסטודיו שלנו בדרום תל אביב נפגשים עיצוב מודרני ונגרות מסורתית. אנחנו לא מייצרים בסדרות — כל רהיט נבנה ביד, פריט אחר פריט, מעצים נבחרים שאנחנו בוחרים אישית.
+      </p>
+      <p class="mt-4 text-lg leading-relaxed text-ink2 font-light">
+        זו הסיבה שלקוחות חוזרים אלינו עשור אחרי עשור: רהיט של KUDU לא מתבלה — הוא מתיישן יפה.
+      </p>
+      <div id="stats" class="mt-10 grid grid-cols-2 gap-x-8 gap-y-8"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── PROCESS ───────── -->
+<section id="process" class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
+  <div class="text-center max-w-2xl mx-auto mb-14 reveal">
+    <p class="eyebrow">תהליך העבודה</p>
+    <h2 class="text-4xl sm:text-5xl mt-3">ארבעה צעדים, ליווי אחד אישי</h2>
+    <p class="mt-5 text-stone leading-relaxed">מהרגע שנפגשים ועד שהרהיט עומד במקומו — אתם בידיים של אדם אחד שמלווה את כל הדרך.</p>
+  </div>
+  <div id="steps" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px rounded-2xl overflow-hidden border" style="border-color:var(--line); background:var(--line)"></div>
+</section>
+
+<!-- ───────── MATERIALS ───────── -->
+<section id="materials" class="bg-ink text-bone">
+  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
+    <div class="flex flex-wrap items-end justify-between gap-6 mb-12 reveal">
+      <div>
+        <p class="eyebrow" style="color:#E9C9A8">חומרים</p>
+        <h2 class="text-4xl sm:text-5xl mt-3" style="color:#FBF9F4">החומר הוא חצי מהסיפור</h2>
+      </div>
+      <p class="max-w-sm leading-relaxed" style="color:#cabfb0">אנחנו עובדים רק עם חומרים שמשתפרים עם הזמן — עץ מלא, עור full-grain, פליז ואבן טבעית.</p>
+    </div>
+    <div id="materials-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6"></div>
+  </div>
+</section>
+
+<!-- ───────── TESTIMONIALS ───────── -->
+<section class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28">
+  <p class="eyebrow text-center reveal">מספרים עלינו</p>
+  <h2 class="text-4xl sm:text-5xl text-center mt-3 mb-14 reveal">בתים שהפכו את KUDU לחלק מהמשפחה</h2>
+  <div id="testimonials" class="grid md:grid-cols-3 gap-6"></div>
+</section>
+
+<!-- ───────── CONTACT / CTA ───────── -->
+<section id="contact" class="bg-paper border-t" style="border-color:var(--line)">
+  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 lg:gap-20">
+    <div class="reveal">
+      <p class="eyebrow">בואו נתחיל</p>
+      <h2 class="text-4xl sm:text-5xl mt-3 leading-tight">יש לכם חלל.<br/>יש לנו את הידיים.</h2>
+      <p class="mt-6 text-lg leading-relaxed text-ink2 font-light max-w-md">
+        ספרו לנו מה אתם מדמיינים — נחזור אליכם תוך יום עסקים אחד לפגישת היכרות ללא התחייבות.
+      </p>
+      <ul class="mt-9 space-y-4 text-ink2">
+        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">✆</span> 03-555-0192</li>
+        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">✉</span> studio@kudu.co.il</li>
+        <li class="flex items-center gap-3"><span class="w-9 h-9 grid place-items-center rounded-full bg-sand text-clay">⌖</span> רחוב המלאכה 14, דרום תל אביב</li>
+      </ul>
+    </div>
+
+    <form id="contact-form" class="reveal bg-bone rounded-3xl p-7 sm:p-9 border" style="border-color:var(--line)" novalidate>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <label class="block">
+          <span class="text-sm text-stone">שם מלא</span>
+          <input required name="name" type="text" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)" placeholder="איך לפנות אליכם?" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-stone">טלפון</span>
+          <input required name="phone" type="tel" inputmode="tel" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)" placeholder="050-0000000" />
+        </label>
+      </div>
+      <label class="block mt-4">
+        <span class="text-sm text-stone">מה תרצו שנבנה?</span>
+        <select name="type" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition" style="border-color:var(--line)">
+          <option>ספה / פינת ישיבה</option>
+          <option>שולחן אוכל</option>
+          <option>יחידת אחסון / ספרייה</option>
+          <option>חדר שינה</option>
+          <option>פרויקט מותאם אחר</option>
+        </select>
+      </label>
+      <label class="block mt-4">
+        <span class="text-sm text-stone">כמה מילים על החלום</span>
+        <textarea name="message" rows="4" class="mt-2 w-full rounded-xl bg-paper border px-4 py-3 outline-none focus:border-clay transition resize-none" style="border-color:var(--line)" placeholder="חלל, סגנון, מידות, צבעים..."></textarea>
+      </label>
+      <button type="submit" class="btn btn-clay w-full justify-center mt-6">שליחת הפנייה</button>
+      <p id="form-ok" class="hidden mt-4 text-center text-clay font-medium">תודה! קיבלנו את הפנייה — נחזור אליכם בקרוב ✦</p>
+    </form>
+  </div>
+</section>
+
+<!-- ───────── FOOTER ───────── -->
+<footer class="bg-ink text-bone">
+  <div class="max-w-container mx-auto px-5 sm:px-8 lg:px-14 py-14">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b" style="border-color:rgba(247,243,236,.14)">
+      <div>
+        <span class="wordmark text-2xl">KUDU</span>
+        <p class="mt-4 max-w-xs leading-relaxed" style="color:#cabfb0">רהיטים מודרניים בהזמנה אישית. נבנים ביד בתל אביב, נשארים במשפחה לדורות.</p>
+      </div>
+      <nav class="flex flex-wrap gap-x-8 gap-y-3 text-sm" style="color:#e9e1d5">
+        <a href="#collections" class="ulink">קולקציות</a>
+        <a href="#process" class="ulink">תהליך</a>
+        <a href="#craft" class="ulink">הסטודיו</a>
+        <a href="#materials" class="ulink">חומרים</a>
+        <a href="#contact" class="ulink">צרו קשר</a>
+      </nav>
+    </div>
+    <div class="pt-7 flex flex-col sm:flex-row justify-between gap-3 text-xs" style="color:#8c8275">
+      <p>© 2026 KUDU Atelier · כל הזכויות שמורות</p>
+      <p>עוצב ונבנה בישראל</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── data ── */
+  const u = (id, w=1100) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
+
+  const collections = [
+    { name:'ספת מָארָה',    tag:'ספה מודולרית · ריפוד בוקלה',  mat:'בד בוקלה · אלון מלא',   price:'החל מ־₪14,900', img:u('1567538096630-e0c55bd6374c'), span:true },
+    { name:'שולחן אֹרֶן',    tag:'שולחן אוכל · רגלי פליז',       mat:'עץ אגוז · פליז מוברש',  price:'החל מ־₪9,400',  img:u('1604578762246-41134e37f9cc') },
+    { name:'כורסת תָּמָה',   tag:'כורסת לאונג׳ · עור איטלקי',    mat:'עור full-grain · אגוז', price:'החל מ־₪6,200',  img:u('1503602642458-232111445657') },
+    { name:'ספריית לָבִיא',  tag:'ספרייה מודולרית עד התקרה',     mat:'אלון מעושן · זכוכית',   price:'החל מ־₪11,800', img:u('1594620302200-9a762244a156') },
+    { name:'מיטת נֹגַהּ',    tag:'מסגרת מרופדת · ראש מרחף',      mat:'בד פשתן · אלון',        price:'החל מ־₪12,300', img:u('1505693416388-ac5ce068fe85'), span:true },
+    { name:'מזנון גֶּפֶן',   tag:'דלתות בחריטה ידנית',           mat:'עץ אגוז · אבן טרצו',    price:'החל מ־₪8,700',  img:u('1538688525198-9b88f6f53126') },
+  ];
+
+  const stats = [
+    { n:'18',     l:'שנות נגרות אמן' },
+    { n:'1,200+', l:'פרויקטים אישיים' },
+    { n:'100%',   l:'בנייה ידנית בישראל' },
+    { n:'∞',      l:'אחריות מבנה' },
+  ];
+
+  const steps = [
+    { n:'01', t:'פגישת היכרות',  d:'נשב יחד — בסטודיו או אצלכם — נבין את החלל, אורח החיים והחלום.' },
+    { n:'02', t:'תכנון ועיצוב',  d:'הדמיות תלת־ממד, דוגמאות חומר אמיתיות ושרטוטים מדויקים לפני שנגענו בעץ.' },
+    { n:'03', t:'נגרות אמן',      d:'כל פריט נבנה ביד בסטודיו, מעצים נבחרים, בגימור איטי ומוקפד.' },
+    { n:'04', t:'התקנה ומסירה',  d:'אנחנו מביאים, מרכיבים וממקמים. אתם פשוט נהנים. אחריות לכל החיים.' },
+  ];
+
+  const materials = [
+    { name:'אלון מלא',   note:'נורדי · FSC',   c:'#C9A878' },
+    { name:'עץ אגוז',    note:'אמריקאי כהה',   c:'#5A3D2B' },
+    { name:'עור איטלקי', note:'full-grain',    c:'#8A5E3C' },
+    { name:'בד בוקלה',   note:'טבעי · רחיץ',   c:'#E3DAC9' },
+    { name:'פליז מוברש', note:'מתיישן יפה',    c:'#B08D57' },
+    { name:'אבן טרצו',   note:'בעבודת יד',     c:'#D9D2C5' },
+  ];
+
+  const testimonials = [
+    { q:'הספה שתכננו איתנו היא לב הסלון. כל אורח שואל מאיפה היא. ההרגשה שזה משהו שנבנה רק בשבילנו — אין כמוה.', n:'מיכל ושי ברנע', r:'בית פרטי, הרצליה פיתוח' },
+    { q:'עבדנו עם הרבה נגרים. אף אחד לא התקרב לרמת הדיוק והליווי. שולחן האוכל יישאר במשפחה לדורות.', n:'אדריכלית ליאת קרן', r:'סטודיו לאדריכלות' },
+    { q:'מהפגישה הראשונה ועד ההתקנה — חוויה של אנשים שאכפת להם. החומרים מדברים בעד עצמם.', n:'דניאל אבני', r:'פנטהאוז, תל אביב' },
+  ];
+
+  /* ── render ── */
+  const grid = document.getElementById('grid');
+  grid.innerHTML = collections.map(c => `
+    <article class="reveal group ${c.span ? 'sm:col-span-2 lg:col-span-2' : ''}">
+      <div class="frame ${c.span ? 'aspect-[16/10]' : 'aspect-[4/5]'}">
+        <img src="${c.img}" alt="${c.name}" loading="lazy" />
+        <span class="absolute top-4 right-4 text-xs px-3 py-1 rounded-full bg-bone/90 text-ink">${c.price}</span>
+      </div>
+      <div class="flex items-start justify-between gap-4 mt-4">
+        <div>
+          <h3 class="text-2xl">${c.name}</h3>
+          <p class="text-stone text-sm mt-1">${c.tag}</p>
+        </div>
+        <span class="text-clay opacity-0 group-hover:opacity-100 transition mt-2">→</span>
+      </div>
+      <p class="text-xs tracking-wide text-stone mt-2 uppercase">${c.mat}</p>
+    </article>
+  `).join('');
+
+  document.getElementById('stats').innerHTML = stats.map(s => `
+    <div class="reveal"><div class="stat text-clay">${s.n}</div><p class="text-sm text-stone mt-1">${s.l}</p></div>
+  `).join('');
+
+  document.getElementById('steps').innerHTML = steps.map(s => `
+    <div class="reveal bg-paper p-7 sm:p-8 hover:bg-bone transition">
+      <div class="font-display text-3xl text-clay">${s.n}</div>
+      <h3 class="text-2xl mt-4">${s.t}</h3>
+      <p class="text-stone leading-relaxed mt-3 text-[.95rem]">${s.d}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('materials-grid').innerHTML = materials.map(m => `
+    <div class="reveal text-center">
+      <div class="aspect-square rounded-2xl mb-3 ring-1 ring-white/10" style="background:${m.c}"></div>
+      <p class="font-serif text-lg" style="color:#FBF9F4">${m.name}</p>
+      <p class="text-xs mt-0.5" style="color:#9a8f7f">${m.note}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('testimonials').innerHTML = testimonials.map(t => `
+    <figure class="reveal bg-paper border rounded-3xl p-8" style="border-color:var(--line)">
+      <div class="text-clay text-3xl font-display leading-none">”</div>
+      <blockquote class="mt-2 text-lg leading-relaxed text-ink2 font-light">${t.q}</blockquote>
+      <figcaption class="mt-6 pt-5 border-t" style="border-color:var(--line)">
+        <p class="font-medium text-ink">${t.n}</p>
+        <p class="text-sm text-stone">${t.r}</p>
+      </figcaption>
+    </figure>
+  `).join('');
+
+  /* ── interactions ── */
+  // nav scroll state
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('solid', window.scrollY > 24);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive:true });
+
+  // mobile menu
+  const sheet = document.getElementById('sheet');
+  document.getElementById('burger').addEventListener('click', () => sheet.classList.add('open'));
+  sheet.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => sheet.classList.remove('open')));
+
+  // reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) { e.target.style.transitionDelay = Math.min(i*40, 160) + 'ms'; e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // contact form (front only)
+  const form = document.getElementById('contact-form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.name.value.trim() || !form.phone.value.trim()) { form.reportValidity?.(); return; }
+    document.getElementById('form-ok').classList.remove('hidden');
+    form.querySelector('button').textContent = 'נשלח ✓';
+    form.querySelectorAll('input,textarea,select,button').forEach(el => el.disabled = true);
+  });
+</script>
+</body>
+</html>
