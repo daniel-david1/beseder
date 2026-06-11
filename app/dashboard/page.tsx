@@ -1941,7 +1941,7 @@ function TopNav({ userEmail, onFinance }: { userEmail: string; onFinance?: () =>
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
+      <nav className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md" style={{ borderBottom: "1px solid rgba(17,24,39,0.07)", boxShadow: "0 1px 0 rgba(17,24,39,0.04), 0 2px 12px rgba(17,24,39,0.04)" }}>
         <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between">
 
           {/* Avatar → opens settings drawer — right side in RTL */}
@@ -2460,37 +2460,91 @@ function ProjectCard({ project, onClick, onEdit, onDelete, onDragStart, onDragOv
   onDrop?: () => void;
   onDragEnd?: () => void;
 }) {
-  const blocked = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "blocked").length, 0);
-  const active  = project.subProjects.reduce((n, sp) => n + sp.stages.filter(s => s.status === "active").length, 0);
+  const allTasks = project.subProjects.flatMap(sp => [
+    ...sp.stages,
+    ...(sp.channels ?? []).flatMap(c => c.stages),
+  ]);
+  const done    = allTasks.filter(s => s.status === "done").length;
+  const blocked = allTasks.filter(s => s.status === "blocked").length;
+  const active  = allTasks.filter(s => s.status === "active").length;
+  const total   = allTasks.length;
+  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
     <div
-      className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-move h-full"
+      className="group relative overflow-hidden flex flex-col h-full cursor-pointer select-none"
+      style={{
+        background: "white",
+        borderRadius: 16,
+        border: "1.5px solid rgba(17,24,39,0.07)",
+        boxShadow: "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)",
+        transition: "box-shadow 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1), border-color 0.18s ease",
+      }}
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(17,24,39,0.11), 0 1px 4px rgba(17,24,39,0.06)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = project.color + "55";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(17,24,39,0.07)";
+      }}
     >
-      <div className="h-1 w-full" style={{ background: project.color }} />
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        {/* Title + actions row */}
-        <div className="flex items-start justify-between gap-1">
-          <button onClick={onClick} className="flex items-center gap-2 flex-1 text-right min-w-0">
-            <span className="text-2xl flex-shrink-0">{project.emoji}</span>
-            <h3 className="font-black text-gray-900 text-sm leading-tight">{project.name}</h3>
-          </button>
-          <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={e => { e.stopPropagation(); onEdit(); }}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-400 flex items-center justify-center text-sm font-bold">×</button>
+      {/* Top accent bar */}
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${project.color}, ${project.color}aa)`, flexShrink: 0 }} />
+
+      {/* Card body */}
+      <button onClick={onClick} className="flex-1 p-4 flex flex-col gap-3 text-right">
+        {/* Emoji + name */}
+        <div className="flex items-start gap-3">
+          <div
+            className="flex-shrink-0 flex items-center justify-center text-xl"
+            style={{ width: 38, height: 38, borderRadius: 11, background: project.color + "18", border: `1.5px solid ${project.color}30` }}
+          >
+            {project.emoji}
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <h3 className="font-black text-gray-900 text-sm leading-snug truncate">{project.name}</h3>
+            <p className="text-[11px] text-gray-400 mt-0.5">{project.subProjects.length} פרויקטים · {total} משימות</p>
           </div>
         </div>
-        {/* Stats */}
-        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
-          <span className="text-[11px] text-gray-400">{project.subProjects.length} פרויקטים</span>
-          {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
-          {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">⚠ {blocked}</span>}
-        </button>
+
+        {/* Status badges */}
+        {(blocked > 0 || active > 0 || done > 0) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {blocked > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>⚠ {blocked} תקוע</span>}
+            {active  > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>▶ {active} פעיל</span>}
+            {done    > 0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#f0fdf4", color: "#16a34a" }}>✓ {done} בוצע</span>}
+          </div>
+        )}
+      </button>
+
+      {/* Progress footer */}
+      {total > 0 ? (
+        <div className="px-4 pb-4 flex items-center gap-2">
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${progress}%`, background: project.color }} />
+          </div>
+          <span className="text-[10px] font-semibold shrink-0" style={{ color: project.color, minWidth: 30, textAlign: "left" }}>{progress}%</span>
+        </div>
+      ) : (
+        <div className="px-4 pb-4">
+          <span className="text-[11px] text-gray-300">אין משימות עדיין</span>
+        </div>
+      )}
+
+      {/* Edit/delete — hover only */}
+      <div className="absolute top-6 left-3 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={e => { e.stopPropagation(); onEdit(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center text-xs shadow-sm border border-gray-100 transition-colors">✏️</button>
+        <button onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center font-black shadow-sm border border-gray-100 transition-colors">×</button>
       </div>
     </div>
   );
@@ -2501,33 +2555,93 @@ function SubProjectCard({ sub, color, onClick, onEdit, onDelete }: {
   sub: SubProject; color: string;
   onClick: () => void; onEdit: () => void; onDelete: () => void;
 }) {
-  const allTasks    = [...sub.stages, ...(sub.channels ?? []).flatMap(c => c.stages)];
-  const blocked     = allTasks.filter(s => s.status === "blocked").length;
-  const active      = allTasks.filter(s => s.status === "active").length;
-  const done        = allTasks.filter(s => s.status === "done").length;
-  const monthlyExp  = subMonthlyExpenses(sub);
-  const monthlyInc  = subMonthlyIncomes(sub);
+  const allTasks   = [...sub.stages, ...(sub.channels ?? []).flatMap(c => c.stages)];
+  const blocked    = allTasks.filter(s => s.status === "blocked").length;
+  const active     = allTasks.filter(s => s.status === "active").length;
+  const done       = allTasks.filter(s => s.status === "done").length;
+  const total      = allTasks.length;
+  const progress   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const monthlyExp = subMonthlyExpenses(sub);
+  const monthlyInc = subMonthlyIncomes(sub);
 
   return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group h-full">
-      <div className="h-1 w-full" style={{ background: color, opacity: 0.6 }} />
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        <div className="flex items-start justify-between gap-1">
-          <button onClick={onClick} className="flex items-center gap-2 flex-1 text-right min-w-0">
-            <span className="text-2xl flex-shrink-0">{sub.emoji}</span>
-            <h3 className="font-black text-gray-900 text-sm leading-tight">{sub.name}</h3>
-          </button>
-          <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+    <div
+      className="group relative overflow-hidden flex flex-col h-full cursor-pointer select-none"
+      style={{
+        background: "white",
+        borderRadius: 16,
+        border: "1.5px solid rgba(17,24,39,0.07)",
+        boxShadow: "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)",
+        transition: "box-shadow 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1), border-color 0.18s ease",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(17,24,39,0.11), 0 1px 4px rgba(17,24,39,0.06)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = color + "55";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(17,24,39,0.07)";
+      }}
+    >
+      {/* Top accent bar */}
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}88)`, flexShrink: 0 }} />
+
+      {/* Card body */}
+      <button onClick={onClick} className="flex-1 p-4 flex flex-col gap-3 text-right">
+        {/* Emoji + name */}
+        <div className="flex items-start gap-3">
+          <div
+            className="flex-shrink-0 flex items-center justify-center text-xl"
+            style={{ width: 38, height: 38, borderRadius: 11, background: color + "15", border: `1.5px solid ${color}28` }}
+          >
+            {sub.emoji}
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <h3 className="font-black text-gray-900 text-sm leading-snug truncate">{sub.name}</h3>
+            <p className="text-[11px] text-gray-400 mt-0.5">{total} משימות{sub.channels.length > 0 ? ` · ${sub.channels.length} פריטים` : ''}</p>
           </div>
         </div>
-        <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap mt-auto">
-          <span className="text-[11px] text-gray-400">{[...sub.stages, ...(sub.channels ?? []).flatMap(c => c.stages)].length} משימות</span>
-          {active  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">▶ {active}</span>}
-          {blocked > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50  text-red-600">⚠ {blocked}</span>}
-          {done    > 0 && <span className="text-[10px] font-semibold text-green-600">✓ {done}</span>}
-        </button>
+
+        {/* Status badges */}
+        {(blocked > 0 || active > 0 || done > 0) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {blocked > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>⚠ {blocked}</span>}
+            {active  > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>▶ {active}</span>}
+            {done    > 0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#f0fdf4", color: "#16a34a" }}>✓ {done}</span>}
+          </div>
+        )}
+
+        {/* Financial */}
+        {(monthlyInc > 0 || monthlyExp > 0) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {monthlyInc > 0 && <span className="text-[10px] font-bold text-green-700">+₪{monthlyInc.toLocaleString("he-IL")}</span>}
+            {monthlyExp > 0 && <span className="text-[10px] font-semibold text-amber-600">-₪{monthlyExp.toLocaleString("he-IL")}</span>}
+          </div>
+        )}
+      </button>
+
+      {/* Progress footer */}
+      {total > 0 ? (
+        <div className="px-4 pb-4 flex items-center gap-2">
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${progress}%`, background: color }} />
+          </div>
+          <span className="text-[10px] font-semibold shrink-0" style={{ color, minWidth: 30, textAlign: "left" }}>{progress}%</span>
+        </div>
+      ) : (
+        <div className="px-4 pb-4">
+          <span className="text-[11px] text-gray-300">אין משימות עדיין</span>
+        </div>
+      )}
+
+      {/* Edit/delete */}
+      <div className="absolute top-6 left-3 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={e => { e.stopPropagation(); onEdit(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center text-xs shadow-sm border border-gray-100 transition-colors">✏️</button>
+        <button onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center font-black shadow-sm border border-gray-100 transition-colors">×</button>
       </div>
     </div>
   );
@@ -2538,72 +2652,102 @@ function ChannelCard({ channel, color, onClick, onEdit, onDelete }: {
   channel: Channel; color: string;
   onClick: () => void; onEdit: () => void; onDelete: () => void;
 }) {
+  const total      = channel.stages.length;
   const done       = channel.stages.filter(s => s.status === "done").length;
   const blocked    = channel.stages.filter(s => s.status === "blocked").length;
   const active     = channel.stages.filter(s => s.status === "active").length;
+  const progress   = total > 0 ? Math.round((done / total) * 100) : 0;
   const monthlyExp = (channel.expenses ?? []).reduce((sum, e) => sum + e.amount, 0) +
     channel.stages.reduce((sum, s) => sum + (s.expenses ?? []).reduce((a, e) => a + e.amount, 0), 0);
   const monthlyInc = (channel.incomes ?? []).reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="card overflow-hidden flex flex-col hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
-      <div className="h-1 w-full" style={{ background: color, opacity: 0.7 }} />
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <button onClick={onClick} className="flex items-center gap-3 flex-1 text-right">
-            <span className="text-2xl">{channel.emoji}</span>
-            <div>
-              <h3 className="font-bold text-gray-900 text-base leading-tight">{channel.name}</h3>
-              {channel.description && <p className="text-sm text-gray-400 mt-0.5">{channel.description}</p>}
-            </div>
-          </button>
-          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-            <button onClick={onEdit}   className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-teal-50 text-gray-400 hover:text-teal-600 flex items-center justify-center text-xs">✏️</button>
-            <button onClick={onDelete} className="icon-btn w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-gray-100 hover:bg-red-50   text-gray-400 hover:text-red-400   flex items-center justify-center text-sm font-bold">×</button>
+    <div
+      className="group relative overflow-hidden flex flex-col cursor-pointer select-none"
+      style={{
+        background: "white",
+        borderRadius: 16,
+        border: "1.5px solid rgba(17,24,39,0.07)",
+        boxShadow: "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)",
+        transition: "box-shadow 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1), border-color 0.18s ease",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(17,24,39,0.11), 0 1px 4px rgba(17,24,39,0.06)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = color + "55";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(17,24,39,0.05), 0 4px 12px rgba(17,24,39,0.04)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(17,24,39,0.07)";
+      }}
+    >
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}88)`, flexShrink: 0 }} />
+
+      <button onClick={onClick} className="flex-1 p-4 flex flex-col gap-3 text-right">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div
+            className="flex-shrink-0 flex items-center justify-center text-xl"
+            style={{ width: 40, height: 40, borderRadius: 12, background: color + "15", border: `1.5px solid ${color}28` }}
+          >
+            {channel.emoji}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-black text-gray-900 text-sm leading-tight truncate">{channel.name}</h3>
+            {channel.description
+              ? <p className="text-[11px] text-gray-400 mt-0.5 truncate">{channel.description}</p>
+              : <p className="text-[11px] text-gray-400 mt-0.5">{total} משימות</p>
+            }
           </div>
         </div>
 
+        {/* Finance badges */}
         {(monthlyInc > 0 || monthlyExp > 0) && (
           <div className="flex gap-1.5 flex-wrap">
             {monthlyInc > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#f0fdf4", border: "1px solid #86efac" }}>
-                <span className="text-xs">💚</span>
-                <span className="text-xs font-bold text-green-700">₪{monthlyInc.toLocaleString("he-IL")}/חודש</span>
-              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #86efac" }}>
+                +₪{monthlyInc.toLocaleString("he-IL")}/חודש
+              </span>
             )}
             {monthlyExp > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "#fef3c7", border: "1px solid #fde68a" }}>
-                <span className="text-xs">💸</span>
-                <span className="text-xs font-bold text-amber-700">₪{monthlyExp.toLocaleString("he-IL")}/חודש</span>
-              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fef3c7", color: "#92400e", border: "1px solid #fcd34d" }}>
+                -₪{monthlyExp.toLocaleString("he-IL")}/חודש
+              </span>
             )}
           </div>
         )}
 
-        {channel.stages.length > 0 ? (
-          <button onClick={onClick} className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs text-gray-400">{channel.stages.length} משימות</span>
-            {active > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#eff6ff", color: "#2563eb" }}>
-                ▶ {active} פעיל
-              </span>
-            )}
-            {blocked > 0 && (
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>
-                ⚠ {blocked} תקוע
-              </span>
-            )}
-            {done > 0 && (
-              <span className="text-[11px] font-semibold text-green-600">✓ {done}</span>
-            )}
-          </button>
-        ) : (
-          <p className="text-sm text-gray-300">אין משימות עדיין</p>
+        {/* Status badges */}
+        {(blocked > 0 || active > 0 || done > 0) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {blocked > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>⚠ {blocked} תקוע</span>}
+            {active  > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#dbeafe", color: "#1d4ed8" }}>▶ {active} פעיל</span>}
+            {done    > 0 && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#f0fdf4", color: "#16a34a" }}>✓ {done}</span>}
+          </div>
         )}
+      </button>
 
-        <button onClick={onClick} className="btn btn-ghost w-full justify-center text-sm mt-auto">
-          פתח פריט ←
-        </button>
+      {/* Progress footer */}
+      {total > 0 ? (
+        <div className="px-4 pb-4 flex items-center gap-2">
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${progress}%`, background: color }} />
+          </div>
+          <span className="text-[10px] font-semibold shrink-0" style={{ color, minWidth: 30, textAlign: "left" }}>{progress}%</span>
+        </div>
+      ) : (
+        <div className="px-4 pb-4">
+          <span className="text-[11px] text-gray-300">אין משימות עדיין</span>
+        </div>
+      )}
+
+      {/* Edit/delete */}
+      <div className="absolute top-6 left-3 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={e => { e.stopPropagation(); onEdit(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center text-xs shadow-sm border border-gray-100 transition-colors">✏️</button>
+        <button onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="w-7 h-7 rounded-lg bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center font-black shadow-sm border border-gray-100 transition-colors">×</button>
       </div>
     </div>
   );
@@ -2968,7 +3112,7 @@ export default function Dashboard() {
         )}
 
         {/* ── Channel context bar ── */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm" style={{ borderBottom: `2px solid ${activeProject.color}40` }}>
           <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
 
             <div className="flex items-center gap-2 min-w-0">
@@ -3074,7 +3218,7 @@ export default function Dashboard() {
         {editingSub       && <SubProjectModal existing={editingSub} order={activeSubProject.order} onClose={() => setEditingSub(null)} onSave={handleSaveSub} onNavigateToChannel={handleNavigateToChannel} />}
 
         {/* ── SubProject context bar ── */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm" style={{ borderBottom: `2px solid ${activeProject.color}40` }}>
           <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
 
             {/* Right: back + identity */}
@@ -3267,7 +3411,7 @@ export default function Dashboard() {
         {editingProject && <NewProjectModal existing={editingProject} order={editingProject.order} onClose={() => setEditingProject(null)} onSave={handleSaveProject} />}
 
         {/* ── Project context bar ── */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm" style={{ borderBottom: `2px solid ${activeBrand.color}40` }}>
           <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
 
             {/* Right: back (brand) → project identity */}
@@ -3462,7 +3606,7 @@ export default function Dashboard() {
         {editingBrand     && <BrandWizard existing={editingBrand} onClose={() => setEditingBrand(null)} onSave={handleSaveBrand} />}
 
         {/* ── Brand context bar — single unified header ── */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm" style={{ borderBottom: `2px solid ${activeBrand.color}30` }}>
           <div className="max-w-screen-lg mx-auto px-4 h-14 flex items-center justify-between gap-3">
 
             {/* Right: back arrow + brand identity */}
