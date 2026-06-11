@@ -138,12 +138,14 @@ function applyBgTheme(theme: BgTheme) {
 /* ─── Morning Panel ───────────────────────────────────── */
 const DAILY_GOAL_KEY = "beseder_daily_goal_v1";
 
-function MorningPanel({ brands, userEmail, onBrandClick }: {
+function MorningPanel({ brands, userEmail, onBrandClick, alwaysExpanded }: {
   brands: Brand[];
   userEmail: string;
   onBrandClick: (brand: Brand) => void;
+  alwaysExpanded?: boolean;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [_collapsed, setCollapsed] = useState(false);
+  const collapsed = alwaysExpanded ? false : _collapsed;
   const [tasks, setTasks]         = useState<DailyTask[]>([]);
   const [newTaskInput, setNewTaskInput] = useState("");
   const firstName = userEmail.split("@")[0] ?? "שלום";
@@ -217,27 +219,54 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
     .slice(0, 3);
 
   return (
-    <div className="card rounded-2xl shadow-sm mb-6 overflow-hidden">
+    <div className={`card rounded-2xl shadow-sm overflow-hidden${alwaysExpanded ? '' : ' mb-6'}`}>
       {/* Header */}
       <div
-        className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
-        style={{ background: "linear-gradient(135deg, #f5fbfc 0%, #f0f7fa 100%)", borderBottom: collapsed ? "none" : "1px solid #eef2f6" }}
-        onClick={() => setCollapsed(v => !v)}
+        className={`flex items-center justify-between px-5 py-4${alwaysExpanded ? '' : ' cursor-pointer select-none'}`}
+        style={{ background: "linear-gradient(135deg, #f5fbfc 0%, #f0f7fa 100%)", borderBottom: (collapsed && !alwaysExpanded) ? "none" : "1px solid #eef2f6" }}
+        onClick={alwaysExpanded ? undefined : () => setCollapsed(v => !v)}
       >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">☀️</span>
+          <span className={alwaysExpanded ? "text-3xl" : "text-2xl"}>☀️</span>
           <div>
-            <h2 className="font-bold text-gray-900 text-base leading-tight">בוקר טוב, {firstName}</h2>
+            <h2 className={`text-gray-900 leading-tight${alwaysExpanded ? ' font-black text-xl' : ' font-bold text-base'}`}>בוקר טוב, {firstName}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{hebrewDate}</p>
           </div>
         </div>
-        <button className="text-gray-400 hover:text-gray-700 transition-colors text-lg px-2" aria-label="collapse">
-          {collapsed ? "▼" : "▲"}
-        </button>
+        {!alwaysExpanded && (
+          <button className="text-gray-400 hover:text-gray-700 transition-colors text-lg px-2" aria-label="collapse">
+            {collapsed ? "▼" : "▲"}
+          </button>
+        )}
       </div>
 
       {!collapsed && (
         <div className="px-5 py-4 space-y-5">
+          {/* Stats row — today mode only */}
+          {alwaysExpanded && (() => {
+            const allBrands = brands.filter(b => b.emoji !== "💰");
+            const blockedCount = allBrands.filter(b => getBrandHealth(b).level === "critical").length;
+            const openTasks = tasks.filter(t => t.status !== "done").length;
+            return (
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-white p-3 text-center border border-gray-100 shadow-sm">
+                  <p className="text-2xl font-black text-gray-900">{openTasks}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">משימות פתוחות</p>
+                </div>
+                <div className="rounded-2xl p-3 text-center border shadow-sm" style={{
+                  background: blockedCount > 0 ? "#fef2f2" : "#f0fdf4",
+                  borderColor: blockedCount > 0 ? "#fca5a5" : "#86efac"
+                }}>
+                  <p className="text-2xl font-black" style={{ color: blockedCount > 0 ? "#dc2626" : "#16a34a" }}>{blockedCount}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: blockedCount > 0 ? "#dc2626" : "#16a34a" }}>תקועים</p>
+                </div>
+                <div className="rounded-2xl bg-white p-3 text-center border border-gray-100 shadow-sm">
+                  <p className="text-2xl font-black text-orange-500">{allBrands.length}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">מותגים</p>
+                </div>
+              </div>
+            );
+          })()}
           {/* Daily Tasks */}
           <div>
             <p className="text-xs font-semibold text-gray-500 mb-3">📋 משימות היום</p>
@@ -321,8 +350,56 @@ function MorningPanel({ brands, userEmail, onBrandClick }: {
             )}
           </div>
 
+          {/* Urgent items — today mode only */}
+          {alwaysExpanded && (() => {
+            const urgentItems: { stageName: string; brandName: string; brandEmoji: string; status: StageStatus; brand: Brand }[] = [];
+            for (const brand of brands.filter(b => b.emoji !== "💰")) {
+              for (const project of brand.projects) {
+                for (const sub of project.subProjects) {
+                  const allStages = [
+                    ...sub.stages,
+                    ...sub.channels.flatMap(c => c.stages),
+                  ];
+                  for (const stage of allStages) {
+                    if (stage.status === "blocked" || stage.status === "active") {
+                      urgentItems.push({ stageName: stage.name, brandName: brand.name, brandEmoji: brand.emoji, status: stage.status, brand });
+                    }
+                  }
+                }
+              }
+            }
+            urgentItems.sort((a, b) => (a.status === "blocked" ? -1 : b.status === "blocked" ? 1 : 0));
+            if (!urgentItems.length) return null;
+            return (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-3">🚦 בתנועה עכשיו</p>
+                <div className="space-y-2">
+                  {urgentItems.slice(0, 6).map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onBrandClick(item.brand)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-right group"
+                      style={{ background: item.status === "blocked" ? "#fef2f2" : "#f0f9ff", border: `1.5px solid ${item.status === "blocked" ? "#fca5a5" : "#bae6fd"}` }}
+                    >
+                      <span className="text-base shrink-0">{item.brandEmoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{item.stageName}</p>
+                        <p className="text-[11px] text-gray-400">{item.brandName}</p>
+                      </div>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0" style={{
+                        background: item.status === "blocked" ? "#fee2e2" : "#dbeafe",
+                        color: item.status === "blocked" ? "#dc2626" : "#1d4ed8"
+                      }}>
+                        {item.status === "blocked" ? "⚠ תקוע" : "▶ פעיל"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {/* Priority brands */}
-          {priorityBrands.length > 0 && (
+          {!alwaysExpanded && priorityBrands.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-gray-500 mb-2">פוקוס מומלץ</p>
               <div className="space-y-2">
@@ -2568,6 +2645,9 @@ export default function Dashboard() {
   const [userEmail,        setUserEmail]       = useState("");
   const [teamAccessBrand,  setTeamAccessBrand] = useState<Brand | null>(null);
 
+  // Tab navigation (home level)
+  const [activeTab, setActiveTab] = useState<'today' | 'brands'>('today');
+
   // Drag-to-reorder brand cards
   const dragBrandId = useRef<string | null>(null);
   const [dragOverBrandId, setDragOverBrandId] = useState<string | null>(null);
@@ -3569,7 +3649,7 @@ export default function Dashboard() {
 
   /* ══ LEVEL 0: Brands home ══ */
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24 md:pb-5">
       <TopNav userEmail={userEmail} onFinance={() => setShowLoansManager(true)} />
       {showBrandModal && (
         <BrandWizard
@@ -3609,27 +3689,10 @@ export default function Dashboard() {
         <TeamAccessModal brand={teamAccessBrand} onClose={() => setTeamAccessBrand(null)} />
       )}
 
-      <div className="max-w-screen-lg mx-auto px-4 py-5 sm:py-8 space-y-6 animate-in">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">המותגים שלי</h1>
-            {(() => {
-              const visibleBrands = brands.filter(b => b.emoji !== "💰");
-              return (
-                <p className="text-sm text-gray-400 mt-0.5">
-                  {visibleBrands.length === 0 ? "צור מותג ראשון" : `${visibleBrands.length} מותג${visibleBrands.length !== 1 ? "ים" : ""}`}
-                </p>
-              );
-            })()}
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowWBBuilder(true)} className="btn btn-ghost text-sm flex items-center gap-2">🗺️ בנה מפה</button>
-            <button onClick={() => setShowBrandModal(true)} className="btn btn-orange">+ מותג חדש</button>
-          </div>
-        </div>
-
-        {brands.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center max-w-lg mx-auto">
+      {brands.length === 0 ? (
+        /* ── Empty state ── */
+        <div className="max-w-screen-lg mx-auto px-4 py-10 animate-in">
+          <div className="flex flex-col items-center justify-center py-16 text-center max-w-lg mx-auto">
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-400 to-blue-600 flex items-center justify-center text-4xl mb-6 shadow-lg shadow-teal-200">🏢</div>
             <h2 className="font-black text-gray-900 text-2xl mb-3">ברוך הבא ל-beseder</h2>
             <p className="text-gray-400 text-base leading-relaxed mb-8 max-w-sm">
@@ -3655,56 +3718,155 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-        ) : (
-          <>
-            {/* Morning panel — priority focus */}
+        </div>
+      ) : (
+        /* ── Main content with tabs ── */
+        <div className="max-w-screen-lg mx-auto px-4 pt-4 pb-5 space-y-4 animate-in">
+
+          {/* ── Tab switcher ── */}
+          <div className="flex gap-1 bg-gray-100/80 rounded-2xl p-1">
+            <button
+              onClick={() => setActiveTab('today')}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={activeTab === 'today' ? { background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', color: '#111827' } : { color: '#9ca3af' }}
+            >
+              <span>☀️</span> היום
+            </button>
+            <button
+              onClick={() => setActiveTab('brands')}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={activeTab === 'brands' ? { background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', color: '#111827' } : { color: '#9ca3af' }}
+            >
+              <span>🏢</span> מותגים ({brands.filter(b => b.emoji !== "💰").length})
+            </button>
+          </div>
+
+          {/* ── Today tab ── */}
+          {activeTab === 'today' && (
             <MorningPanel
               brands={brands}
               userEmail={userEmail}
               onBrandClick={b => setActiveBrand(b)}
+              alwaysExpanded
             />
+          )}
 
-            <MonthlyMemorySection brands={brands} />
+          {/* ── Brands tab ── */}
+          {activeTab === 'brands' && (
+            <>
+              <MonthlyMemorySection brands={brands} />
 
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-semibold text-gray-500 tracking-wide">המותגים שלי</h2>
-              <span className="text-xs text-gray-400">{brands.filter(b => b.emoji !== "💰").length} מותגים</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {brands.filter(b => b.emoji !== "💰").map(b => {
-                const health = getBrandHealth(b);
-                return (
-                  <BrandCard
-                    key={b.id}
-                    brand={b}
-                    health={health}
-                    onClick={() => setActiveBrand(b)}
-                    onEdit={() => setEditingBrand(b)}
-                    onDelete={() => handleDeleteBrand(b.id)}
-                    onHide={() => {
-                      const updated = brands.map(br => br.id === b.id ? { ...br, hidden: !br.hidden } : br);
-                      syncAll(updated);
-                    }}
-                    onTeamAccess={() => setTeamAccessBrand(b)}
-                    onSetup={() => setSetupBrand(b)}
-                    onDragStart={e => handleBrandDragStart(e, b.id)}
-                    onDragOver={e => handleBrandDragOver(e, b.id)}
-                    onDrop={e => handleBrandDrop(e, b.id)}
-                    onDragEnd={handleBrandDragEnd}
-                    isDragOver={dragOverBrandId === b.id}
-                  />
-                );
-              })}
-              <button
-                onClick={() => setShowBrandModal(true)}
-                className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
-                <span className="font-semibold text-gray-400 text-sm">מותג חדש</span>
-              </button>
-            </div>
-          </>
-        )}
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-500 tracking-wide">המותגים שלי</h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowWBBuilder(true)} className="btn btn-ghost text-xs flex items-center gap-1.5 py-1.5 px-3">🗺️ מפה</button>
+                  <button onClick={() => setShowBrandModal(true)} className="btn btn-orange text-xs py-1.5 px-3">+ מותג</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {brands.filter(b => b.emoji !== "💰").map(b => {
+                  const health = getBrandHealth(b);
+                  return (
+                    <BrandCard
+                      key={b.id}
+                      brand={b}
+                      health={health}
+                      onClick={() => setActiveBrand(b)}
+                      onEdit={() => setEditingBrand(b)}
+                      onDelete={() => handleDeleteBrand(b.id)}
+                      onHide={() => {
+                        const updated = brands.map(br => br.id === b.id ? { ...br, hidden: !br.hidden } : br);
+                        syncAll(updated);
+                      }}
+                      onTeamAccess={() => setTeamAccessBrand(b)}
+                      onSetup={() => setSetupBrand(b)}
+                      onDragStart={e => handleBrandDragStart(e, b.id)}
+                      onDragOver={e => handleBrandDragOver(e, b.id)}
+                      onDrop={e => handleBrandDrop(e, b.id)}
+                      onDragEnd={handleBrandDragEnd}
+                      isDragOver={dragOverBrandId === b.id}
+                    />
+                  );
+                })}
+                <button
+                  onClick={() => setShowBrandModal(true)}
+                  className="card flex flex-col items-center justify-center gap-3 py-12 hover:shadow-md transition-all hover:-translate-y-0.5 border-2 border-dashed border-gray-200 bg-transparent"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-500 flex items-center justify-center text-2xl">+</div>
+                  <span className="font-semibold text-gray-400 text-sm">מותג חדש</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Mobile bottom nav ── */}
+      <div
+        className="fixed bottom-0 left-0 right-0 md:hidden z-50"
+        style={{
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(17,24,39,0.07)",
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <div className="flex items-end justify-around px-2 pt-1 pb-2">
+          {/* היום */}
+          <button
+            onClick={() => setActiveTab('today')}
+            className="flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all"
+            style={{ color: activeTab === 'today' ? '#f97316' : '#9ca3af' }}
+          >
+            <span className="text-xl">☀️</span>
+            <span className="text-[10px] font-bold">היום</span>
+          </button>
+
+          {/* מותגים */}
+          <button
+            onClick={() => setActiveTab('brands')}
+            className="flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all"
+            style={{ color: activeTab === 'brands' ? '#f97316' : '#9ca3af' }}
+          >
+            <span className="text-xl">🏢</span>
+            <span className="text-[10px] font-bold">מותגים</span>
+          </button>
+
+          {/* + button (center, elevated) */}
+          <button
+            onClick={() => setShowBrandModal(true)}
+            className="flex flex-col items-center gap-0.5"
+          >
+            <span
+              className="w-12 h-12 flex items-center justify-center rounded-2xl text-white text-2xl font-black -mt-5"
+              style={{
+                background: "linear-gradient(135deg, #f97316, #ea580c)",
+                boxShadow: "0 4px 16px rgba(249,115,22,0.45)",
+              }}
+            >+</span>
+            <span className="text-[10px] font-bold text-gray-400 mt-0.5">חדש</span>
+          </button>
+
+          {/* כספים */}
+          <button
+            onClick={() => setShowLoansManager(true)}
+            className="flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all text-gray-400"
+          >
+            <span className="text-xl">💰</span>
+            <span className="text-[10px] font-bold">כספים</span>
+          </button>
+
+          {/* מפה */}
+          <button
+            onClick={() => setShowWBBuilder(true)}
+            className="flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all text-gray-400"
+          >
+            <span className="text-xl">🗺️</span>
+            <span className="text-[10px] font-bold">מפה</span>
+          </button>
+        </div>
       </div>
     </div>
   );
